@@ -25,15 +25,16 @@ class Bili_Live:
     def __init__(self, config_file: str = "config.json", cookies: str = ""):
         self._config_ = Config(config_file=config_file)
         self._data_ = Data()
-        self._exit_register_()
-        # check_bat()
+        atexit.register(self.save_config)
         check_readme(config_file=config_file)
+        # check_bat()
+
         if cookies:
             try:
                 self._data_.cookies = json.loads(cookies)
                 self._get_info_from_cookies_(self._data_.cookies)
             except Exception as e:
-                print(str(e))
+                log("传入的cookies错误，无法加载", 21, str(e))
         pass
 
     def _get_area_id_from_user_choose_(self) -> int:
@@ -47,15 +48,15 @@ class Bili_Live:
         id = 0
         while id <= 0:
             # 主分区
-            print("请选择主分区：")
+            log("请选择主分区：")
             root_area = self._data_.get_area_name()
             for index, data in enumerate(root_area):
                 end = "\n" if index % 4 == print_max - 1 else " "
                 print(f"{index + 1:2}: {data:<8}", end=end)
-            print("\n请输入要选择的主分区 序号 或 名称：")
+            log("\n请输入要选择的主分区 序号 或 名称：")
             select = input()
             while select == "":
-                print("输入为空，重新输入主分区 序号 或 名称：")
+                log("输入为空，重新输入主分区 序号 或 名称：")
                 select = input()
             try:
                 select = int(select)
@@ -68,12 +69,12 @@ class Bili_Live:
             root_id = select
 
             # 子分区
-            print("\n子分区：")
+            log("\n子分区：")
             child_area = self._data_.get_area_name(root_id)
             for index, data in enumerate(child_area):
                 end = "\n" if index % 4 == print_max - 1 else " "
                 print(f"{index + 1:>2}: {data:<6}", end=end)
-            print("\n请输入要选择的子分区 序号 或 名称（回车重新选择主分区）：")
+            log("\n请输入要选择的子分区 序号 或 名称（回车重新选择主分区）：")
             select = input()
             if select == "":
                 log("重新选择主分区")
@@ -142,32 +143,6 @@ class Bili_Live:
         self._data_.title = new_title
         return True
 
-    def _qr_login_(self):
-        """
-        二维码登录
-
-        Arguments:
-            data {Data} -- 数据类
-        """
-        res = get_json(
-            "https://passport.bilibili.com/x/passport-login/web/qrcode/generate",
-            headers={"User-Agent": self._data_.get_user_agent()},
-        )
-        qr_url = res["data"]["url"]
-        qr_key = res["data"]["qrcode_key"]
-
-        qr = QRCode()
-        qr.add_data(qr_url)
-        qr.make(fit=True)
-        qr.make_image().show()
-        status = False
-        while not status:
-            status = self._get_qr_cookies_(qr_key, status)
-            sleep(1)
-        self._data_.cookies_str = json.dumps(
-            self._data_.cookies, separators=(",", ":"), ensure_ascii=False
-        )
-
     def _get_info_from_cookies_(self):
         self._data_.csrf = self._data_.cookies.get("bili_jct")
         self._data_.user_id = self._data_.cookies.get("DedeUserID")
@@ -208,20 +183,7 @@ class Bili_Live:
                 log("二维码已扫描，等待确认")
         return False
 
-    def login(self) -> dict:
-        """
-        登录
-        """
-        if not is_exist(self._config_.config_file):
-            self._qr_login_()
-        elif not self._config_.read_config(self._data_):
-            self._qr_login_()
-        else:
-            if self.get_user_status() != 0:
-                self._qr_login_()
-        self._get_info_from_cookies_()
-
-    def update_area(self):
+    def _update_area_(self):
         """
         更新直播分区列表 \n
         分区结构：\n
@@ -258,9 +220,9 @@ class Bili_Live:
 
         self._data_.area = results
 
-    def update_room_data(self):
+    def _update_room_data_(self):
         """
-        更新直播状态
+        更新直播间状态
         """
         if self._data_.room_id < 0:
             log("room_id获取失败，请重新尝试", 3)
@@ -277,6 +239,50 @@ class Bili_Live:
             self._data_.live_status = self._data_.room_data.get("live_status", -1)
             self._data_.title = self._data_.room_data.get("title", "")
             self._data_.area_id = self._data_.room_data.get("area_id", -1)
+
+    def login(self) -> dict:
+        """
+        登录
+        """
+        if not is_exist(self._config_.config_file):
+            self.qr_login()
+        elif not self.read_config():
+            self.qr_login()
+        else:
+            if self.get_user_status() != 0:
+                self.qr_login()
+        self._get_info_from_cookies_()
+        self._update_area_()
+        self._update_room_data_()
+
+    def read_config(self):
+        return self._config_.read_config(self._data_)
+
+    def qr_login(self):
+        """
+        二维码登录
+
+        Arguments:
+            data {Data} -- 数据类
+        """
+        res = get_json(
+            "https://passport.bilibili.com/x/passport-login/web/qrcode/generate",
+            headers={"User-Agent": self._data_.get_user_agent()},
+        )
+        qr_url = res["data"]["url"]
+        qr_key = res["data"]["qrcode_key"]
+
+        qr = QRCode()
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+        qr.make_image().show()
+        status = False
+        while not status:
+            status = self._get_qr_cookies_(qr_key, status)
+            sleep(1)
+        self._data_.cookies_str = json.dumps(
+            self._data_.cookies, separators=(",", ":"), ensure_ascii=False
+        )
 
     def set_live_title(self, title: str = None):
         """
@@ -300,14 +306,19 @@ class Bili_Live:
             else:
                 log(f"更改标题失败，{res.get('msg')}")
 
-    def set_area(self, id: int = 0):
+    def set_area(self, id: int | str = 0):
         """
         单独设置分区(开播无需单独设置)。
 
         Keyword Arguments:
-            id {int} -- 分区id (default: {0})
+            id {int|str} -- 分区id或分区名称 (default: {0})
         """
-        self._set_area_by_id_(id)
+        if type(id) is int:
+            self._set_area_by_id_(id)
+        elif type(id) is str:
+            self._set_area_by_id_(self.get_area_id_by_name(id))
+        else:
+            log("id值需要为int或str", 20)
         data = post_json(
             "https://api.live.bilibili.com/room/v1/Room/update",
             cookies=self._data_.cookies,
@@ -350,10 +361,17 @@ class Bili_Live:
         )
         return res
 
-    def get_live_status(self):
+    def save_config(self):
+        if self._data_.cookies_str != "":
+            log("正在保存配置...")
+            self._config_.save_config(self._data_)
+        else:
+            log("无数据，跳过保存。")
+
+    def get_live_status(self) -> int:
         return self._data_.live_status
 
-    def get_rtmp(self):
+    def get_rtmp(self) -> tuple[str, str]:
         return self._data_.rtmp_addr, self._data_.rtmp_code
 
     def get_user_status(self) -> int:
@@ -385,10 +403,3 @@ class Bili_Live:
 
     def get_area_id_by_name(self, name: str) -> int:
         return self._data_.get_area_id_by_name(name=name, area_id=-1)
-
-    def save(self):
-        log("正在保存配置...")
-        self._config_.save_config(self._data_)
-
-    def _exit_register_(self):
-        atexit.register(self.save)
