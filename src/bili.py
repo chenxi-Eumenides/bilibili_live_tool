@@ -5,7 +5,16 @@ from time import sleep
 from qrcode import QRCode
 
 from .lib import Config, Data
-from .utils import get, get_json, is_exist, log, post, post_json
+from .utils import (
+    check_bat,
+    check_readme,
+    get,
+    get_json,
+    is_exist,
+    log,
+    post,
+    post_json,
+)
 
 
 class Bili_Live:
@@ -13,10 +22,18 @@ class Bili_Live:
     B站直播
     """
 
-    def __init__(self, config_file: str = None):
+    def __init__(self, config_file: str = "config.json", cookies: str = ""):
         self._config_ = Config(config_file=config_file)
         self._data_ = Data()
-        self.exit_register()
+        self._exit_register_()
+        # check_bat()
+        check_readme(config_file=config_file)
+        if cookies:
+            try:
+                self._data_.cookies = json.loads(cookies)
+                self._get_info_from_cookies_(self._data_.cookies)
+            except Exception as e:
+                print(str(e))
         pass
 
     def _get_area_id_from_user_choose_(self) -> int:
@@ -44,10 +61,10 @@ class Bili_Live:
                 select = int(select)
             except Exception:
                 # 输入了字符串
-                select = self._data_.get_area_id(select)
+                select = self._data_.get_area_id_by_name(select)
             else:
                 # 输入了序号
-                select = self._data_.get_area_id(root_area[select - 1])
+                select = self._data_.get_area_id_by_name(root_area[select - 1])
             root_id = select
 
             # 子分区
@@ -65,10 +82,12 @@ class Bili_Live:
                 select = int(select)
             except Exception:
                 # 输入了字符串
-                select = self._data_.get_area_id(select, root_id)
+                select = self._data_.get_area_id_by_name(select, root_id)
             else:
                 # 输入了序号
-                select = self._data_.get_area_id(child_area[select - 1], root_id)
+                select = self._data_.get_area_id_by_name(
+                    child_area[select - 1], root_id
+                )
             id = select
         return id
 
@@ -148,7 +167,18 @@ class Bili_Live:
         self._data_.cookies_str = json.dumps(
             self._data_.cookies, separators=(",", ":"), ensure_ascii=False
         )
+
+    def _get_info_from_cookies_(self):
         self._data_.csrf = self._data_.cookies.get("bili_jct")
+        self._data_.user_id = self._data_.cookies.get("DedeUserID")
+        self._data_.room_id = (
+            get_json(
+                url=f"https://api.live.bilibili.com/room/v2/Room/room_id_by_uid?uid={self._data_.user_id}",
+                headers={"User-Agent": self._data_.get_user_agent()},
+            )
+            .get("data")
+            .get("room_id")
+        )
 
     def _get_qr_cookies_(self, qr_key: str, status: bool) -> dict:
         """
@@ -189,8 +219,7 @@ class Bili_Live:
         else:
             if self.get_user_status() != 0:
                 self._qr_login_()
-            else:
-                return True
+        self._get_info_from_cookies_()
 
     def update_area(self):
         """
@@ -227,7 +256,7 @@ class Bili_Live:
             }
             results.append(result)
 
-        self._config_.area = results
+        self._data_.area = results
 
     def update_room_data(self):
         """
@@ -246,6 +275,8 @@ class Bili_Live:
         else:
             self._data_.room_data = res.get("data")
             self._data_.live_status = self._data_.room_data.get("live_status", -1)
+            self._data_.title = self._data_.room_data.get("title", "")
+            self._data_.area_id = self._data_.room_data.get("area_id", -1)
 
     def set_live_title(self, title: str = None):
         """
@@ -255,13 +286,19 @@ class Bili_Live:
             title {str} -- 直播标题 (default: {None})
         """
         if self._set_live_title_(title):
-            res = post(
+            res = post_json(
                 url="https://api.live.bilibili.com/room/v1/Room/update",
                 headers=self._data_.get_header(),
                 cookies=self._data_.cookies,
                 data=self._data_.get_data_title(),
             )
-            return res
+            if res.get("code") == 0:
+                if (status := res.get("data").get("audit_title_status")) == 0:
+                    log("更改标题成功。")
+                elif status == 2:
+                    log("更改标题成功，正在审核中。")
+            else:
+                log(f"更改标题失败，{res.get('msg')}")
 
     def set_area(self, id: int = 0):
         """
@@ -344,11 +381,14 @@ class Bili_Live:
             f"当前分区：{data.get('parent_area_name')}({data.get('parent_area_id')}) {data.get('area_name')}({data.get('area_id')})",
             f"直播时长：{data.get('live_time')}",
         ]
-        print("\n".join(res))
+        return "\n".join(res)
+
+    def get_area_id_by_name(self, name: str) -> int:
+        return self._data_.get_area_id_by_name(name=name, area_id=-1)
 
     def save(self):
         log("正在保存配置...")
         self._config_.save_config(self._data_)
 
-    def exit_register(self):
+    def _exit_register_(self):
         atexit.register(self.save)
