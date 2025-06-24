@@ -197,6 +197,7 @@ cython_debug/
 # folder
 other/
 # file
+使用说明.txt
 test.py
 *.json
 *.ini
