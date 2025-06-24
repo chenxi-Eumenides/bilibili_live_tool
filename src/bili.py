@@ -10,6 +10,7 @@ from .utils import (
     check_readme,
     get,
     get_json,
+    get_version,
     is_exist,
     log,
     post,
@@ -35,6 +36,7 @@ class Bili_Live:
                 self._get_info_from_cookies_(self._data_.cookies)
             except Exception as e:
                 log("传入的cookies错误，无法加载", 21, str(e))
+        log(f"初始化完成，当前版本：{get_version}")
         pass
 
     def _get_area_id_from_user_choose_(self) -> int:

@@ -4,19 +4,21 @@ B站开播与下播工具
 # 使用说明
 
 本程序用于快捷开启直播、结束直播、修改直播标题、修改直播分区
-第一次双击exe，会生成本说明，以及4个快捷方式。之后可以运行bat快捷方式快速启动。
+第一次双击exe，会生成使用说明，以及4个快捷方式。之后可以运行bat快捷方式快速启动。
 
 近期B站网络抽风，可能不是软件问题。
 
-## 下载
+## 安装
 
 ### 二进制文件
 
 [releases](https://github.com/chenxi-Eumenides/bilibili_live_tool/releases/latest)
 
-[cn](https://wwzt.lanzoul.com/b00zxtbjrg) 密码:chenxi
+[蓝奏云(CN)](https://wwzt.lanzoul.com/b00zxtbjrg)  密码:chenxi
 
-## 源码
+双击运行。
+
+### 源码
 
 ```bash
 # 下载库
@@ -25,7 +27,7 @@ git clone https://github.com/chenxi-Eumenides/bilibili_live_tool.git
 uv sync
 # 运行脚本
 uv run main.py
-# 目前请手动修改脚本
+# alpha版本请手动修改脚本
 ```
 
 ## 使用方法
@@ -55,5 +57,8 @@ ARGS:
   help   : 打印帮助信息
 ```
 
+## 致谢
+
 原作者：Chace (https://github.com/ChaceQC)
-二改作者：chenxi (https://github.com/chenxi-Eumenides)
+bilibili-API-collect项目 (https://github.com/SocialSisterYi/bilibili-API-collect/)
+
