@@ -1,3 +1,4 @@
+import atexit
 import json
 from time import sleep
 
@@ -15,6 +16,7 @@ class Bili_Live:
     def __init__(self, config_file: str = None):
         self._config_ = Config(config_file=config_file)
         self._data_ = Data()
+        self.exit_register()
         pass
 
     def _get_area_id_from_user_choose_(self) -> int:
@@ -110,7 +112,7 @@ class Bili_Live:
         Returns:
             _type_ -- _description_
         """
-        if len(title) <= 0:
+        if title is None or len(title) <= 0:
             return False
         elif self._data_.is_valid_live_title(title):
             new_title = title
@@ -284,6 +286,7 @@ class Bili_Live:
         """
         启动直播
         """
+        self._set_area_by_id_()
         res = post_json(
             "https://api.live.bilibili.com/room/v1/Room/startLive",
             cookies=self._data_.cookies,
@@ -318,7 +321,9 @@ class Bili_Live:
 
     def get_user_status(self) -> int:
         res = get_json(
+            # url="https://account.bilibili.com/site/getCoin",
             url="https://api.bilibili.com/x/web-interface/nav/stat",
+            headers=self._data_.get_header(),
             cookies=self._data_.cookies,
         )
         if res is None:
@@ -329,3 +334,21 @@ class Bili_Live:
             self._data_.cookies_str_old = ""
             log("cookies已过期，请重新登录")
         return res.get("code")
+
+    def get_room_status(self) -> str:
+        data = self._data_.room_data
+        res = [
+            f"主播uid ：{data.get('uid')}      粉丝数：{data.get('attention')}",
+            f"直播标题：{data.get('title')}  直播间号：{data.get('room_id')}",
+            f"直播间描述：{data.get('description')}",
+            f"当前分区：{data.get('parent_area_name')}({data.get('parent_area_id')}) {data.get('area_name')}({data.get('area_id')})",
+            f"直播时长：{data.get('live_time')}",
+        ]
+        print("\n".join(res))
+
+    def save(self):
+        log("正在保存配置...")
+        self._config_.save_config(self._data_)
+
+    def exit_register(self):
+        atexit.register(self.save)
