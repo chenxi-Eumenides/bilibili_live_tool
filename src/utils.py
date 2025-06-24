@@ -6,7 +6,7 @@ import requests
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
 # V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
-version = (0, 3, 0, "alpha", 4)
+version = (0, 3, 0, "alpha", 5)
 
 
 def get_version() -> str:
