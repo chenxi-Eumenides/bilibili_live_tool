@@ -44,11 +44,14 @@ uv run main.py
 
 ## 命令行参数
 ```bash
+bili-live.exe <ARGS>
+ARGS:
          : 无参数则手动选择功能
   auto   : 自动选择上次的分区与标题，并开播/下播
   start  : 手动选择分区与标题，并开播/下播
   select : 更改分区
   title  : 更改标题
+  info   : 获取直播间信息
   help   : 打印帮助信息
 ```
 
