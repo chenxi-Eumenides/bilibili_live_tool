@@ -49,15 +49,15 @@ class Config:
             data.rtmp_code_old = config.get("rtmp_code", "")
             data.cookies_str = config.get("cookies_str", "")
             data.cookies_str_old = config.get("cookies_str", "")
+            data.cookies = json.loads(data.cookies_str)
             data.csrf = config.get("csrf", "")
             data.refresh_token = config.get("refresh_token", "")
             self.area = config.get("area", {})
             data.room_data = config.get("room_data", {})
-        if data.room_id != -1 and data.cookies_str != "" and data.csrf != "":
-            res = True
-            return res
-        log("config.json内容不正确，重新登录")
-        return False
+        if data.room_id == -1 or data.cookies_str == "" or data.csrf == "":
+            log("config.json内容不正确，重新登录")
+            return False
+        return True
 
     def save_config(self, data: "Data"):
         """
