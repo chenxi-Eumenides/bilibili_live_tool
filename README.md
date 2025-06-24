@@ -1,12 +1,14 @@
 # bilibili_live_tool
 B站开播与下播工具
 
-# 使用说明
-
 本程序用于快捷开启直播、结束直播、修改直播标题、修改直播分区
 第一次双击exe，会生成使用说明，以及4个快捷方式。之后可以运行bat快捷方式快速启动。
 
 近期B站网络抽风，可能不是软件问题。
+
+## 声明
+
+本程序仅用于获取推流地址以及推流码，不会封号等等，任何与账号有关的问题概不负责。
 
 ## 安装
 
@@ -28,6 +30,7 @@ uv sync
 # 运行脚本
 uv run main.py
 # alpha版本请手动修改脚本
+# 扫码登录
 ```
 
 ## 使用方法
@@ -59,6 +62,7 @@ ARGS:
 
 ## 致谢
 
-原作者：Chace (https://github.com/ChaceQC)
+bilibili_live_stream_code项目 (https://github.com/ChaceQC/bilibili_live_stream_code)
+
 bilibili-API-collect项目 (https://github.com/SocialSisterYi/bilibili-API-collect/)
 
