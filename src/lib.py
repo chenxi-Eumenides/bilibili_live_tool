@@ -41,6 +41,7 @@ class Config:
             log("读取config.json失败，重新登录")
             return False
         else:
+            data.user_id = config.get("user_id", -1)
             data.room_id = config.get("room_id", -1)
             data.area_id = config.get("area_id", -1)
             data.title = config.get("title", "")
@@ -49,13 +50,17 @@ class Config:
             data.rtmp_code_old = config.get("rtmp_code", "")
             data.cookies_str = config.get("cookies_str", "")
             data.cookies_str_old = config.get("cookies_str", "")
-            data.cookies = json.loads(data.cookies_str)
             data.csrf = config.get("csrf", "")
             data.refresh_token = config.get("refresh_token", "")
             self.area = config.get("area", {})
             data.room_data = config.get("room_data", {})
-        if data.room_id == -1 or data.cookies_str == "" or data.csrf == "":
-            log("config.json内容不正确，重新登录")
+        if data.cookies_str == "":
+            log("无法读取cookies，重新登录")
+            return False
+        try:
+            data.cookies = json.loads(data.cookies_str)
+        except Exception:
+            log("加载cookies失败")
             return False
         return True
 
@@ -67,6 +72,7 @@ class Config:
             config {Config} -- config对象
         """
         config = {
+            "user_id": data.user_id,
             "room_id": data.room_id,
             "area_id": data.area_id,
             "title": data.title,
@@ -76,7 +82,7 @@ class Config:
             "csrf": data.csrf,
             "refresh_token": data.refresh_token,
             "room_data": data.room_data,
-            "area": self.area,
+            "area": data.area,
         }
         try:
             with open(self.config_file, "w", encoding="utf-8") as f:
@@ -87,6 +93,7 @@ class Config:
 
 @dataclass
 class Data:
+    user_id: int = -1
     room_id: int = -1
     area_id: int = -1
     title: str = ""
@@ -213,13 +220,13 @@ class Data:
                 results.append(data.get("name"))
         return results
 
-    def get_area_id(self, name: str = "", area_id: int = 0) -> int:
+    def get_area_id_by_name(self, name: str, area_id: int = 0) -> int:
         """
         获取分区名字对应的id
 
         Keyword Arguments:
-            name {str} -- 搜索的分区名字 (default: {""})
-            area_id {int} -- 搜索分区所在的主分区id (default: {0})
+            name {str} -- 搜索的分区名字
+            area_id {int} -- 搜索分区所在的主分区id，0为只获取主分区，-1为从所有分区中搜索 (default: {0})
 
         Returns:
             int -- 分区id，0为失败
@@ -228,18 +235,24 @@ class Data:
             log("搜索名称为空，请重新尝试！")
             return 0
         for part in self.area:
-            if area_id:
+            if area_id > 0:
                 if area_id == part.get("id"):
                     for p in part.get("list"):
                         if name in p.get("name"):
                             return p.get("id")
-            else:
+            elif area_id == 0:
                 if name in part.get("name"):
                     return part.get("id")
-        if area_id == 0:
-            log("索取主分区id失败，请重新尝试！")
-        else:
+            elif area_id == -1:
+                for p in part.get("list"):
+                    if name in p.get("name"):
+                        return p.get("id")
+        if area_id > 0:
             log("获取子分区id失败，请重新尝试！")
+        elif area_id == 0:
+            log("索取主分区id失败，请重新尝试！")
+        elif area_id == -1:
+            log(f"索取分区id失败。({name}:{area_id})")
         return 0
 
     def is_valid_area_id(self, id: int) -> bool:
