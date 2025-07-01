@@ -1,12 +1,12 @@
 from os import path, startfile
-from sys import argv
+from sys import argv, exit
 
 import requests
 
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
 # V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
-version = (0, 3, 0, "alpha", 5)
+version = (0, 3, 0, "alpha", 6)
 
 
 def get_version() -> str:
@@ -48,11 +48,12 @@ def get_help_content() -> list[str]:
         "只修改直播分区",
         "",
         "## 命令行参数",
-        "         : 无参数则手动选择功能",
+        "         : 无参数，视为 manual",
         "  auto   : 自动选择上次的分区与标题，并开播/下播",
-        "  start  : 手动选择分区与标题，并开播/下播",
-        "  select : 更改分区",
+        "  manual : 手动选择分区与标题，并开播/下播",
+        "  area   : 更改分区",
         "  title  : 更改标题",
+        "  info   : 仅打印直播间信息",
         "  help   : 打印帮助信息",
         "",
         "原作者：Chace (https://github.com/ChaceQC)",
@@ -126,8 +127,8 @@ def check_bat() -> bool:
     return all(
         [
             create_bat("自动开播&下播.bat", "auto"),
-            create_bat("手动开播&下播.bat", "start"),
-            create_bat("更改分区.bat", "select"),
+            create_bat("手动开播&下播.bat", "manual"),
+            create_bat("更改分区.bat", "area"),
             create_bat("更改标题.bat", "title"),
         ]
     )
@@ -151,6 +152,8 @@ def post(url: str, params=None, cookies=None, headers=None, data=None):
         res = requests.post(
             url=url, params=params, cookies=cookies, headers=headers, data=data
         )
+    except ConnectionResetError as e:
+        log(f"请求api({url})过多，请稍后再尝试。", 1, str(e))
     except Exception as e:
         log(f"请求api({url})出错", 1, str(e))
     else:

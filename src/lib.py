@@ -119,7 +119,7 @@ class Data:
             )
         return {
             "room_id": self.room_id,
-            "platform": "android_link",
+            "platform": "pc_link",
             "area_v2": self.area_id,
             "backup_stream": "0",
             "csrf_token": self.csrf,
@@ -134,7 +134,7 @@ class Data:
             )
         return {
             "room_id": self.room_id,
-            "platform": "android_link",
+            "platform": "pc_link",
             "csrf_token": self.csrf,
             "csrf": self.csrf,
         }
@@ -147,7 +147,7 @@ class Data:
             )
         return {
             "room_id": self.room_id,
-            "platform": "android_link",
+            "platform": "pc_link",
             "title": self.title,
             "csrf_token": self.csrf,
             "csrf": self.csrf,
@@ -163,13 +163,13 @@ class Data:
             "room_id": self.room_id,
             "area_id": self.area_id,
             "activity_id": 0,
-            "platform": "android_link",
+            "platform": "pc_link",
             "csrf_token": self.csrf,
             "csrf": self.csrf,
         }
 
     def get_user_agent(self) -> str:
-        return "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"
+        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
 
     def get_header(self) -> dict[str, str]:
         return {
@@ -178,7 +178,7 @@ class Data:
             "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
             "origin": "https://link.bilibili.com",
             "referer": "https://link.bilibili.com/p/center/index",
-            "sec-ch-ua": '"Microsoft Edge";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+            "sec-ch-ua": '"Microsoft Edge";v="137", "Not=A?Brand";v="8", "Chromium";v="137"',
             "sec-ch-ua-mobile": "?0",
             "sec-ch-ua-platform": '"Windows"',
             "sec-fetch-dest": "empty",

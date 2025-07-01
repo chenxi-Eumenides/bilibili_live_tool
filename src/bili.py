@@ -9,6 +9,7 @@ from .utils import (
     check_bat,
     check_readme,
     get,
+    get_help_content,
     get_json,
     get_version,
     is_exist,
@@ -28,7 +29,7 @@ class Bili_Live:
         self._data_ = Data()
         atexit.register(self.save_config)
         check_readme(config_file=config_file)
-        # check_bat()
+        check_bat()
 
         if cookies:
             try:
@@ -36,7 +37,9 @@ class Bili_Live:
                 self._get_info_from_cookies_(self._data_.cookies)
             except Exception as e:
                 log("传入的cookies错误，无法加载", 21, str(e))
-        log(f"初始化完成，当前版本：{get_version}")
+
+        log(f"初始化完成，当前版本：{get_version()}")
+        log("任何时候，按 Ctrl+C 或 关闭窗口 退出程序")
         pass
 
     def _get_area_id_from_user_choose_(self) -> int:
@@ -123,27 +126,6 @@ class Bili_Live:
             self._data_.area_id = id
         else:
             self._data_.area_id = self._get_area_id_from_user_choose_()
-
-    def _set_live_title_(self, title: str = None):
-        """
-        设置直播间标题
-
-        Keyword Arguments:
-            title {str} -- 直播间标题 (default: {None})
-
-        Returns:
-            _type_ -- _description_
-        """
-        if title is None or len(title) <= 0:
-            return False
-        elif self._data_.is_valid_live_title(title):
-            new_title = title
-        else:
-            new_title = self._get_live_title_from_user_()
-            if not self._data_.is_valid_live_title(new_title):
-                return False
-        self._data_.title = new_title
-        return True
 
     def _get_info_from_cookies_(self):
         self._data_.csrf = self._data_.cookies.get("bili_jct")
@@ -288,34 +270,41 @@ class Bili_Live:
 
     def set_live_title(self, title: str = None):
         """
-        单独设置直播标题
+        设置直播标题。不传入则为手动输入。
 
         Keyword Arguments:
             title {str} -- 直播标题 (default: {None})
         """
-        if self._set_live_title_(title):
-            res = post_json(
-                url="https://api.live.bilibili.com/room/v1/Room/update",
-                headers=self._data_.get_header(),
-                cookies=self._data_.cookies,
-                data=self._data_.get_data_title(),
-            )
-            if res.get("code") == 0:
-                if (status := res.get("data").get("audit_title_status")) == 0:
-                    log("更改标题成功。")
-                elif status == 2:
-                    log("更改标题成功，正在审核中。")
-            else:
-                log(f"更改标题失败，{res.get('msg')}")
+        if title is None:
+            title = self._get_live_title_from_user_()
+        if len(title) <= 0 or not self._data_.is_valid_live_title(title):
+            log("非法标题，跳过。")
+            return
+        self._data_.title = title
+        res = post_json(
+            url="https://api.live.bilibili.com/room/v1/Room/update",
+            headers=self._data_.get_header(),
+            cookies=self._data_.cookies,
+            data=self._data_.get_data_title(),
+        )
+        if res.get("code") == 0:
+            if (status := res.get("data").get("audit_title_status")) == 0:
+                log("更改标题成功。")
+            elif status == 2:
+                log("更改标题成功，正在审核中。")
+        else:
+            log(f"更改标题失败，{res.get('msg')}")
 
-    def set_area(self, id: int | str = 0):
+    def set_live_area(self, id: int | str = None):
         """
-        单独设置分区(开播无需单独设置)。
+        单独设置分区，开播需单独设置。不传入则为手动选择。
 
         Keyword Arguments:
-            id {int|str} -- 分区id或分区名称 (default: {0})
+            id {int|str} -- 分区id或分区名称 (default: {None})
         """
-        if type(id) is int:
+        if id is None:
+            self._set_area_by_id_(self._get_area_id_from_user_choose_())
+        elif type(id) is int:
             self._set_area_by_id_(id)
         elif type(id) is str:
             self._set_area_by_id_(self.get_area_id_by_name(id))
@@ -328,15 +317,35 @@ class Bili_Live:
             data=self._data_.get_data_id(),
         )
         if data.get("code") == 0:
-            log("更改分区成功！")
+            log(
+                f"更改分区({self._data_.get_area_name_by_id(self._data_.area_id)[1]}:{self._data_.area_id})成功！"
+            )
         else:
-            log(f"更改分区({self._data_.area_id})失败,", 20, data.get("msg"))
+            log(
+                f"更改分区({self._data_.get_area_name_by_id(self._data_.area_id)[1]}:{self._data_.area_id})失败,",
+                20,
+                data.get("msg"),
+            )
+
+    def get_user_status(self) -> int:
+        res = get_json(
+            url="https://api.bilibili.com/x/web-interface/nav/stat",
+            headers=self._data_.get_header(),
+            cookies=self._data_.cookies,
+        )
+        if res is None:
+            return -1
+        if res.get("code") == -101:
+            self._data_.cookies = {}
+            self._data_.cookies_str = ""
+            self._data_.cookies_str_old = ""
+            log("cookies已过期，请重新登录")
+        return res.get("code")
 
     def start_live(self):
         """
         启动直播
         """
-        self._set_area_by_id_()
         res = post_json(
             "https://api.live.bilibili.com/room/v1/Room/startLive",
             cookies=self._data_.cookies,
@@ -349,6 +358,7 @@ class Bili_Live:
             rtmp = res["data"]["rtmp"]
             self._data_.rtmp_addr = rtmp["addr"]
             self._data_.rtmp_code = rtmp["code"]
+            log("已开播")
         return res
 
     def stop_live(self):
@@ -376,32 +386,22 @@ class Bili_Live:
     def get_rtmp(self) -> tuple[str, str]:
         return self._data_.rtmp_addr, self._data_.rtmp_code
 
-    def get_user_status(self) -> int:
-        res = get_json(
-            # url="https://account.bilibili.com/site/getCoin",
-            url="https://api.bilibili.com/x/web-interface/nav/stat",
-            headers=self._data_.get_header(),
-            cookies=self._data_.cookies,
-        )
-        if res is None:
-            return -1
-        if res.get("code") == -101:
-            self._data_.cookies = {}
-            self._data_.cookies_str = ""
-            self._data_.cookies_str_old = ""
-            log("cookies已过期，请重新登录")
-        return res.get("code")
+    def get_area_id_by_name(self, name: str) -> int:
+        return self._data_.get_area_id_by_name(name=name, area_id=-1)
 
-    def get_room_status(self) -> str:
+    def get_room_info(self) -> str:
         data = self._data_.room_data
         res = [
+            "当前正在直播" if self.get_live_status() == 1 else "当前不在直播",
             f"主播uid ：{data.get('uid')}      粉丝数：{data.get('attention')}",
-            f"直播标题：{data.get('title')}  直播间号：{data.get('room_id')}",
-            f"直播间描述：{data.get('description')}",
+            f"直播间号：{data.get('room_id')}",
+            f"直播标题：{data.get('title')}",
+            f"直播间描述：{data.get('description')[9:-10]}",
             f"当前分区：{data.get('parent_area_name')}({data.get('parent_area_id')}) {data.get('area_name')}({data.get('area_id')})",
-            f"直播时长：{data.get('live_time')}",
+            f"直播起始时间：{data.get('live_time')}",
+            f"当前在线观众：{data.get('online')}",
         ]
         return "\n".join(res)
 
-    def get_area_id_by_name(self, name: str) -> int:
-        return self._data_.get_area_id_by_name(name=name, area_id=-1)
+    def get_help_info(self) -> str:
+        return "\n".join(get_help_content())
