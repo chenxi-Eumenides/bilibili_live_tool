@@ -371,6 +371,13 @@ class Bili_Live:
             headers=self._data_.get_header(),
             data=self._data_.get_data_stop(),
         )
+        if res["code"] != 0:
+            log(
+                "下播失败，请手动前往网页下播：https://link.bilibili.com/p/center/index#/my-room/start-live",
+                21,
+            )
+        else:
+            log("已下播")
         return res
 
     def save_config(self):
