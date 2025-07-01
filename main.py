@@ -87,3 +87,5 @@ if __name__ == "__main__":
         manual(live)
 
     log("")
+    log("按任意按键退出工具。")
+    input()
