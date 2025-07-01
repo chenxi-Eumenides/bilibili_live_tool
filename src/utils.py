@@ -56,8 +56,15 @@ def get_help_content() -> list[str]:
         "  info   : 仅打印直播间信息",
         "  help   : 打印帮助信息",
         "",
-        "原作者：Chace (https://github.com/ChaceQC)",
-        "二改作者：chenxi (https://github.com/chenxi-Eumenides)",
+        "## 致谢",
+        "",
+        "bilibili_live_stream_code项目 (https://github.com/ChaceQC/bilibili_live_stream_code)",
+        "",
+        "bilibili-API-collect项目 (https://github.com/SocialSisterYi/bilibili-API-collect/)",
+        "",
+        "## 作者",
+        "",
+        "chenxi_Eumenides (https://github.com/chenxi-Eumenides)",
     ]
 
 
