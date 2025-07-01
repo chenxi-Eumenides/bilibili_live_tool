@@ -365,7 +365,7 @@ class Bili_Live:
         """
         停止直播
         """
-        res = post(
+        res = post_json(
             "https://api.live.bilibili.com/room/v1/Room/stopLive",
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),

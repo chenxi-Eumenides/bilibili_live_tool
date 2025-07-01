@@ -40,7 +40,9 @@ def manual(live: Bili_Live):
     status = live.get_live_status()
     if status == 0 or status == 2:
         live.set_live_area()
+        print("")
         live.set_live_title()
+        print("")
         live.start_live()
         print("")
         rtmp(live)
