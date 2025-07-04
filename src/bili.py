@@ -14,7 +14,6 @@ from .utils import (
     get_version,
     is_exist,
     log,
-    post,
     post_json,
 )
 
@@ -27,6 +26,7 @@ class Bili_Live:
     def __init__(self, config_file: str = "config.json", cookies: str = ""):
         self._config_ = Config(config_file=config_file)
         self._data_ = Data()
+        atexit.register(self._exit_)
         atexit.register(self.save_config)
         check_readme(config_file=config_file)
         check_bat()
@@ -39,7 +39,7 @@ class Bili_Live:
                 log("传入的cookies错误，无法加载", 21, str(e))
 
         log(f"初始化完成，当前版本：{get_version()}")
-        log("任何时候，按 Ctrl+C 或 关闭窗口 退出程序")
+        log("任何时候，按 Ctrl+C 退出程序")
         pass
 
     def _get_area_id_from_user_choose_(self) -> int:
@@ -223,6 +223,10 @@ class Bili_Live:
             self._data_.live_status = self._data_.room_data.get("live_status", -1)
             self._data_.title = self._data_.room_data.get("title", "")
             self._data_.area_id = self._data_.room_data.get("area_id", -1)
+
+    def _exit_(self):
+        print("按回车结束程序 或 直接关闭窗口")
+        input()
 
     def login(self) -> dict:
         """

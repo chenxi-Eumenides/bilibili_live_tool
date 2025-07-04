@@ -1,7 +1,7 @@
 from sys import argv
 
 from src.bili import Bili_Live
-from src.utils import log
+from src.utils import is_exist, log
 
 
 def rtmp(live: Bili_Live):
@@ -10,6 +10,7 @@ def rtmp(live: Bili_Live):
         log("推流码无变化，可以直接开播。")
         print("")
         log(rtmp_code)
+        print("")
     else:
         log("推流地址：")
         print("")
@@ -20,6 +21,7 @@ def rtmp(live: Bili_Live):
         log(rtmp_code)
         print("")
         log("请将 推流地址 和 推流码 复制到obs直播配置中，再开播。")
+        print("")
 
 
 def help(live: Bili_Live):
@@ -86,8 +88,7 @@ if __name__ == "__main__":
     elif option == "info":
         pass
     else:
-        manual(live)
-
-    log("")
-    log("按任意按键退出工具。")
-    input()
+        if is_exist(live._config_.config_file):
+            auto(live)
+        else:
+            manual(live)
