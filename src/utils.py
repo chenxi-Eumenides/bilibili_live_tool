@@ -98,6 +98,8 @@ def log(string: str, reason: int = -1, error_data: any = None, func=None):
 
 
 def check_readme(config_file: str):
+    if ".exe" not in argv[0]:
+        return False
     if is_exist(config_file):
         return False
     content = "\n".join(get_help_content())
@@ -114,6 +116,9 @@ def check_bat() -> bool:
     Returns:
         bool -- 是否已创建
     """
+
+    if ".exe" not in argv[0]:
+        return False
 
     def create_bat(bat: str, arg: str) -> bool:
         if not is_exist(bat):
