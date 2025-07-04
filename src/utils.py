@@ -6,7 +6,7 @@ import requests
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
 # V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
-version = (0, 3, 4)
+version = (0, 3, 5)
 
 
 def get_version() -> str:
@@ -94,8 +94,6 @@ def log(string: str, reason: int = -1, error_data: any = None, func=None):
         else:
             s = f"{string}\n报错原因：{str(error_data)}"
         print(s)
-        # print(callable(func))
-        input("输入回车关闭程序")
         exit(reason)
 
 
