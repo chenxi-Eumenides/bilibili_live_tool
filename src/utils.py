@@ -1,7 +1,9 @@
-from os import path, startfile
+from os import path
 from sys import argv, exit
 
 import requests
+import subprocess
+import platform
 
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
@@ -97,6 +99,21 @@ def log(string: str, reason: int = -1, error_data: any = None, func=None):
         exit(reason)
 
 
+
+def startfile(filepath):
+    """
+    跨平台打开文件
+
+    :param filepath: 文件路径
+    """
+    if platform.system() == "Windows":
+        os.startfile(filepath) 
+    elif platform.system() == "Darwin":
+        subprocess.call(('open', filepath))
+    else:
+        subprocess.call(('xdg-open', filepath))
+
+
 def check_readme(config_file: str):
     if ".exe" not in argv[0]:
         return False
@@ -105,7 +122,7 @@ def check_readme(config_file: str):
     content = "\n".join(get_help_content())
     with open("使用说明.txt", "w", encoding="utf-8") as f:
         f.writelines(content)
-    startfile("使用说明.txt")
+    startfile("使用说明.txt") 
     return True
 
 
@@ -116,7 +133,6 @@ def check_bat() -> bool:
     Returns:
         bool -- 是否已创建
     """
-
     if ".exe" not in argv[0]:
         return False
 
