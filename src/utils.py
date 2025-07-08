@@ -1,4 +1,4 @@
-from os import path, startfile
+from os import path
 from sys import argv, exit
 
 import requests
@@ -104,8 +104,8 @@ def check_readme(config_file: str):
         return False
     content = "\n".join(get_help_content())
     with open("使用说明.txt", "w", encoding="utf-8") as f:
+        print(content)
         f.writelines(content)
-    startfile("使用说明.txt")
     return True
 
 
