@@ -59,7 +59,7 @@ uv run main.py
 ```bash
 bili-live-tool.exe <ARGS>
 ARGS:
-         : 无参数，视为 manual
+         : 无config.json为manual，否则为auto
   auto   : 自动选择上次的分区与标题，并开播/下播
   manual : 手动选择分区与标题，并开播/下播
   area   : 更改分区
