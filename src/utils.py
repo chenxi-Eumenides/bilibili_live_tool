@@ -2,6 +2,8 @@ from os import path, startfile
 from sys import argv, exit
 
 import requests
+import subprocess
+import platform
 
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
@@ -12,8 +14,10 @@ version = (0, 3, 5)
 def get_version() -> str:
     if len(version) == 3:
         return f"V{version[0]}.{version[1]}.{version[2]}"
-    else:
+    elif len(version) == 5:
         return f"V{version[0]}.{version[1]}.{version[2]}-{version[3]}-{version[4]}"
+    else:
+        return "V0.0.1"
 
 
 def get_help_content() -> list[str]:
@@ -105,7 +109,7 @@ def check_readme(config_file: str):
     content = "\n".join(get_help_content())
     with open("使用说明.txt", "w", encoding="utf-8") as f:
         f.writelines(content)
-    startfile("使用说明.txt")
+    open_file("使用说明.txt")
     return True
 
 
@@ -142,6 +146,24 @@ def check_bat() -> bool:
             create_bat("更改标题.bat", "title"),
         ]
     )
+
+
+def open_file(file) -> bool:
+    """
+    跨平台打开文件
+
+    Arguments:
+        file {str} -- 文件路径
+
+    Returns:
+        bool -- 是否成功
+    """
+    if platform.system() == "Windows":
+        os.startfile(file)
+    elif platform.system() == "Darwin":
+        subprocess.call(('open', file))
+    else:
+        subprocess.call(('xdg-open', file))
 
 
 def is_exist(file) -> bool:
