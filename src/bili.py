@@ -226,6 +226,8 @@ class Bili_Live:
             self._data_.area_id = self._data_.room_data.get("area_id", -1)
 
     def _exit_(self):
+        if os.path.exists("qr.jpg"):
+            os.remove("qr.jpg")
         print("按回车结束程序 或 直接关闭窗口")
         input()
 
@@ -273,8 +275,6 @@ class Bili_Live:
             sleep(1)
         self._data_.cookies_str = json.dumps(
             self._data_.cookies, separators=(",", ":"), ensure_ascii=False
-            if os.path.exists("qr.jpg"):
-                os.remove("qr.jpg")
         )
 
     def set_live_title(self, title: str = None):
