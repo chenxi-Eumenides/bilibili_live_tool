@@ -1,8 +1,11 @@
 import json
+import os
+import platform
+import subprocess
 from dataclasses import dataclass, field
 from sys import argv
 
-from .utils import is_exist, log, version
+import requests
 
 
 def gen_list():
@@ -13,12 +16,17 @@ def gen_dict():
     return {}
 
 
+# tuple[int, int, int, str, int]
+# 0.0.1 (0, 0, 1)
+# V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
+version = (0, 3, 6)
+
+
 @dataclass
 class Config:
     version: tuple[int, int, int] = version
     self_file: str = argv[0]
     config_file: str = "config.json"
-    tui_mode: bool = False
 
     def read_config(self, data: "Data") -> bool:
         """
@@ -31,13 +39,11 @@ class Config:
             bool -- 是否成功
         """
         if not is_exist(self.config_file):
-            log("不存在config.json，请重新登录")
             return False
         try:
             with open(self.config_file, "r", encoding="utf-8") as f:
                 config: dict = json.load(f)
         except Exception:
-            log("读取config.json失败，重新登录")
             return False
         else:
             data.user_id = config.get("user_id", -1)
@@ -54,16 +60,14 @@ class Config:
             self.area = config.get("area", {})
             data.room_data = config.get("room_data", {})
         if data.cookies_str == "":
-            log("无法读取cookies，重新登录")
             return False
         try:
             data.cookies = json.loads(data.cookies_str)
         except Exception:
-            log("加载cookies失败")
             return False
         return True
 
-    def save_config(self, data: "Data"):
+    def save_config(self, data: "Data") -> bool:
         """
         保存config
 
@@ -86,9 +90,12 @@ class Config:
         try:
             with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(config, f, ensure_ascii=False, indent=4)
-        except Exception as e:
-            log("保存config.json失败", 12, str(e))
-            raise e
+        except Exception:
+            return False
+        return True
+
+    def check_config(self) -> bool:
+        return is_exist(self.config_file)
 
 
 @dataclass
@@ -113,9 +120,6 @@ class Data:
 
     def get_data_start(self) -> dict[str, str | int]:
         if self.room_id <= 0 or self.area_id <= 0 or self.csrf == "":
-            log(
-                f"参数无效(room_id={self.room_id},area_id={self.area_id},csrf={self.csrf})"
-            )
             return None
         return {
             "room_id": self.room_id,
@@ -128,7 +132,6 @@ class Data:
 
     def get_data_stop(self) -> dict[str, str]:
         if self.room_id <= 0 or self.csrf == "":
-            log(f"参数无效(room_id={self.room_id},csrf={self.csrf})")
             return None
         return {
             "room_id": self.room_id,
@@ -139,7 +142,6 @@ class Data:
 
     def get_data_title(self) -> dict[str, str]:
         if self.room_id <= 0 or self.title == "" or self.csrf == "":
-            log(f"参数无效(room_id={self.room_id},title={self.title},csrf={self.csrf})")
             return None
         return {
             "room_id": self.room_id,
@@ -151,9 +153,6 @@ class Data:
 
     def get_data_id(self) -> dict[str, str | int]:
         if self.room_id <= 0 or self.area_id <= 0 or self.csrf == "":
-            log(
-                f"参数无效(room_id={self.room_id},area_id={self.area_id},csrf={self.csrf})"
-            )
             return None
         return {
             "room_id": self.room_id,
@@ -225,11 +224,10 @@ class Data:
             area_id {int} -- 搜索分区所在的主分区id，0为只获取主分区，-1为从所有分区中搜索 (default: {0})
 
         Returns:
-            int -- 分区id，0为失败
+            int -- 分区id
         """
         if name == "":
-            log("搜索名称为空，请重新尝试！")
-            return 0
+            raise "搜索名称为空"
         for part in self.area:
             if area_id > 0:
                 if area_id == part.get("id"):
@@ -244,12 +242,11 @@ class Data:
                     if name in p.get("name"):
                         return p.get("id")
         if area_id > 0:
-            log("获取子分区id失败，请重新尝试！")
+            raise "获取子分区id失败"
         elif area_id == 0:
-            log("索取主分区id失败，请重新尝试！")
-        elif area_id == -1:
-            log(f"索取分区id失败。({name}:{area_id})")
-        return 0
+            raise "获取主分区id失败"
+        else:
+            raise "获取分区id失败"
 
     def is_valid_area_id(self, id: int) -> bool:
         """
@@ -272,3 +269,193 @@ class Data:
         if len(title) > 20 or len(title) <= 0:
             return False
         return True
+
+
+def get_version() -> str:
+    if len(version) == 3:
+        return f"V{version[0]}.{version[1]}.{version[2]}"
+    elif len(version) == 5:
+        return f"V{version[0]}.{version[1]}.{version[2]}-{version[3]}-{version[4]}"
+    else:
+        return "V0.0.1"
+
+
+def get_help_content() -> list[str]:
+    """
+    获取帮助信息
+
+    Returns:
+        list[str] -- 帮助信息列表
+    """
+    return [
+        "# 使用说明",
+        "",
+        "本程序用于快捷开启直播、结束直播、修改直播标题、修改直播分区",
+        "第一次双击exe，会生成本说明，以及4个快捷方式。之后可以运行bat快捷方式快速启动。",
+        "",
+        "近期B站网络抽风，可能不是软件问题。",
+        "",
+        f"当前版本 {get_version()}",
+        "",
+        "## 使用方法",
+        "",
+        "### 手动开播&下播",
+        "此选项手动选择分区、输入标题、确认开播&下播",
+        "",
+        "### 自动开播&下播",
+        "此选项根据已保存的配置文件，自动开播&下播。需要手动启动一次后才能正常工作",
+        "",
+        "### 修改直播标题",
+        "只修改直播标题",
+        "",
+        "### 修改直播分区",
+        "只修改直播分区",
+        "",
+        "## 命令行参数",
+        "         : 无参数，视为 manual",
+        "  auto   : 自动选择上次的分区与标题，并开播/下播",
+        "  manual : 手动选择分区与标题，并开播/下播",
+        "  area   : 更改分区",
+        "  title  : 更改标题",
+        "  info   : 仅打印直播间信息",
+        "  help   : 打印帮助信息",
+        "",
+        "## 致谢",
+        "",
+        "bilibili_live_stream_code项目 (https://github.com/ChaceQC/bilibili_live_stream_code)",
+        "",
+        "bilibili-API-collect项目 (https://github.com/SocialSisterYi/bilibili-API-collect/)",
+        "",
+        "## 作者",
+        "",
+        "chenxi_Eumenides (https://github.com/chenxi-Eumenides)",
+    ]
+
+
+def check_readme(config_file: str) -> bool:
+    if ".exe" not in argv[0]:
+        return False
+    if is_exist(config_file):
+        return False
+    content = "\n".join(get_help_content())
+    with open("使用说明.txt", "w", encoding="utf-8") as f:
+        f.writelines(content)
+    open_file("使用说明.txt")
+    return True
+
+
+def check_bat() -> bool:
+    """
+    检查快捷脚本是否已创建
+
+    Returns:
+        bool -- 是否已创建
+    """
+
+    if ".exe" not in argv[0]:
+        return False
+
+    def create_bat(bat: str, arg: str) -> bool:
+        if not is_exist(bat):
+            content = [
+                "@echo off\n",
+                f'if not exist "%~dp0{os.path.basename(argv[0])}" exit /b\n',
+                f'"%~dp0{os.path.basename(argv[0])}" "{arg}"\n',
+                "pause\n",
+            ]
+            with open(bat, "w", encoding="ansi") as f:
+                f.writelines(content)
+            return False
+        else:
+            return True
+
+    return all(
+        [
+            create_bat("自动开播&下播.bat", "auto"),
+            create_bat("手动开播&下播.bat", "manual"),
+            create_bat("更改分区.bat", "area"),
+            create_bat("更改标题.bat", "title"),
+        ]
+    )
+
+
+def open_file(file) -> bool:
+    """
+    跨平台打开文件
+
+    Arguments:
+        file {str} -- 文件路径
+
+    Returns:
+        bool -- 是否成功
+    """
+    if platform.system() == "Windows":
+        os.startfile(file)
+    elif platform.system() == "Darwin":
+        subprocess.call(("open", file))
+    else:
+        subprocess.call(("xdg-open", file))
+
+
+def is_exist(file) -> bool:
+    """
+    文件是否存在
+
+    Arguments:
+        file {str} -- 文件路径
+
+    Returns:
+        bool -- 是否存在
+    """
+    return os.path.exists(file)
+
+
+def post(url: str, params=None, cookies=None, headers=None, data=None):
+    try:
+        res = requests.post(
+            url=url, params=params, cookies=cookies, headers=headers, data=data
+        )
+    except ConnectionResetError as e:
+        raise f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}"
+    except Exception as e:
+        raise f"请求api({url})出错\n报错原因：{str(e)}"
+    else:
+        if res.status_code != 200:
+            raise f"请求api({url})出错，状态码为{res.status_code}"
+    return res
+
+
+def post_json(
+    url: str, params=None, cookies=None, headers=None, data=None
+) -> dict | list:
+    res = post(url=url, params=params, cookies=cookies, headers=headers, data=data)
+    if res.status_code == 200:
+        return res.json()
+
+
+def get(url: str, params=None, cookies=None, headers=None, data=None):
+    try:
+        res = requests.get(
+            url=url, params=params, cookies=cookies, headers=headers, data=data
+        )
+    except ConnectionResetError as e:
+        raise f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}"
+    except Exception as e:
+        raise f"请求api({url})出错\n报错原因：{str(e)}"
+    else:
+        if res.status_code != 200:
+            raise f"请求api({url})出错，状态码为{res.status_code}"
+    return res
+
+
+def get_json(
+    url: str, params=None, cookies=None, headers=None, data=None
+) -> dict | list:
+    res = get(url=url, params=params, cookies=cookies, headers=headers, data=data)
+    if res.status_code == 200:
+        return res.json()
+
+
+def get_cookies(url: str, params=None, cookies=None, headers=None, data=None) -> dict:
+    res = get(url=url, params=params, cookies=cookies, headers=headers, data=data)
+    return res.cookies.get_dict()
