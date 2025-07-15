@@ -1,5 +1,6 @@
 import atexit
 import json
+import os
 from time import sleep
 
 from qrcode import QRCode
@@ -263,13 +264,17 @@ class Bili_Live:
         qr = QRCode()
         qr.add_data(qr_url)
         qr.make(fit=True)
-        qr.make_image().show()
+        qr_image = qr.make_image()
+        qr_image.show()
+        qr_image.save("qr.jpg")
         status = False
         while not status:
             status = self._get_qr_cookies_(qr_key, status)
             sleep(1)
         self._data_.cookies_str = json.dumps(
             self._data_.cookies, separators=(",", ":"), ensure_ascii=False
+            if os.path.exists("qr.jpg"):
+                os.remove("qr.jpg")
         )
 
     def set_live_title(self, title: str = None):
