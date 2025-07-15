@@ -37,7 +37,8 @@ class Bili_Live:
                 self._data_.cookies = json.loads(cookies)
                 self._get_info_from_cookies_(self._data_.cookies)
             except Exception as e:
-                log("传入的cookies错误，无法加载", 21, str(e))
+                log("传入的cookies错误，无法加载", str(e))
+                raise e
 
         log(f"初始化完成，当前版本：{get_version()}")
         log("任何时候，按 Ctrl+C 退出程序")
@@ -162,7 +163,8 @@ class Bili_Live:
             self._data_.refresh_token = login_res.json()["data"]["refresh_token"]
             return True
         elif code == 86038:
-            log("二维码已失效，请重新启动软件", 18)
+            log("二维码已失效，请重新启动软件")
+            raise
         elif code == 86090:
             if not status:
                 log("二维码已扫描，等待确认")
@@ -210,7 +212,8 @@ class Bili_Live:
         更新直播间状态
         """
         if self._data_.room_id < 0:
-            log("room_id获取失败，请重新尝试", 3)
+            log("room_id获取失败，请重新尝试")
+            raise
         res = post_json(
             "https://api.live.bilibili.com/room/v1/Room/get_info",
             cookies=self._data_.cookies,
@@ -218,7 +221,8 @@ class Bili_Live:
             data={"room_id": self._data_.room_id},
         )
         if res.get("code") != 0:
-            log("获取直播间状态出错，不存在该直播间", 3)
+            log("获取直播间状态出错，不存在该直播间")
+            raise
         else:
             self._data_.room_data = res.get("data")
             self._data_.live_status = self._data_.room_data.get("live_status", -1)
@@ -318,7 +322,8 @@ class Bili_Live:
         elif type(id) is str:
             self._set_area_by_id_(self.get_area_id_by_name(id))
         else:
-            log("id值需要为int或str", 20)
+            log("id值需要为int或str")
+            raise
         data = post_json(
             "https://api.live.bilibili.com/room/v1/Room/update",
             cookies=self._data_.cookies,
@@ -332,9 +337,9 @@ class Bili_Live:
         else:
             log(
                 f"更改分区({self._data_.get_area_name_by_id(self._data_.area_id)[1]}:{self._data_.area_id})失败,",
-                20,
                 data.get("msg"),
             )
+            raise
 
     def get_user_status(self) -> int:
         res = get_json(
@@ -362,7 +367,8 @@ class Bili_Live:
             data=self._data_.get_data_start(),
         )
         if res["code"] != 0:
-            log("获取推流码失败，cookie可能失效，请重新获取！", 5, res)
+            log("获取推流码失败，cookie可能失效，请重新获取！", res)
+            raise
         else:
             rtmp = res["data"]["rtmp"]
             self._data_.rtmp_addr = rtmp["addr"]
@@ -385,12 +391,14 @@ class Bili_Live:
                 "下播失败，请手动前往网页下播：https://link.bilibili.com/p/center/index#/my-room/start-live",
                 21,
             )
+            raise
         else:
             log("已下播")
         return res
 
     def save_config(self):
-        if self._data_.cookies_str != "":
+        print("")
+        if self._data_.cookies_str != "" and self._data_.user_id != -1:
             log("正在保存配置...")
             self._config_.save_config(self._data_)
         else:
@@ -400,7 +408,18 @@ class Bili_Live:
         return self._data_.live_status
 
     def get_rtmp(self) -> tuple[str, str]:
-        return self._data_.rtmp_addr, self._data_.rtmp_code
+        log("推流地址：")
+        log("")
+        log(self._data_.rtmp_addr)
+        log("")
+        log("推流码：")
+        log("")
+        log(self._data_.rtmp_code)
+        log("")
+        if self._data_.rtmp_code == self._data_.rtmp_code_old:
+            log("推流码无变化，可以直接开播。")
+        else:
+            log("请将 推流地址 和 推流码 复制到obs直播配置中，再开播。")
 
     def get_area_id_by_name(self, name: str) -> int:
         return self._data_.get_area_id_by_name(name=name, area_id=-1)
