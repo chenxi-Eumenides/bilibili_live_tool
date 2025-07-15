@@ -1,9 +1,9 @@
-from os import path, startfile
+import os
+import platform
+import subprocess
 from sys import argv, exit
 
 import requests
-import subprocess
-import platform
 
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
@@ -80,28 +80,22 @@ def print_help():
         log(line)
 
 
-def log(string: str, reason: int = -1, error_data: any = None, func=None):
+def log(string: str, error_reason: any = None) -> bool:
     """
     打印输出
 
     :param string: 输出字符串
-    :param reason: 报错id, defaults to -1
     :param error_data: 报错信息, defaults to None
     """
-    if reason == -1:
-        print(string)
-    elif reason == 0:
-        pass
+    if error_reason is None:
+        print(f"{string}")
+        return True
     else:
-        if error_data is None:
-            s = f"{string}"
-        else:
-            s = f"{string}\n报错原因：{str(error_data)}"
-        print(s)
-        exit(reason)
+        print(f"{string}\n报错原因：{str(error_reason)}")
+        return False
 
 
-def check_readme(config_file: str):
+def check_readme(config_file: str) -> bool:
     if ".exe" not in argv[0]:
         return False
     if is_exist(config_file):
@@ -128,8 +122,8 @@ def check_bat() -> bool:
         if not is_exist(bat):
             content = [
                 "@echo off\n",
-                f'if not exist "%~dp0{path.basename(argv[0])}" exit /b\n',
-                f'"%~dp0{path.basename(argv[0])}" "{arg}"\n',
+                f'if not exist "%~dp0{os.path.basename(argv[0])}" exit /b\n',
+                f'"%~dp0{os.path.basename(argv[0])}" "{arg}"\n',
                 "pause\n",
             ]
             with open(bat, "w", encoding="ansi") as f:
@@ -161,9 +155,9 @@ def open_file(file) -> bool:
     if platform.system() == "Windows":
         os.startfile(file)
     elif platform.system() == "Darwin":
-        subprocess.call(('open', file))
+        subprocess.call(("open", file))
     else:
-        subprocess.call(('xdg-open', file))
+        subprocess.call(("xdg-open", file))
 
 
 def is_exist(file) -> bool:
@@ -176,7 +170,7 @@ def is_exist(file) -> bool:
     Returns:
         bool -- 是否存在
     """
-    return path.exists(file)
+    return os.path.exists(file)
 
 
 def post(url: str, params=None, cookies=None, headers=None, data=None):
@@ -185,12 +179,15 @@ def post(url: str, params=None, cookies=None, headers=None, data=None):
             url=url, params=params, cookies=cookies, headers=headers, data=data
         )
     except ConnectionResetError as e:
-        log(f"请求api({url})过多，请稍后再尝试。", 1, str(e))
+        log(f"请求api({url})过多，请稍后再尝试。", str(e))
+        raise e
     except Exception as e:
-        log(f"请求api({url})出错", 1, str(e))
+        log(f"请求api({url})出错", str(e))
+        raise e
     else:
         if res.status_code != 200:
-            log(f"请求api({url})出错，状态码为{res.status_code}", 2)
+            log(f"请求api({url})出错，状态码为{res.status_code}")
+            raise
     return res
 
 
@@ -208,11 +205,12 @@ def get(url: str, params=None, cookies=None, headers=None, data=None):
             url=url, params=params, cookies=cookies, headers=headers, data=data
         )
     except Exception as e:
-        log(f"请求api({url})出错", 1, str(e))
-        return None
+        log(f"请求api({url})出错", str(e))
+        raise e
     else:
         if res.status_code != 200:
-            log(f"请求api({url})出错，状态码为{res.status_code}", 2)
+            log(f"请求api({url})出错，状态码为{res.status_code}")
+            raise
     return res
 
 
