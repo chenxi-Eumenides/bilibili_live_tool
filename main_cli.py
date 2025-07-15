@@ -1,6 +1,6 @@
 from sys import argv
 
-from bili_cli import Bili_Live
+from src.bili_cli import Bili_Live
 
 
 def help(live: Bili_Live):
