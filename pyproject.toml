@@ -1,6 +1,6 @@
 [project]
 name = "bilibili_live_tool"
-version = "0.3.6"
+version = "0.3.7"
 description = "a simple tool to start or stop bilibili live and get stream code."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -8,6 +8,7 @@ dependencies = [
     "image>=1.5.33",
     "qrcode>=8.2",
     "requests>=2.32.3",
+    "windows-curses>=2.4.1",
 ]
 
 [dependency-groups]
