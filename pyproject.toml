@@ -8,7 +8,6 @@ dependencies = [
     "image>=1.5.33",
     "qrcode>=8.2",
     "requests>=2.32.3",
-    "windows-curses>=2.4.1",
 ]
 
 [dependency-groups]
