@@ -5,8 +5,9 @@ from time import sleep
 
 from qrcode import QRCode
 
-from .lib import Config, Data
-from .utils import (
+from .lib import (
+    Config,
+    Data,
     check_bat,
     check_readme,
     get,
@@ -14,7 +15,6 @@ from .utils import (
     get_json,
     get_version,
     is_exist,
-    log,
     post_json,
 )
 
@@ -37,11 +37,11 @@ class Bili_Live:
                 self._data_.cookies = json.loads(cookies)
                 self._get_info_from_cookies_(self._data_.cookies)
             except Exception as e:
-                log("传入的cookies错误，无法加载", str(e))
+                print(f"传入的cookies错误，无法加载\n报错原因：{str(e)}")
                 raise e
 
-        log(f"初始化完成，当前版本：{get_version()}")
-        log("任何时候，按 Ctrl+C 退出程序")
+        print(f"初始化完成，当前版本：{get_version()}")
+        print("任何时候，按 Ctrl+C 退出程序")
         pass
 
     def _get_area_id_from_user_choose_(self) -> int:
@@ -55,47 +55,45 @@ class Bili_Live:
         id = 0
         while id <= 0:
             # 主分区
-            log("请选择主分区：")
+            print("请选择主分区：")
             root_area = self._data_.get_area_name()
             for index, data in enumerate(root_area):
                 end = "\n" if index % 4 == print_max - 1 else " "
                 print(f"{index + 1:2}: {data:<8}", end=end)
-            log("\n请输入要选择的主分区 序号 或 名称：")
+            print("\n请输入要选择的主分区 序号 或 名称：")
             select = input()
             while select == "":
-                log("输入为空，重新输入主分区 序号 或 名称：")
+                print("输入为空，重新输入主分区 序号 或 名称：")
                 select = input()
             try:
                 select = int(select)
             except Exception:
                 # 输入了字符串
-                select = self._data_.get_area_id_by_name(select)
+                select = self.get_area_id_by_name(select)
             else:
                 # 输入了序号
-                select = self._data_.get_area_id_by_name(root_area[select - 1])
+                select = self.get_area_id_by_name(root_area[select - 1])
             root_id = select
 
             # 子分区
-            log("\n子分区：")
+            print("\n子分区：")
             child_area = self._data_.get_area_name(root_id)
             for index, data in enumerate(child_area):
                 end = "\n" if index % 4 == print_max - 1 else " "
                 print(f"{index + 1:>2}: {data:<6}", end=end)
-            log("\n请输入要选择的子分区 序号 或 名称（回车重新选择主分区）：")
+            print("\n请输入要选择的子分区 序号 或 名称（回车重新选择主分区）：")
             select = input()
             if select == "":
-                log("重新选择主分区")
+                print("重新选择主分区")
                 continue
             try:
                 select = int(select)
             except Exception:
                 # 输入了字符串
-                select = self._data_.get_area_id_by_name(select, root_id)
+                select = self.get_area_id_by_name(select, root_id)
             else:
                 # 输入了序号
-                select = self._data_.get_area_id_by_name(
-                    child_area[select - 1], root_id
-                )
+                select = self.get_area_id_by_name(child_area[select - 1], root_id)
             id = select
         return id
 
@@ -106,11 +104,11 @@ class Bili_Live:
         Returns:
             str -- 直播标题
         """
-        log(f"当前标题为： {self._data_.room_data.get('title')}")
-        log("请输入标题，标题不得超过20字（直接回车为原标题）：")
+        print(f"当前标题为： {self._data_.room_data.get('title')}")
+        print("请输入标题，标题不得超过20字（直接回车为原标题）：")
         new_title = input()
         while len(new_title) > 20:
-            log("标题不得超过20字，请重新输入（直接回车为原标题）：")
+            print("标题不得超过20字，请重新输入（直接回车为原标题）：")
             new_title = input()
         return new_title
 
@@ -163,11 +161,10 @@ class Bili_Live:
             self._data_.refresh_token = login_res.json()["data"]["refresh_token"]
             return True
         elif code == 86038:
-            log("二维码已失效，请重新启动软件")
-            raise
+            raise "二维码已失效，请重新启动软件"
         elif code == 86090:
             if not status:
-                log("二维码已扫描，等待确认")
+                print("二维码已扫描，等待确认")
         return False
 
     def _update_area_(self):
@@ -212,7 +209,7 @@ class Bili_Live:
         更新直播间状态
         """
         if self._data_.room_id < 0:
-            log("room_id获取失败，请重新尝试")
+            print("room_id获取失败，请重新尝试")
             raise
         res = post_json(
             "https://api.live.bilibili.com/room/v1/Room/get_info",
@@ -221,7 +218,7 @@ class Bili_Live:
             data={"room_id": self._data_.room_id},
         )
         if res.get("code") != 0:
-            log("获取直播间状态出错，不存在该直播间")
+            print("获取直播间状态出错，不存在该直播间")
             raise
         else:
             self._data_.room_data = res.get("data")
@@ -242,6 +239,7 @@ class Bili_Live:
         if not is_exist(self._config_.config_file):
             self.qr_login()
         elif not self.read_config():
+            print("读取config.json失败，请重新登陆")
             self.qr_login()
         else:
             if self.get_user_status() != 0:
@@ -291,22 +289,24 @@ class Bili_Live:
         if title is None:
             title = self._get_live_title_from_user_()
         if len(title) <= 0 or not self._data_.is_valid_live_title(title):
-            log("非法标题，跳过。")
+            print("非法标题，跳过。")
             return
         self._data_.title = title
+        if (data := self._data_.get_data_title()) is None:
+            raise f"数据错误(room_id={self._data_.room_id},title={self._data_.title},csrf={self._data_.csrf})"
         res = post_json(
             url="https://api.live.bilibili.com/room/v1/Room/update",
             headers=self._data_.get_header(),
             cookies=self._data_.cookies,
-            data=self._data_.get_data_title(),
+            data=data,
         )
         if res.get("code") == 0:
             if (status := res.get("data").get("audit_title_status")) == 0:
-                log("更改标题成功。")
+                print("更改标题成功。")
             elif status == 2:
-                log("更改标题成功，正在审核中。")
+                print("更改标题成功，正在审核中。")
         else:
-            log(f"更改标题失败，{res.get('msg')}")
+            print(f"更改标题失败，{res.get('msg')}")
 
     def set_live_area(self, id: int | str = None):
         """
@@ -315,6 +315,7 @@ class Bili_Live:
         Keyword Arguments:
             id {int|str} -- 分区id或分区名称 (default: {None})
         """
+        # 获取分区id
         if id is None:
             self._set_area_by_id_(self._get_area_id_from_user_choose_())
         elif type(id) is int:
@@ -322,24 +323,24 @@ class Bili_Live:
         elif type(id) is str:
             self._set_area_by_id_(self.get_area_id_by_name(id))
         else:
-            log("id值需要为int或str")
+            print("id值需要为int或str")
             raise
+        # 发送分区api
+        if (data := self._data_.get_data_id()) is None:
+            raise f"数据错误(room_id={self._data_.room_id},area_id={self._data_.area_id},csrf={self._data_.csrf})"
         data = post_json(
             "https://api.live.bilibili.com/room/v1/Room/update",
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
-            data=self._data_.get_data_id(),
+            data=data,
         )
+        # api结果
+        if (area_name := self._data_.get_area_name_by_id(self._data_.area_id)) is None:
+            print(f"无法找到分区名 (area_id={self._data_.area_id})")
         if data.get("code") == 0:
-            log(
-                f"更改分区({self._data_.get_area_name_by_id(self._data_.area_id)[1]}:{self._data_.area_id})成功！"
-            )
+            print(f"更改分区({area_name[1]}:{self._data_.area_id})成功！")
         else:
-            log(
-                f"更改分区({self._data_.get_area_name_by_id(self._data_.area_id)[1]}:{self._data_.area_id})失败,",
-                data.get("msg"),
-            )
-            raise
+            raise f"更改分区({area_name[1]}:{self._data_.area_id})失败\n报错原因：{data.get('msg')}"
 
     def get_user_status(self) -> int:
         res = get_json(
@@ -353,73 +354,76 @@ class Bili_Live:
             self._data_.cookies = {}
             self._data_.cookies_str = ""
             self._data_.cookies_str_old = ""
-            log("cookies已过期，请重新登录")
+            print("cookies已过期，请重新登录")
         return res.get("code")
 
     def start_live(self):
         """
         启动直播
         """
+        if (data := self._data_.get_data_start()) is None:
+            raise f"数据错误(room_id={self._data_.room_id},area_id={self._data_.area_id},csrf={self._data_.csrf})"
         res = post_json(
             "https://api.live.bilibili.com/room/v1/Room/startLive",
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
-            data=self._data_.get_data_start(),
+            data=data,
         )
         if res["code"] != 0:
-            log("获取推流码失败，cookie可能失效，请重新获取！", res)
+            print(f"获取推流码失败，cookie可能失效，请重新获取！\n报错原因：{res}")
             raise
         else:
             rtmp = res["data"]["rtmp"]
             self._data_.rtmp_addr = rtmp["addr"]
             self._data_.rtmp_code = rtmp["code"]
-            log("已开播")
+            print("已开播")
         return res
 
     def stop_live(self):
         """
         停止直播
         """
+        if (data := self._data_.get_data_stop()) is None:
+            raise f"数据错误(room_id={self._data_.room_id},csrf={self._data_.csrf})"
         res = post_json(
             "https://api.live.bilibili.com/room/v1/Room/stopLive",
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
-            data=self._data_.get_data_stop(),
+            data=data,
         )
         if res["code"] != 0:
-            log(
-                "下播失败，请手动前往网页下播：https://link.bilibili.com/p/center/index#/my-room/start-live",
-                21,
+            print(
+                "下播失败，请手动前往网页下播：https://link.bilibili.com/p/center/index#/my-room/start-live"
             )
             raise
         else:
-            log("已下播")
+            print("已下播")
         return res
 
     def save_config(self):
         print("")
         if self._data_.cookies_str != "" and self._data_.user_id != -1:
-            log("正在保存配置...")
+            print("正在保存配置...")
             self._config_.save_config(self._data_)
         else:
-            log("无数据，跳过保存。")
+            print("无数据，跳过保存。")
 
     def get_live_status(self) -> int:
         return self._data_.live_status
 
     def get_rtmp(self) -> tuple[str, str]:
-        log("推流地址：")
-        log("")
-        log(self._data_.rtmp_addr)
-        log("")
-        log("推流码：")
-        log("")
-        log(self._data_.rtmp_code)
-        log("")
+        print("推流地址：")
+        print("")
+        print(self._data_.rtmp_addr)
+        print("")
+        print("推流码：")
+        print("")
+        print(self._data_.rtmp_code)
+        print("")
         if self._data_.rtmp_code == self._data_.rtmp_code_old:
-            log("推流码无变化，可以直接开播。")
+            print("推流码无变化，可以直接开播。")
         else:
-            log("请将 推流地址 和 推流码 复制到obs直播配置中，再开播。")
+            print("请将 推流地址 和 推流码 复制到obs直播配置中，再开播。")
 
     def get_area_id_by_name(self, name: str) -> int:
         return self._data_.get_area_id_by_name(name=name, area_id=-1)
