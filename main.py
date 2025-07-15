@@ -7,9 +7,15 @@ from src.utils import is_exist, log
 def rtmp(live: Bili_Live):
     rtmp_url, rtmp_code = live.get_rtmp()
     if rtmp_code == live._data_.rtmp_code_old:
-        log("推流码无变化，可以直接开播。")
+        log("推流地址：")
+        print("")
+        log(rtmp_url)
+        print("")
+        log("推流码：")
         print("")
         log(rtmp_code)
+        print("")
+        log("推流码无变化，可以直接开播。")
         print("")
     else:
         log("推流地址：")
