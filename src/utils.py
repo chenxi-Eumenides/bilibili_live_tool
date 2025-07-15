@@ -8,7 +8,7 @@ import platform
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
 # V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
-version = (0, 3, 5)
+version = (0, 3, 6)
 
 
 def get_version() -> str:
