@@ -4,32 +4,6 @@ from src.bili import Bili_Live
 from src.utils import is_exist, log
 
 
-def rtmp(live: Bili_Live):
-    rtmp_url, rtmp_code = live.get_rtmp()
-    if rtmp_code == live._data_.rtmp_code_old:
-        log("推流地址：")
-        print("")
-        log(rtmp_url)
-        print("")
-        log("推流码：")
-        print("")
-        log(rtmp_code)
-        print("")
-        log("推流码无变化，可以直接开播。")
-        print("")
-    else:
-        log("推流地址：")
-        print("")
-        log(rtmp_url)
-        print("")
-        log("推流码：")
-        print("")
-        log(rtmp_code)
-        print("")
-        log("请将 推流地址 和 推流码 复制到obs直播配置中，再开播。")
-        print("")
-
-
 def help(live: Bili_Live):
     log(live.get_help_info())
 
@@ -53,7 +27,7 @@ def manual(live: Bili_Live):
         print("")
         live.start_live()
         print("")
-        rtmp(live)
+        live.get_rtmp()
     elif status == 1:
         live.stop_live()
     else:
@@ -65,7 +39,7 @@ def auto(live: Bili_Live):
     if status == 0 or status == 2:
         live.start_live()
         print("")
-        rtmp(live)
+        live.get_rtmp()
     elif status == 1:
         live.stop_live()
     else:
@@ -76,9 +50,9 @@ if __name__ == "__main__":
     live = Bili_Live(config_file="config.json")
     live.login()
 
-    print("")
+    log("")
     log(live.get_room_info())
-    print("")
+    log("")
 
     option = argv[1] if len(argv) > 1 else None
     if option == "auto":
