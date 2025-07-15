@@ -1,11 +1,10 @@
 from sys import argv
 
 from src.bili import Bili_Live
-from src.utils import is_exist, log
 
 
 def help(live: Bili_Live):
-    log(live.get_help_info())
+    print(live.get_help_info())
 
 
 def title(live: Bili_Live):
@@ -50,9 +49,9 @@ if __name__ == "__main__":
     live = Bili_Live(config_file="config.json")
     live.login()
 
-    log("")
-    log(live.get_room_info())
-    log("")
+    print("")
+    print(live.get_room_info())
+    print("")
 
     option = argv[1] if len(argv) > 1 else None
     if option == "auto":
@@ -68,7 +67,7 @@ if __name__ == "__main__":
     elif option == "info":
         pass
     else:
-        if is_exist(live._config_.config_file):
+        if live._config_.check_config():
             auto(live)
         else:
             manual(live)
