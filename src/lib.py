@@ -18,8 +18,7 @@ class Config:
     version: tuple[int, int, int] = version
     self_file: str = argv[0]
     config_file: str = "config.json"
-    log_file: str = "log.txt"
-    log_flag: bool = False
+    tui_mode: bool = False
 
     def read_config(self, data: "Data") -> bool:
         """
@@ -89,6 +88,7 @@ class Config:
                 json.dump(config, f, ensure_ascii=False, indent=4)
         except Exception as e:
             log("保存config.json失败", 12, str(e))
+            raise e
 
 
 @dataclass
@@ -114,9 +114,9 @@ class Data:
     def get_data_start(self) -> dict[str, str | int]:
         if self.room_id <= 0 or self.area_id <= 0 or self.csrf == "":
             log(
-                f"参数无效(room_id={self.room_id},area_id={self.area_id},csrf={self.csrf})",
-                3,
+                f"参数无效(room_id={self.room_id},area_id={self.area_id},csrf={self.csrf})"
             )
+            return None
         return {
             "room_id": self.room_id,
             "platform": "pc_link",
@@ -128,10 +128,8 @@ class Data:
 
     def get_data_stop(self) -> dict[str, str]:
         if self.room_id <= 0 or self.csrf == "":
-            log(
-                f"参数无效(room_id={self.room_id},csrf={self.csrf})",
-                3,
-            )
+            log(f"参数无效(room_id={self.room_id},csrf={self.csrf})")
+            return None
         return {
             "room_id": self.room_id,
             "platform": "pc_link",
@@ -141,10 +139,8 @@ class Data:
 
     def get_data_title(self) -> dict[str, str]:
         if self.room_id <= 0 or self.title == "" or self.csrf == "":
-            log(
-                f"参数无效(room_id={self.room_id},title={self.title},csrf={self.csrf})",
-                3,
-            )
+            log(f"参数无效(room_id={self.room_id},title={self.title},csrf={self.csrf})")
+            return None
         return {
             "room_id": self.room_id,
             "platform": "pc_link",
@@ -156,9 +152,9 @@ class Data:
     def get_data_id(self) -> dict[str, str | int]:
         if self.room_id <= 0 or self.area_id <= 0 or self.csrf == "":
             log(
-                f"参数无效(room_id={self.room_id},area_id={self.area_id},csrf={self.csrf})",
-                3,
+                f"参数无效(room_id={self.room_id},area_id={self.area_id},csrf={self.csrf})"
             )
+            return None
         return {
             "room_id": self.room_id,
             "area_id": self.area_id,
