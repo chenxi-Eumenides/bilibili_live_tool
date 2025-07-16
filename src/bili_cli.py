@@ -35,7 +35,7 @@ class Bili_Live:
         if cookies:
             try:
                 self._data_.cookies = json.loads(cookies)
-                self._get_info_from_cookies_(self._data_.cookies)
+                self._get_info_from_cookies_()
             except Exception as e:
                 print(f"传入的cookies错误，无法加载\n报错原因：{str(e)}")
                 raise e
@@ -130,11 +130,14 @@ class Bili_Live:
     def _get_info_from_cookies_(self):
         self._data_.csrf = self._data_.cookies.get("bili_jct")
         self._data_.user_id = self._data_.cookies.get("DedeUserID")
+        room_data = get_json(
+            url=f"https://api.live.bilibili.com/room/v2/Room/room_id_by_uid?uid={self._data_.user_id}",
+            headers={"User-Agent": self._data_.get_user_agent()},
+        )
+        if room_data.get("code") != 0:
+            raise "获取直播间号失败，检查是否开通直播间。"
         self._data_.room_id = (
-            get_json(
-                url=f"https://api.live.bilibili.com/room/v2/Room/room_id_by_uid?uid={self._data_.user_id}",
-                headers={"User-Agent": self._data_.get_user_agent()},
-            )
+            room_data
             .get("data")
             .get("room_id")
         )
