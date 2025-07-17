@@ -117,6 +117,7 @@ class Data:
     area: list[dict[str, str | int | dict[str, str | int]]] = field(
         default_factory=gen_list
     )
+    max_title_num: int = 40
 
     def get_data_start(self) -> dict[str, str | int]:
         if self.room_id <= 0 or self.area_id <= 0 or self.csrf == "":
@@ -227,26 +228,31 @@ class Data:
             int -- 分区id
         """
         if name == "":
-            raise "搜索名称为空"
+            return 0
+            raise Exception("搜索名称为空")
         for part in self.area:
             if area_id > 0:
+                # 指定子分区id
                 if area_id == part.get("id"):
                     for p in part.get("list"):
                         if name in p.get("name"):
                             return p.get("id")
             elif area_id == 0:
+                # 指定主分区
                 if name in part.get("name"):
                     return part.get("id")
             elif area_id == -1:
+                # 指定所有分区
                 for p in part.get("list"):
                     if name in p.get("name"):
                         return p.get("id")
+        return 0
         if area_id > 0:
-            raise "获取子分区id失败"
+            raise Exception("获取子分区id失败")
         elif area_id == 0:
-            raise "获取主分区id失败"
+            raise Exception("获取主分区id失败")
         else:
-            raise "获取分区id失败"
+            raise Exception("获取分区id失败")
 
     def is_valid_area_id(self, id: int) -> bool:
         """
@@ -266,7 +272,7 @@ class Data:
     def is_valid_live_title(self, title: str) -> bool:
         if title is None:
             return False
-        if len(title) > 20 or len(title) <= 0:
+        if len(title) > self.max_title_num or len(title) <= 0:
             return False
         return True
 
@@ -379,15 +385,12 @@ def check_bat() -> bool:
     )
 
 
-def open_file(file) -> bool:
+def open_file(file):
     """
     跨平台打开文件
 
     Arguments:
         file {str} -- 文件路径
-
-    Returns:
-        bool -- 是否成功
     """
     if platform.system() == "Windows":
         os.startfile(file)
@@ -416,12 +419,12 @@ def post(url: str, params=None, cookies=None, headers=None, data=None):
             url=url, params=params, cookies=cookies, headers=headers, data=data
         )
     except ConnectionResetError as e:
-        raise f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}"
+        raise Exception(f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}")
     except Exception as e:
-        raise f"请求api({url})出错\n报错原因：{str(e)}"
+        raise Exception(f"请求api({url})出错\n报错原因：{str(e)}")
     else:
         if res.status_code != 200:
-            raise f"请求api({url})出错，状态码为{res.status_code}"
+            raise Exception(f"请求api({url})出错，状态码为{res.status_code}")
     return res
 
 
@@ -439,12 +442,12 @@ def get(url: str, params=None, cookies=None, headers=None, data=None):
             url=url, params=params, cookies=cookies, headers=headers, data=data
         )
     except ConnectionResetError as e:
-        raise f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}"
+        raise Exception(f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}")
     except Exception as e:
-        raise f"请求api({url})出错\n报错原因：{str(e)}"
+        raise Exception(f"请求api({url})出错\n报错原因：{str(e)}")
     else:
         if res.status_code != 200:
-            raise f"请求api({url})出错，状态码为{res.status_code}"
+            raise Exception(f"请求api({url})出错，状态码为{res.status_code}")
     return res
 
 
