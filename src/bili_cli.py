@@ -69,15 +69,26 @@ class Bili_Live:
                 select = int(select)
             except Exception:
                 # 输入了字符串
-                select = self.get_area_id_by_name(select)
+                area_id = self._data_.get_area_id_by_name(select, area_id=0)
+                if area_id == 0:
+                    # 输入的不是主分区
+                    area_id = self._data_.get_area_id_by_name(select, area_id=-1)
+                    if area_id == 0:
+                        raise Exception("输入错误，未找到分区名")
+                    id = area_id
+                    break
             else:
                 # 输入了序号
-                select = self.get_area_id_by_name(root_area[select - 1])
-            root_id = select
+                area_id = self._data_.get_area_id_by_name(
+                    root_area[select - 1], area_id=0
+                )
+            root_id = area_id
 
             # 子分区
-            print("\n子分区：")
             child_area = self._data_.get_area_name(root_id)
+            if child_area == []:
+                raise Exception("子分区获取错误，检查主分区id是否正确")
+            print("\n请选择子分区：")
             for index, data in enumerate(child_area):
                 end = "\n" if index % 4 == print_max - 1 else " "
                 print(f"{index + 1:>2}: {data:<6}", end=end)
@@ -90,11 +101,13 @@ class Bili_Live:
                 select = int(select)
             except Exception:
                 # 输入了字符串
-                select = self.get_area_id_by_name(select, root_id)
+                area_id = self._data_.get_area_id_by_name(select, root_id)
             else:
                 # 输入了序号
-                select = self.get_area_id_by_name(child_area[select - 1], root_id)
-            id = select
+                area_id = self._data_.get_area_id_by_name(
+                    child_area[select - 1], root_id
+                )
+            id = area_id
         return id
 
     def _get_live_title_from_user_(self) -> str:
@@ -105,10 +118,14 @@ class Bili_Live:
             str -- 直播标题
         """
         print(f"当前标题为： {self._data_.room_data.get('title')}")
-        print("请输入标题，标题不得超过20字（直接回车为原标题）：")
+        print(
+            f"请输入标题，标题不得超过{self._data_.max_title_num}字（直接回车为原标题）："
+        )
         new_title = input()
         while len(new_title) > 20:
-            print("标题不得超过20字，请重新输入（直接回车为原标题）：")
+            print(
+                f"标题不得超过{self._data_.max_title_num}字，请重新输入（直接回车为原标题）："
+            )
             new_title = input()
         return new_title
 
@@ -135,12 +152,8 @@ class Bili_Live:
             headers={"User-Agent": self._data_.get_user_agent()},
         )
         if room_data.get("code") != 0:
-            raise "获取直播间号失败，检查是否开通直播间。"
-        self._data_.room_id = (
-            room_data
-            .get("data")
-            .get("room_id")
-        )
+            raise Exception("获取直播间号失败，检查是否开通直播间。")
+        self._data_.room_id = room_data.get("data").get("room_id")
 
     def _get_qr_cookies_(self, qr_key: str, status: bool) -> dict:
         """
@@ -164,7 +177,7 @@ class Bili_Live:
             self._data_.refresh_token = login_res.json()["data"]["refresh_token"]
             return True
         elif code == 86038:
-            raise "二维码已失效，请重新启动软件"
+            raise Exception("二维码已失效，请重新启动软件")
         elif code == 86090:
             if not status:
                 print("二维码已扫描，等待确认")
@@ -204,8 +217,8 @@ class Bili_Live:
                 "list": part_results,
             }
             results.append(result)
-
-        self._data_.area = results
+        if len(results) > 0:
+            self._data_.area = results
 
     def _update_room_data_(self):
         """
@@ -296,7 +309,9 @@ class Bili_Live:
             return
         self._data_.title = title
         if (data := self._data_.get_data_title()) is None:
-            raise f"数据错误(room_id={self._data_.room_id},title={self._data_.title},csrf={self._data_.csrf})"
+            raise Exception(
+                f"数据错误(room_id={self._data_.room_id},title={self._data_.title},csrf={self._data_.csrf})"
+            )
         res = post_json(
             url="https://api.live.bilibili.com/room/v1/Room/update",
             headers=self._data_.get_header(),
@@ -326,11 +341,12 @@ class Bili_Live:
         elif type(id) is str:
             self._set_area_by_id_(self.get_area_id_by_name(id))
         else:
-            print("id值需要为int或str")
-            raise
+            raise Exception("id值需要为int或str")
         # 发送分区api
         if (data := self._data_.get_data_id()) is None:
-            raise f"数据错误(room_id={self._data_.room_id},area_id={self._data_.area_id},csrf={self._data_.csrf})"
+            raise Exception(
+                f"数据错误(room_id={self._data_.room_id},area_id={self._data_.area_id},csrf={self._data_.csrf})"
+            )
         data = post_json(
             "https://api.live.bilibili.com/room/v1/Room/update",
             cookies=self._data_.cookies,
@@ -343,7 +359,9 @@ class Bili_Live:
         if data.get("code") == 0:
             print(f"更改分区({area_name[1]}:{self._data_.area_id})成功！")
         else:
-            raise f"更改分区({area_name[1]}:{self._data_.area_id})失败\n报错原因：{data.get('msg')}"
+            raise Exception(
+                f"更改分区({area_name[1]}:{self._data_.area_id})失败\n报错原因：{data.get('msg')}"
+            )
 
     def get_user_status(self) -> int:
         res = get_json(
@@ -365,7 +383,9 @@ class Bili_Live:
         启动直播
         """
         if (data := self._data_.get_data_start()) is None:
-            raise f"数据错误(room_id={self._data_.room_id},area_id={self._data_.area_id},csrf={self._data_.csrf})"
+            raise Exception(
+                f"数据错误(room_id={self._data_.room_id},area_id={self._data_.area_id},csrf={self._data_.csrf})"
+            )
         res = post_json(
             "https://api.live.bilibili.com/room/v1/Room/startLive",
             cookies=self._data_.cookies,
@@ -387,7 +407,9 @@ class Bili_Live:
         停止直播
         """
         if (data := self._data_.get_data_stop()) is None:
-            raise f"数据错误(room_id={self._data_.room_id},csrf={self._data_.csrf})"
+            raise Exception(
+                f"数据错误(room_id={self._data_.room_id},csrf={self._data_.csrf})"
+            )
         res = post_json(
             "https://api.live.bilibili.com/room/v1/Room/stopLive",
             cookies=self._data_.cookies,
