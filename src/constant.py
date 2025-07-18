@@ -1,0 +1,16 @@
+# 常量
+
+# tuple[int, int, int, str, int]
+# 0.0.1 (0, 0, 1)
+# V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
+VERSION = (0, 3, 8, "alpha", 2)
+
+README_FILE = "使用说明.txt"
+CONFIG_FILE = "config.json"
+
+APP_KEY: str = "aae92bc66f3edfab"
+APP_SECRET: str = "af125a0d5279fd576c1b4418a3e8276d"
+LIVEHIME_BUILD: str = "9343"
+LIVEHIME_VERSION: str = "7.17.0.9343"
+
+TITLE_MAX_CHAR: int = 40
