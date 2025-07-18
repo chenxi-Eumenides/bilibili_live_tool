@@ -27,8 +27,7 @@ git clone https://github.com/chenxi-Eumenides/bilibili_live_tool.git
 # 安装依赖
 uv sync
 # 运行脚本
-uv run main.py
-# alpha版本请手动修改脚本
+uv run main_cli.py
 # 扫码登录
 ```
 
@@ -73,3 +72,5 @@ ARGS:
 bilibili_live_stream_code项目 (https://github.com/ChaceQC/bilibili_live_stream_code)
 
 bilibili-API-collect项目 (https://github.com/SocialSisterYi/bilibili-API-collect/)
+
+StartLive项目 (https://github.com/Radekyspec/StartLive)
