@@ -4,6 +4,9 @@ import platform
 import subprocess
 from dataclasses import dataclass, field
 from sys import argv
+from hashlib import md5
+from time import time
+from urllib.parse import urlencode
 
 import requests
 
@@ -118,6 +121,10 @@ class Data:
         default_factory=gen_list
     )
     max_title_num: int = 40
+    APP_KEY: str = "aae92bc66f3edfab"
+    APP_SECRET: str = "af125a0d5279fd576c1b4418a3e8276d"
+    LIVEHIME_BUILD: str = "9343"
+    LIVEHIME_VERSION: str = "7.17.0.9343"
 
     def get_data_start(self) -> dict[str, str | int]:
         if self.room_id <= 0 or self.area_id <= 0 or self.csrf == "":
@@ -126,9 +133,9 @@ class Data:
             "room_id": self.room_id,
             "platform": "pc_link",
             "area_v2": self.area_id,
-            "backup_stream": "0",
             "csrf_token": self.csrf,
             "csrf": self.csrf,
+            "type": 2,
         }
 
     def get_data_stop(self) -> dict[str, str]:
@@ -182,6 +189,37 @@ class Data:
             "sec-fetch-site": "same-site",
             "user-agent": self.get_user_agent(),
         }
+
+    def sign_data(self, data: dict):
+        """
+        对数据签名
+
+        1、添加appkey字段
+
+        2、按照参数的 Key 重新排序
+
+        3、进行 url query 序列化，并拼接与之对应的appsec (盐) 进行 md5 Hash 运算（32-bit 字符小写）
+        
+        4、尾部增添sign字段，它的 Value 为上一步计算所得的 hash
+        """
+        # 添加必要的字段
+        data.update({
+            "access_key":"",
+            "ts": str(int(time())),
+            "build": self.LIVEHIME_BUILD,
+            "version": self.LIVEHIME_VERSION,
+            'appkey': self.APP_KEY,
+        })
+        # 按照 key 重排参数
+        signed_data = dict(sorted(data.items()))
+        # 签名
+        sign = md5(
+            (urlencode(signed_data, encoding="utf-8") + self.APP_SECRET).encode(
+                encoding="utf-8")).hexdigest()
+        # 添加到尾部
+        signed_data.update({'sign': sign})
+        return signed_data
+
 
     def get_area_name_by_id(self, id: int) -> tuple[str, str]:
         """
