@@ -79,9 +79,13 @@ class Bili_Live:
                     break
             else:
                 # 输入了序号
-                area_id = self._data_.get_area_id_by_name(
-                    root_area[select - 1], area_id=0
-                )
+                if 1 <= select <= len(root_area):
+                    area_id = self._data_.get_area_id_by_name(
+                        root_area[select - 1], area_id=0
+                    )
+                else:
+                    print("序号不在范围内，请重新输入。")
+                    continue
             root_id = area_id
 
             # 子分区
@@ -104,9 +108,13 @@ class Bili_Live:
                 area_id = self._data_.get_area_id_by_name(select, root_id)
             else:
                 # 输入了序号
-                area_id = self._data_.get_area_id_by_name(
-                    child_area[select - 1], root_id
-                )
+                if 1 <= select <= len(child_area):
+                    area_id = self._data_.get_area_id_by_name(
+                        child_area[select - 1], root_id
+                    )
+                else:
+                    print("输入的序号不在范围内")
+                    continue
             id = area_id
         return id
 
