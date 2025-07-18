@@ -426,7 +426,7 @@ class Bili_Live:
             "https://api.live.bilibili.com/room/v1/Room/startLive",
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
-            data=data,
+            data=self._data_.sign_data(data),
         )
         if res.get("code") != 0:
             if res.get("code") == 60024:
