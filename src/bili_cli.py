@@ -5,7 +5,13 @@ from time import sleep
 
 from qrcode import QRCode
 
-from .constant import CONFIG_FILE, QR_FACE_IMG, QR_IMG
+from .constant import (
+    AREA_OUTPUT_LINE_NUM,
+    CONFIG_FILE,
+    QR_FACE_IMG,
+    QR_IMG,
+    TITLE_MAX_CHAR,
+)
 from .lib import (
     Config,
     Data,
@@ -52,14 +58,17 @@ class Bili_Live:
         Returns:
             int -- 分区id
         """
-        print_max = 3
         id = 0
         while id <= 0:
             # 主分区
             print("请选择主分区：")
             root_area = self._data_.get_area_name()
             for index, data in enumerate(root_area):
-                end = "\n" if index % 4 == print_max - 1 else " "
+                end = (
+                    "\n"
+                    if index % AREA_OUTPUT_LINE_NUM == AREA_OUTPUT_LINE_NUM - 1
+                    else " "
+                )
                 print(f"{index + 1:2}: {data:<8}", end=end)
             print("\n请输入要选择的主分区 序号 或 名称：")
             select = input()
@@ -95,7 +104,11 @@ class Bili_Live:
                 raise Exception("子分区获取错误，检查主分区id是否正确")
             print("\n请选择子分区：")
             for index, data in enumerate(child_area):
-                end = "\n" if index % 4 == print_max - 1 else " "
+                end = (
+                    "\n"
+                    if index % AREA_OUTPUT_LINE_NUM == AREA_OUTPUT_LINE_NUM - 1
+                    else " "
+                )
                 print(f"{index + 1:>2}: {data:<6}", end=end)
             print("\n请输入要选择的子分区 序号 或 名称（回车重新选择主分区）：")
             select = input()
@@ -127,14 +140,10 @@ class Bili_Live:
             str -- 直播标题
         """
         print(f"当前标题为： {self._data_.room_data.get('title')}")
-        print(
-            f"请输入标题，标题不得超过{self._data_.max_title_num}字（直接回车为原标题）："
-        )
+        print(f"请输入标题，标题不得超过{TITLE_MAX_CHAR}字（直接回车为原标题）：")
         new_title = input()
-        while len(new_title) > 20:
-            print(
-                f"标题不得超过{self._data_.max_title_num}字，请重新输入（直接回车为原标题）："
-            )
+        while len(new_title) > TITLE_MAX_CHAR:
+            print(f"标题不得超过{TITLE_MAX_CHAR}字，请重新输入（直接回车为原标题）：")
             new_title = input()
         return new_title
 
