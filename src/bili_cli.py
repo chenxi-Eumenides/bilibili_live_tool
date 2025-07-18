@@ -458,7 +458,7 @@ class Bili_Live:
         )
         if res.get("code") != 0:
             raise Exception(
-                f"下播失败,{res.get("msg")}\n请手动前往网页下播：https://link.bilibili.com/p/center/index#/my-room/start-live"
+                f"下播失败,{res.get('msg')}\n请手动前往网页下播：https://link.bilibili.com/p/center/index#/my-room/start-live"
             )
         else:
             print("已下播")
