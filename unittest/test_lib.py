@@ -1,6 +1,7 @@
 import io
 import os
 import sys
+from platform import system as get_platform
 from unittest import TestCase, main
 from unittest.mock import mock_open, patch
 
@@ -216,32 +217,66 @@ class Test(TestCase):
         self.assertFalse(self.data.is_valid_live_title("1" * 41), msg="长度为41的标题")
         self.assertFalse(self.data.is_valid_live_title(""), msg="长度为0的标题")
 
-    @patch("src.lib.subprocess.call", lambda t: print(f"subprocess.call {t[0]} {t[1]}"))
-    @patch("src.lib.os.startfile", lambda u: print(f"os.startfile {u}"))
     def test_open_file(self):
-        with patch("src.lib.platform.system") as p:
-            p.return_value = "Windows"
-            with patch("sys.stdout", new=io.StringIO()) as output:
-                open_file("test.txt")
-            self.assertEqual(
-                output.getvalue(), "os.startfile test.txt\n", msg="win平台打开文件"
+        if get_platform() == "Windows":
+
+            @patch(
+                "src.lib.subprocess.call",
+                lambda t: print(f"subprocess.call {t[0]} {t[1]}"),
             )
-            p.return_value = "Darwin"
-            with patch("sys.stdout", new=io.StringIO()) as output:
-                open_file("test.txt")
-            self.assertEqual(
-                output.getvalue(),
-                "subprocess.call open test.txt\n",
-                msg="mac平台打开文件",
+            @patch("src.lib.os.startfile", lambda u: print(f"os.startfile {u}"))
+            def test(self: Test):
+                with patch("src.lib.platform.system") as p:
+                    p.return_value = "Windows"
+                    with patch("sys.stdout", new=io.StringIO()) as output:
+                        open_file("test.txt")
+                    self.assertEqual(
+                        output.getvalue(),
+                        "os.startfile test.txt\n",
+                        msg="win平台打开文件",
+                    )
+                    p.return_value = "Darwin"
+                    with patch("sys.stdout", new=io.StringIO()) as output:
+                        open_file("test.txt")
+                    self.assertEqual(
+                        output.getvalue(),
+                        "subprocess.call open test.txt\n",
+                        msg="mac平台打开文件",
+                    )
+                    p.return_value = "Manjaro"
+                    with patch("sys.stdout", new=io.StringIO()) as output:
+                        open_file("test.txt")
+                    self.assertEqual(
+                        output.getvalue(),
+                        "subprocess.call xdg-open test.txt\n",
+                        msg="linux平台(manjaro)打开文件",
+                    )
+        else:
+
+            @patch(
+                "src.lib.subprocess.call",
+                lambda t: print(f"subprocess.call {t[0]} {t[1]}"),
             )
-            p.return_value = "Manjaro"
-            with patch("sys.stdout", new=io.StringIO()) as output:
-                open_file("test.txt")
-            self.assertEqual(
-                output.getvalue(),
-                "subprocess.call xdg-open test.txt\n",
-                msg="linux平台(manjaro)打开文件",
-            )
+            def test(self: Test):
+                with patch("src.lib.platform.system") as p:
+                    p.return_value = "Darwin"
+                    with patch("sys.stdout", new=io.StringIO()) as output:
+                        open_file("test.txt")
+                    self.assertEqual(
+                        output.getvalue(),
+                        "subprocess.call open test.txt\n",
+                        msg="mac平台打开文件",
+                    )
+                    p.return_value = "Manjaro"
+                    with patch("sys.stdout", new=io.StringIO()) as output:
+                        open_file("test.txt")
+                    self.assertEqual(
+                        output.getvalue(),
+                        "subprocess.call xdg-open test.txt\n",
+                        msg="linux平台(manjaro)打开文件",
+                    )
+
+        test(self)
 
 
 if __name__ == "__main__":
