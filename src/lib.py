@@ -159,7 +159,7 @@ class Data:
             "csrf": self.csrf,
         }
 
-    def get_data_id(self) -> dict[str, str | int]:
+    def get_data_area(self) -> dict[str, str | int]:
         if self.room_id <= 0 or self.area_id <= 0 or self.csrf == "":
             return None
         return {
@@ -169,6 +169,17 @@ class Data:
             "platform": "pc_link",
             "csrf_token": self.csrf,
             "csrf": self.csrf,
+        }
+
+    def get_data_face(self) -> dict[str, str | int]:
+        if self.room_id <= 0 or self.csrf == "":
+            return None
+        return {
+            "room_id": self.room_id,
+            "face_auth_code": "60024",
+            "csrf_token": self.csrf,
+            "csrf": self.csrf,
+            "visit_id": "",
         }
 
     def get_user_agent(self) -> str:
