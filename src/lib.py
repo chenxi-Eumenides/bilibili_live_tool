@@ -65,7 +65,7 @@ class Config:
             data.cookies_str_old = config.get("cookies_str", "")
             data.csrf = config.get("csrf", "")
             data.refresh_token = config.get("refresh_token", "")
-            self.area = config.get("area", {})
+            data.area = config.get("area", [])
             data.room_data = config.get("room_data", {})
         if data.cookies_str == "":
             return False
@@ -471,12 +471,12 @@ def post(url: str, params=None, cookies=None, headers=None, data=None):
             url=url, params=params, cookies=cookies, headers=headers, data=data
         )
     except ConnectionResetError as e:
-        raise Exception(f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}")
+        raise ConnectionResetError(f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}")
     except Exception as e:
         raise Exception(f"请求api({url})出错\n报错原因：{str(e)}")
     else:
         if res.status_code != 200:
-            raise Exception(f"请求api({url})出错，状态码为{res.status_code}")
+            raise ConnectionError(f"请求api({url})出错，状态码为{res.status_code}")
     return res
 
 
