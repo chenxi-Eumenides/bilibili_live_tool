@@ -5,6 +5,7 @@ from time import sleep
 
 from qrcode import QRCode
 
+from .constant import CONFIG_FILE, QR_FACE_IMG, QR_IMG
 from .lib import (
     Config,
     Data,
@@ -24,7 +25,7 @@ class Bili_Live:
     B站直播
     """
 
-    def __init__(self, config_file: str = "config.json", cookies: str = ""):
+    def __init__(self, config_file: str = CONFIG_FILE, cookies: str = ""):
         self._config_ = Config(config_file=config_file)
         self._data_ = Data()
         atexit.register(self._exit_)
@@ -251,8 +252,10 @@ class Bili_Live:
             self._data_.area_id = self._data_.room_data.get("area_id", -1)
 
     def _exit_(self):
-        if os.path.exists("qr.jpg"):
-            os.remove("qr.jpg")
+        if os.path.exists(QR_IMG):
+            os.remove(QR_IMG)
+        if os.path.exists(QR_FACE_IMG):
+            os.remove(QR_FACE_IMG)
         print("按回车结束程序 或 直接关闭窗口")
         input()
 
@@ -263,7 +266,7 @@ class Bili_Live:
         if not is_exist(self._config_.config_file):
             self.qr_login()
         elif not self.read_config():
-            print("读取config.json失败，请重新登陆")
+            print(f"读取{self._config_.config_file}失败，请重新登陆")
             self.qr_login()
         else:
             if self.get_user_status() != 0:
@@ -294,7 +297,7 @@ class Bili_Live:
         qr.make(fit=True)
         qr_image = qr.make_image()
         qr_image.show()
-        qr_image.save("qr.jpg")
+        qr_image.save(QR_IMG)
         status = False
         while not status:
             status = self._get_qr_cookies_(qr_key, status)
@@ -351,7 +354,7 @@ class Bili_Live:
         else:
             raise Exception("id值需要为int或str")
         # 发送分区api
-        if (data := self._data_.get_data_id()) is None:
+        if (data := self._data_.get_data_area()) is None:
             raise Exception(
                 f"数据错误(room_id={self._data_.room_id},area_id={self._data_.area_id},csrf={self._data_.csrf})"
             )
@@ -393,26 +396,21 @@ class Bili_Live:
         Arguments:
             data {Data} -- 数据类
         """
-        # res = get_json(
-        #     url,
-        #     headers={"User-Agent": self._data_.get_user_agent()},
-        # )
-        # qr_url = res["data"]["url"]
-        # qr_key = res["data"]["qrcode_key"]
-
         qr = QRCode()
         qr.add_data(qr_url)
         qr.make(fit=True)
         qr_image = qr.make_image()
         qr_image.show()
-        # qr_image.save("qr_face.jpg")
-        # status = False
-        # while not status:
-        #     status = self._get_qr_cookies_(qr_key, status)
-        #     sleep(1)
-        # self._data_.cookies_str = json.dumps(
-        #     self._data_.cookies, separators=(",", ":"), ensure_ascii=False
-        # )
+        qr_image.save(QR_FACE_IMG)
+
+        url = "https://api.live.bilibili.com/xlive/app-blink/v1/preLive/IsUserIdentifiedByFaceAuth"
+        data = self._data_.get_data_face()
+        status = False
+        while not status:
+            res = post_json(url, data=data)
+            if res.get("data") and res.get("data").get("is_identified"):
+                status = True
+            sleep(1)
 
     def start_live(self):
         """
@@ -431,8 +429,8 @@ class Bili_Live:
         if res.get("code") != 0:
             if res.get("code") == 60024:
                 print(f"{res.get('msg')}，访问：{res.get('data').get('qr')}")
-                self.qr_face(res.get('data').get('qr'))
-                raise Exception("B站风控，无法获取推流码。")
+                self.qr_face(res.get("data").get("qr"))
+                # raise Exception("B站风控，无法获取推流码。")
             else:
                 raise Exception(f"获取推流码失败！\n报错原因：{res.get('msg')}")
         else:
@@ -440,7 +438,6 @@ class Bili_Live:
             self._data_.rtmp_addr = rtmp.get("addr")
             self._data_.rtmp_code = rtmp.get("code")
             print("已开播")
-        return res
 
     def stop_live(self):
         """
