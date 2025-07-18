@@ -1,0 +1,56 @@
+{
+    "user_id": 1111,
+    "room_id": 2222,
+    "area_id": 35,
+    "title": "title",
+    "rtmp_addr": "rtmp://live-push.bilivideo.com/live-bvc/",
+    "rtmp_code": "?streamname=live_rtmp_code_streamname&key=rtmp_code_key=rtmp&pflag=2",
+    "cookies_str": "{\"SESSDATA\":\"SESSDATA\",\"bili_jct\":\"bili_jct\",\"DedeUserID\":\"DedeUserID\",\"DedeUserID__ckMd5\":\"DedeUserID__ckMd5\",\"sid\":\"sid\",\"sec_ck\":\"sec_ck\"}",
+    "csrf": "csrf",
+    "refresh_token": "refresh_token",
+    "room_data": {
+        "uid": 1111,
+        "room_id": 2222,
+        "attention": 33,
+        "online": 0,
+        "description": "&lt;p&gt;description&lt;/p&gt;",
+        "live_status": 0,
+        "area_id": 35,
+        "parent_area_id": 3,
+        "parent_area_name": "手游",
+        "title": "title",
+        "live_time": "0000-00-00 00:00:00",
+        "tags": "瞎玩,随缘,游戏,MC,王者荣耀,单机游戏",
+        "area_name": "王者荣耀"
+    },
+    "area": [
+        {
+            "name": "网游",
+            "id": 2,
+            "list": [
+                {
+                    "name": "英雄联盟",
+                    "id": 86
+                },
+                {
+                    "name": "无畏契约",
+                    "id": 329
+                }
+            ]
+        },
+        {
+            "name": "手游",
+            "id": 3,
+            "list": [
+                {
+                    "name": "王者荣耀",
+                    "id": 35
+                },
+                {
+                    "name": "和平精英",
+                    "id": 256
+                }
+            ]
+        }
+    ]
+}

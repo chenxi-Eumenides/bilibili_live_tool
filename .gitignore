@@ -199,7 +199,9 @@ other/
 # file
 使用说明.txt
 test.py
+learn_unittest.py
 *.json
+!test.json
 *.ini
 *.bat
 *.zip
