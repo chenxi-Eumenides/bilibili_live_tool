@@ -3,12 +3,23 @@ import os
 import platform
 import subprocess
 from dataclasses import dataclass, field
-from sys import argv
 from hashlib import md5
+from sys import argv
 from time import time
 from urllib.parse import urlencode
 
 import requests
+
+from .constant import (
+    APP_KEY,
+    APP_SECRET,
+    CONFIG_FILE,
+    LIVEHIME_BUILD,
+    LIVEHIME_VERSION,
+    README_FILE,
+    TITLE_MAX_CHAR,
+    VERSION,
+)
 
 
 def gen_list():
@@ -19,17 +30,11 @@ def gen_dict():
     return {}
 
 
-# tuple[int, int, int, str, int]
-# 0.0.1 (0, 0, 1)
-# V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
-version = (0, 3, 8, "alpha", 1)
-
-
 @dataclass
 class Config:
-    version: tuple[int, int, int] = version
+    version: tuple[int, int, int] = VERSION
     self_file: str = argv[0]
-    config_file: str = "config.json"
+    config_file: str = CONFIG_FILE
 
     def read_config(self, data: "Data") -> bool:
         """
@@ -120,11 +125,6 @@ class Data:
     area: list[dict[str, str | int | dict[str, str | int]]] = field(
         default_factory=gen_list
     )
-    max_title_num: int = 40
-    APP_KEY: str = "aae92bc66f3edfab"
-    APP_SECRET: str = "af125a0d5279fd576c1b4418a3e8276d"
-    LIVEHIME_BUILD: str = "9343"
-    LIVEHIME_VERSION: str = "7.17.0.9343"
 
     def get_data_start(self) -> dict[str, str | int]:
         if self.room_id <= 0 or self.area_id <= 0 or self.csrf == "":
@@ -199,27 +199,30 @@ class Data:
         2、按照参数的 Key 重新排序
 
         3、进行 url query 序列化，并拼接与之对应的appsec (盐) 进行 md5 Hash 运算（32-bit 字符小写）
-        
+
         4、尾部增添sign字段，它的 Value 为上一步计算所得的 hash
         """
         # 添加必要的字段
-        data.update({
-            "access_key":"",
-            "ts": str(int(time())),
-            "build": self.LIVEHIME_BUILD,
-            "version": self.LIVEHIME_VERSION,
-            'appkey': self.APP_KEY,
-        })
+        data.update(
+            {
+                "access_key": "",
+                "ts": str(int(time())),
+                "build": LIVEHIME_BUILD,
+                "version": LIVEHIME_VERSION,
+                "appkey": APP_KEY,
+            }
+        )
         # 按照 key 重排参数
         signed_data = dict(sorted(data.items()))
         # 签名
         sign = md5(
-            (urlencode(signed_data, encoding="utf-8") + self.APP_SECRET).encode(
-                encoding="utf-8")).hexdigest()
+            (urlencode(signed_data, encoding="utf-8") + APP_SECRET).encode(
+                encoding="utf-8"
+            )
+        ).hexdigest()
         # 添加到尾部
-        signed_data.update({'sign': sign})
+        signed_data.update({"sign": sign})
         return signed_data
-
 
     def get_area_name_by_id(self, id: int) -> tuple[str, str]:
         """
@@ -310,16 +313,16 @@ class Data:
     def is_valid_live_title(self, title: str) -> bool:
         if title is None:
             return False
-        if len(title) > self.max_title_num or len(title) <= 0:
+        if len(title) > TITLE_MAX_CHAR or len(title) <= 0:
             return False
         return True
 
 
 def get_version() -> str:
-    if len(version) == 3:
-        return f"V{version[0]}.{version[1]}.{version[2]}"
-    elif len(version) == 5:
-        return f"V{version[0]}.{version[1]}.{version[2]}-{version[3]}-{version[4]}"
+    if len(VERSION) == 3:
+        return f"V{VERSION[0]}.{VERSION[1]}.{VERSION[2]}"
+    elif len(VERSION) == 5:
+        return f"V{VERSION[0]}.{VERSION[1]}.{VERSION[2]}-{VERSION[3]}-{VERSION[4]}"
     else:
         return "V0.0.1"
 
@@ -382,9 +385,9 @@ def check_readme(config_file: str) -> bool:
     if is_exist(config_file):
         return False
     content = "\n".join(get_help_content())
-    with open("使用说明.txt", "w", encoding="utf-8") as f:
+    with open(README_FILE, "w", encoding="utf-8") as f:
         f.writelines(content)
-    open_file("使用说明.txt")
+    open_file(README_FILE)
     return True
 
 
