@@ -3,7 +3,7 @@
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
 # V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
-VERSION = (0, 3, 8, "alpha", 2)
+VERSION = (0, 3, 8)
 
 README_FILE = "使用说明.txt"
 CONFIG_FILE = "config.json"
