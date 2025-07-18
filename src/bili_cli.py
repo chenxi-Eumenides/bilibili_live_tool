@@ -286,8 +286,8 @@ class Bili_Live:
             "https://passport.bilibili.com/x/passport-login/web/qrcode/generate",
             headers={"User-Agent": self._data_.get_user_agent()},
         )
-        qr_url = res["data"]["url"]
-        qr_key = res["data"]["qrcode_key"]
+        qr_url = res.get("data").get("url")
+        qr_key = res.get("data").get("qrcode_key")
 
         qr = QRCode()
         qr.add_data(qr_url)
@@ -386,6 +386,34 @@ class Bili_Live:
             print("cookies已过期，请重新登录")
         return res.get("code")
 
+    def qr_face(self, qr_url: str):
+        """
+        二维码人脸识别
+
+        Arguments:
+            data {Data} -- 数据类
+        """
+        # res = get_json(
+        #     url,
+        #     headers={"User-Agent": self._data_.get_user_agent()},
+        # )
+        # qr_url = res["data"]["url"]
+        # qr_key = res["data"]["qrcode_key"]
+
+        qr = QRCode()
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+        qr_image = qr.make_image()
+        qr_image.show()
+        # qr_image.save("qr_face.jpg")
+        # status = False
+        # while not status:
+        #     status = self._get_qr_cookies_(qr_key, status)
+        #     sleep(1)
+        # self._data_.cookies_str = json.dumps(
+        #     self._data_.cookies, separators=(",", ":"), ensure_ascii=False
+        # )
+
     def start_live(self):
         """
         启动直播
@@ -400,13 +428,17 @@ class Bili_Live:
             headers=self._data_.get_header(),
             data=data,
         )
-        if res["code"] != 0:
-            print(f"获取推流码失败，cookie可能失效，请重新获取！\n报错原因：{res}")
-            raise
+        if res.get("code") != 0:
+            if res.get("code") == 60024:
+                print(f"{res.get('msg')}，访问：{res.get('data').get('qr')}")
+                self.qr_face(res.get('data').get('qr'))
+                raise Exception("B站风控，无法获取推流码。")
+            else:
+                raise Exception(f"获取推流码失败！\n报错原因：{res.get('msg')}")
         else:
-            rtmp = res["data"]["rtmp"]
-            self._data_.rtmp_addr = rtmp["addr"]
-            self._data_.rtmp_code = rtmp["code"]
+            rtmp = res.get("data").get("rtmp")
+            self._data_.rtmp_addr = rtmp.get("addr")
+            self._data_.rtmp_code = rtmp.get("code")
             print("已开播")
         return res
 
@@ -424,11 +456,10 @@ class Bili_Live:
             headers=self._data_.get_header(),
             data=data,
         )
-        if res["code"] != 0:
-            print(
-                "下播失败，请手动前往网页下播：https://link.bilibili.com/p/center/index#/my-room/start-live"
+        if res.get("code") != 0:
+            raise Exception(
+                f"下播失败,{res.get("msg")}\n请手动前往网页下播：https://link.bilibili.com/p/center/index#/my-room/start-live"
             )
-            raise
         else:
             print("已下播")
         return res
