@@ -7,6 +7,8 @@ VERSION = (0, 3, 8, "alpha", 2)
 
 README_FILE = "使用说明.txt"
 CONFIG_FILE = "config.json"
+QR_IMG = "qr.jpg"
+QR_FACE_IMG = "qr_face.jpg"
 
 APP_KEY: str = "aae92bc66f3edfab"
 APP_SECRET: str = "af125a0d5279fd576c1b4418a3e8276d"
