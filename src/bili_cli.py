@@ -306,6 +306,7 @@ class Bili_Live:
         qr.make(fit=True)
         qr_image = qr.make_image()
         qr_image.show()
+        print(f"若无法弹出二维码，请手动打开目录下的 {QR_IMG} 进行扫码。")
         qr_image.save(QR_IMG)
         status = False
         while not status:
@@ -410,6 +411,7 @@ class Bili_Live:
         qr.make(fit=True)
         qr_image = qr.make_image()
         qr_image.show()
+        print(f"若没有弹出二维码，请手动打开目录下的 {QR_FACE_IMG} 进行扫码")
         qr_image.save(QR_FACE_IMG)
 
         url = "https://api.live.bilibili.com/xlive/app-blink/v1/preLive/IsUserIdentifiedByFaceAuth"
@@ -437,11 +439,17 @@ class Bili_Live:
         )
         if res.get("code") != 0:
             if res.get("code") == 60024:
-                print(f"{res.get('msg')}，访问：{res.get('data').get('qr')}")
+                print(f"{res.get('msg')}，请用客户端扫码进行人脸识别。")
                 self.qr_face(res.get("data").get("qr"))
-                # raise Exception("B站风控，无法获取推流码。")
+            elif "qr" in res.get("data"):
+                print(
+                    f"{res.get('msg')} ({res.get('code')})，请用客户端扫码进行人脸识别。"
+                )
+                self.qr_face(res.get("data").get("qr"))
             else:
-                raise Exception(f"获取推流码失败！\n报错原因：{res.get('msg')}")
+                raise Exception(
+                    f"获取推流码失败！\n报错原因：{res.get('msg')} ({res.get('code')})"
+                )
         else:
             rtmp = res.get("data").get("rtmp")
             self._data_.rtmp_addr = rtmp.get("addr")
