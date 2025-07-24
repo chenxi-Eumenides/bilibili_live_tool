@@ -201,39 +201,6 @@ class Data:
             "user-agent": self.get_user_agent(),
         }
 
-    def sign_data(self, data: dict):
-        """
-        对数据签名
-
-        1、添加appkey字段
-
-        2、按照参数的 Key 重新排序
-
-        3、进行 url query 序列化，并拼接与之对应的appsec (盐) 进行 md5 Hash 运算（32-bit 字符小写）
-
-        4、尾部增添sign字段，它的 Value 为上一步计算所得的 hash
-        """
-        # 添加必要的字段
-        data.update(
-            {
-                "access_key": "",
-                "ts": str(int(time())),
-                "build": LIVEHIME_BUILD,
-                "version": LIVEHIME_VERSION,
-                "appkey": APP_KEY,
-            }
-        )
-        # 按照 key 重排参数
-        signed_data = dict(sorted(data.items()))
-        # 签名
-        sign = md5(
-            (urlencode(signed_data, encoding="utf-8") + APP_SECRET).encode(
-                encoding="utf-8"
-            )
-        ).hexdigest()
-        # 添加到尾部
-        signed_data.update({"sign": sign})
-        return signed_data
 
     def get_area_name_by_id(self, id: int) -> tuple[str, str]:
         """
@@ -514,3 +481,37 @@ def get_json(
 def get_cookies(url: str, params=None, cookies=None, headers=None, data=None) -> dict:
     res = get(url=url, params=params, cookies=cookies, headers=headers, data=data)
     return res.cookies.get_dict()
+
+def sign_data(data: dict):
+    """
+    对数据签名
+
+    1、添加appkey字段
+
+    2、按照参数的 Key 重新排序
+
+    3、进行 url query 序列化，并拼接与之对应的appsec (盐) 进行 md5 Hash 运算（32-bit 字符小写）
+
+    4、尾部增添sign字段，它的 Value 为上一步计算所得的 hash
+    """
+    # 添加必要的字段
+    data.update(
+        {
+            "access_key": "",
+            "ts": str(int(time())),
+            "build": LIVEHIME_BUILD,
+            "version": LIVEHIME_VERSION,
+            "appkey": APP_KEY,
+        }
+    )
+    # 按照 key 重排参数
+    signed_data = dict(sorted(data.items()))
+    # 签名
+    sign = md5(
+        (urlencode(signed_data, encoding="utf-8") + APP_SECRET).encode(
+            encoding="utf-8"
+        )
+    ).hexdigest()
+    # 添加到尾部
+    signed_data.update({"sign": sign})
+    return signed_data
