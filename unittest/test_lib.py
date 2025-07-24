@@ -6,7 +6,7 @@ from unittest import TestCase, main
 from unittest.mock import mock_open, patch
 
 sys.path.append(os.getcwd())
-from src.lib import Config, Data, get, get_json, open_file, post, post_json
+from bili_lib import Config, Data, get, get_json, open_file, post, post_json
 
 
 class Test(TestCase):

@@ -5,14 +5,7 @@ from time import sleep
 
 from qrcode import QRCode
 
-from .constant import (
-    AREA_OUTPUT_LINE_NUM,
-    CONFIG_FILE,
-    QR_FACE_IMG,
-    QR_IMG,
-    TITLE_MAX_CHAR,
-)
-from .lib import (
+from .bili_lib import (
     Config,
     Data,
     check_bat,
@@ -23,6 +16,14 @@ from .lib import (
     get_version,
     is_exist,
     post_json,
+    sign_data,
+)
+from .constant import (
+    AREA_OUTPUT_LINE_NUM,
+    CONFIG_FILE,
+    QR_FACE_IMG,
+    QR_IMG,
+    TITLE_MAX_CHAR,
 )
 
 
@@ -435,7 +436,7 @@ class Bili_Live:
             "https://api.live.bilibili.com/room/v1/Room/startLive",
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
-            data=self._data_.sign_data(data),
+            data=sign_data(data),
         )
         if res.get("code") != 0:
             if res.get("code") == 60024:
