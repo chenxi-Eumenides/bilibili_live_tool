@@ -6,7 +6,9 @@ from unittest import TestCase, main
 from unittest.mock import mock_open, patch
 
 sys.path.append(os.getcwd())
-from bili_lib import Config, Data, get, get_json, open_file, post, post_json
+from src.bili_lib import Config, Data, get, get_json, open_file, post, post_json
+
+lib_str = "src.bili_lib."
 
 
 class Test(TestCase):
@@ -221,12 +223,12 @@ class Test(TestCase):
         if get_platform() == "Windows":
 
             @patch(
-                "src.lib.subprocess.call",
+                lib_str + "subprocess.call",
                 lambda t: print(f"subprocess.call {t[0]} {t[1]}"),
             )
-            @patch("src.lib.os.startfile", lambda u: print(f"os.startfile {u}"))
+            @patch(lib_str + "os.startfile", lambda u: print(f"os.startfile {u}"))
             def test(self: Test):
-                with patch("src.lib.platform.system") as p:
+                with patch(lib_str + "platform.system") as p:
                     p.return_value = "Windows"
                     with patch("sys.stdout", new=io.StringIO()) as output:
                         open_file("test.txt")
@@ -254,11 +256,11 @@ class Test(TestCase):
         else:
 
             @patch(
-                "src.lib.subprocess.call",
+                lib_str + "subprocess.call",
                 lambda t: print(f"subprocess.call {t[0]} {t[1]}"),
             )
             def test(self: Test):
-                with patch("src.lib.platform.system") as p:
+                with patch(lib_str + "platform.system") as p:
                     p.return_value = "Darwin"
                     with patch("sys.stdout", new=io.StringIO()) as output:
                         open_file("test.txt")
