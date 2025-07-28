@@ -2,11 +2,16 @@ import hmac
 import os
 import platform
 import subprocess
+from dataclasses import dataclass
+from enum import Enum, auto
 from functools import reduce
 from hashlib import md5, sha256
+from pprint import pformat
 from sys import argv
 from time import time
 from urllib.parse import urlencode
+
+from pypinyin import FIRST_LETTER, NORMAL, pinyin
 
 from .constant import (
     APP_KEY,
@@ -17,6 +22,28 @@ from .constant import (
     README_FILE,
     VERSION,
 )
+from .error import Fail
+
+
+class RES_STATUS(Enum):
+    OK = auto()
+    FAIL = auto()
+
+
+@dataclass
+class RES:
+    STATUS: RES_STATUS = RES_STATUS.OK
+    REASON: Fail = Fail.NotFail
+    DATA: dict = None
+
+    def __str__(self):
+        lines = [
+            f"STATUS : {self.STATUS.name}",
+            "DATA :",
+            f"{pformat(self.DATA, indent=1)}",
+            f"REASON : {self.REASON.name}",
+        ]
+        return "\n".join(lines)
 
 
 def get_version() -> str:
@@ -230,3 +257,11 @@ def check_bat() -> bool:
             create_bat("更改标题.bat", "title"),
         ]
     )
+
+
+def get_pinyin(word: str, first=False) -> str:
+    if first:
+        py: list[list[str]] = pinyin(word, style=FIRST_LETTER)
+    else:
+        py: list[list[str]] = pinyin(word, style=NORMAL)
+    return "".join([p[0] for p in py])

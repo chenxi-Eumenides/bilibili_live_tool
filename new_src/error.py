@@ -3,19 +3,27 @@ from enum import IntEnum, auto
 
 class Fail(IntEnum):
     NotFail = 0
-    NeedIDAuth = auto()
-    NeedFaceAuth = auto()
-    AreaNotFound = auto()
-    OnlyBiliLive = auto()
-    CannotLiveFromWeb = auto()
+    ApiNeedIDAuth = auto()
+    ApiNeedFaceAuth = auto()
+    ApiAreaNotFound = auto()
+    ApiOnlyBiliLive = auto()
+    ApiCannotLiveFromWeb = auto()
+    ArgError = auto()
+    FileNotFound = auto()
+    ReadFileFail = auto()
+    WriteFileFail = auto()
+    EmptyConfig = auto()
+    InvalidCookies = auto()
+    NoPermission = auto()
+    NoResult = auto()
 
 
 Fail_Bili_Code: dict[int, Fail] = {
-    60009: Fail.AreaNotFound,
-    60013: Fail.NeedIDAuth,
-    60024: Fail.NeedFaceAuth,
-    60034: Fail.OnlyBiliLive,
-    60037: Fail.CannotLiveFromWeb,
+    60009: Fail.ApiAreaNotFound,
+    60013: Fail.ApiNeedIDAuth,
+    60024: Fail.ApiNeedFaceAuth,
+    60034: Fail.ApiOnlyBiliLive,
+    60037: Fail.ApiCannotLiveFromWeb,
 }
 
 

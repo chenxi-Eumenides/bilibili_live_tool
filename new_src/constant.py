@@ -3,12 +3,12 @@
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
 # V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
-VERSION = (0, 3, 8)
+VERSION: tuple[int, int, int, str, int] = (0, 3, 8)
 
-README_FILE = "使用说明.txt"
-CONFIG_FILE = "config.json"
-QR_IMG = "qr.jpg"
-QR_FACE_IMG = "qr_face.jpg"
+README_FILE: str = "使用说明.txt"
+CONFIG_FILE: str = "config.json"
+QR_IMG: str = "qr.jpg"
+QR_FACE_IMG: str = "qr_face.jpg"
 
 APP_KEY: str = "aae92bc66f3edfab"
 APP_SECRET: str = "af125a0d5279fd576c1b4418a3e8276d"
@@ -20,7 +20,7 @@ TICKET_KEY: str = "XgwSnGZ1p"
 TITLE_MAX_CHAR: int = 40
 AREA_OUTPUT_LINE_NUM: int = 4
 PLATFORM: str = "pc_link"
-BILI_URLS = {
+BILI_URLS: dict[str, str] = {
     "start_live": "https://api.live.bilibili.com/room/v1/Room/startLive",
     "stop_live": "https://api.live.bilibili.com/room/v1/Room/stopLive",
     "room_update": "https://api.live.bilibili.com/room/v1/Room/update",
@@ -30,6 +30,38 @@ BILI_URLS = {
     "room_data": "https://api.live.bilibili.com/room/v1/Room/get_info",
     "qr_login": "https://passport.bilibili.com/x/passport-login/web/qrcode/generate",
     "qr_face": "https://api.live.bilibili.com/xlive/app-blink/v1/preLive/IsUserIdentifiedByFaceAuth",
+    "bili_ticket": "https://api.bilibili.com/bapis/bilibili.api.ticket.v1.Ticket/GenWebTicket",
+    "wbi_keys": "https://api.bilibili.com/x/web-interface/nav",
+}
+
+EMPTY_DATA_LOGIN: dict = {
+    "user_id": 0,
+    "cookies_str": "",
+    "csrf": "",
+    "refresh_token": "",
+}
+EMPTY_DATA_LIVE: dict = {
+    "room_id": 0,
+    "title": "",
+    "area_id": 0,
+    "rtmp_addr": "",
+    "rtmp_code": "",
+}
+
+USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
+HEADERS: dict = {
+    "accept": "application/json, text/plain, */*",
+    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+    "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
+    "origin": "https://link.bilibili.com",
+    "referer": "https://link.bilibili.com/p/center/index",
+    "sec-ch-ua": '"Microsoft Edge";v="137", "Not=A?Brand";v="8", "Chromium";v="137"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-site",
+    "user-agent": USER_AGENT,
 }
 
 MIXIN_KEY_ENC_TAB: list[int] = [
@@ -98,19 +130,3 @@ MIXIN_KEY_ENC_TAB: list[int] = [
     44,
     52,
 ]
-
-USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
-HEADERS: dict = {
-    "accept": "application/json, text/plain, */*",
-    "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
-    "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-    "origin": "https://link.bilibili.com",
-    "referer": "https://link.bilibili.com/p/center/index",
-    "sec-ch-ua": '"Microsoft Edge";v="137", "Not=A?Brand";v="8", "Chromium";v="137"',
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": '"Windows"',
-    "sec-fetch-dest": "empty",
-    "sec-fetch-mode": "cors",
-    "sec-fetch-site": "same-site",
-    "user-agent": USER_AGENT,
-}
