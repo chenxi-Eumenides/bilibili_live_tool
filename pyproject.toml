@@ -1,6 +1,6 @@
 [project]
 name = "bili_live_tool"
-version = "0.3.9"
+version = "0.3.10"
 description = "a simple tool to start or stop bilibili live and get stream code."
 readme = "README.md"
 requires-python = ">=3.9"

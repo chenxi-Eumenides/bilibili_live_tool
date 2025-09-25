@@ -262,12 +262,15 @@ class Bili_Live:
             self._data_.area_id = self._data_.room_data.get("area_id", -1)
 
     def _exit_(self):
-        if os.path.exists(QR_IMG):
-            os.remove(QR_IMG)
-        if os.path.exists(QR_FACE_IMG):
-            os.remove(QR_FACE_IMG)
-        print("按回车结束程序 或 直接关闭窗口")
-        input()
+        try:
+            if os.path.exists(QR_IMG):
+                os.remove(QR_IMG)
+            if os.path.exists(QR_FACE_IMG):
+                os.remove(QR_FACE_IMG)
+            print("按 Enter回车 结束程序 或 直接关闭窗口")
+            input()
+        except (EOFError,KeyboardInterrupt):
+            pass
 
     def login(self) -> dict:
         """
