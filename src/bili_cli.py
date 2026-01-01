@@ -444,7 +444,6 @@ class Bili_Live:
                     headers=self._data_.get_header(),
                     data=data
                 )
-                print(res)
                 if res.get("data") and res.get("data").get("is_identified"):
                     status = True
                 else:
