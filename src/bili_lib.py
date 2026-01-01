@@ -5,7 +5,7 @@ import subprocess
 from dataclasses import dataclass, field
 from hashlib import md5
 from sys import argv
-from time import time
+from time import sleep, time
 from urllib.parse import urlencode
 
 import requests
@@ -30,84 +30,13 @@ def gen_dict():
     return {}
 
 
+
 @dataclass
-class Config:
+class Data:
     version: tuple[int, int, int] = VERSION
     self_file: str = argv[0]
     config_file: str = CONFIG_FILE
 
-    def read_config(self, data: "Data") -> bool:
-        """
-        读取config
-
-        Arguments:
-            config_file {Config} -- Config对象
-
-        Returns:
-            bool -- 是否成功
-        """
-        if not is_exist(self.config_file):
-            return False
-        try:
-            with open(self.config_file, "r", encoding="utf-8") as f:
-                config: dict = json.load(f)
-        except Exception:
-            return False
-        else:
-            data.user_id = config.get("user_id", -1)
-            data.room_id = config.get("room_id", -1)
-            data.area_id = config.get("area_id", -1)
-            data.title = config.get("title", "")
-            data.rtmp_addr = config.get("rtmp_addr", "")
-            data.rtmp_code = config.get("rtmp_code", "")
-            data.rtmp_code_old = config.get("rtmp_code", "")
-            data.cookies_str = config.get("cookies_str", "")
-            data.cookies_str_old = config.get("cookies_str", "")
-            data.csrf = config.get("csrf", "")
-            data.refresh_token = config.get("refresh_token", "")
-            data.area = config.get("area", [])
-            data.room_data = config.get("room_data", {})
-        if data.cookies_str == "":
-            return False
-        try:
-            data.cookies = json.loads(data.cookies_str)
-        except Exception:
-            return False
-        return True
-
-    def save_config(self, data: "Data") -> bool:
-        """
-        保存config
-
-        Arguments:
-            config {Config} -- config对象
-        """
-        config = {
-            "user_id": data.user_id,
-            "room_id": data.room_id,
-            "area_id": data.area_id,
-            "title": data.title,
-            "rtmp_addr": data.rtmp_addr,
-            "rtmp_code": data.rtmp_code,
-            "cookies_str": data.cookies_str,
-            "csrf": data.csrf,
-            "refresh_token": data.refresh_token,
-            "room_data": data.room_data,
-            "area": data.area,
-        }
-        try:
-            with open(self.config_file, "w", encoding="utf-8") as f:
-                json.dump(config, f, ensure_ascii=False, indent=4)
-        except Exception:
-            return False
-        return True
-
-    def check_config(self) -> bool:
-        return is_exist(self.config_file)
-
-
-@dataclass
-class Data:
     user_id: int = -1
     room_id: int = -1
     area_id: int = -1
@@ -122,9 +51,77 @@ class Data:
     cookies_str_old: str = ""
     csrf: str = ""
     refresh_token: str = ""
+    live_version: str = ""
+    live_build: str = ""
     area: list[dict[str, str | int | dict[str, str | int]]] = field(
         default_factory=gen_list
     )
+    def read_config(self) -> bool:
+        """
+        读取config
+
+        Returns:
+            bool -- 是否成功
+        """
+        if not is_exist(self.config_file):
+            return False
+        try:
+            with open(self.config_file, "r", encoding="utf-8") as f:
+                config: dict = json.load(f)
+        except Exception:
+            return False
+        else:
+            self.user_id = config.get("user_id", -1)
+            self.room_id = config.get("room_id", -1)
+            self.area_id = config.get("area_id", -1)
+            self.title = config.get("title", "")
+            self.rtmp_addr = config.get("rtmp_addr", "")
+            self.rtmp_code = config.get("rtmp_code", "")
+            self.rtmp_code_old = config.get("rtmp_code", "")
+            self.cookies_str = config.get("cookies_str", "")
+            self.cookies_str_old = config.get("cookies_str", "")
+            self.csrf = config.get("csrf", "")
+            self.refresh_token = config.get("refresh_token", "")
+            self.area = config.get("area", [])
+            self.room_data = config.get("room_data", {})
+            self.live_version = config.get("live_version", LIVEHIME_VERSION)
+            self.live_build = config.get("live_build", LIVEHIME_BUILD)
+        if self.cookies_str == "":
+            return False
+        try:
+            self.cookies = json.loads(self.cookies_str)
+        except Exception:
+            return False
+        return True
+
+    def save_config(self) -> bool:
+        """
+        保存config
+        """
+        config = {
+            "user_id": self.user_id,
+            "room_id": self.room_id,
+            "area_id": self.area_id,
+            "title": self.title,
+            "rtmp_addr": self.rtmp_addr,
+            "rtmp_code": self.rtmp_code,
+            "cookies_str": self.cookies_str,
+            "csrf": self.csrf,
+            "refresh_token": self.refresh_token,
+            "room_data": self.room_data,
+            "live_version": self.live_version,
+            "live_build": self.live_build,
+            "area": self.area,
+        }
+        try:
+            with open(self.config_file, "w", encoding="utf-8") as f:
+                json.dump(config, f, ensure_ascii=False, indent=4)
+        except Exception:
+            return False
+        return True
+
+    def check_config(self) -> bool:
+        return is_exist(self.config_file)
 
     def get_data_start(self) -> dict[str, str | int]:
         if self.room_id <= 0 or self.area_id <= 0 or self.csrf == "":
@@ -136,6 +133,8 @@ class Data:
             "csrf_token": self.csrf,
             "csrf": self.csrf,
             "type": 2,
+            "build": self.live_build,
+            "version": self.live_version,
         }
 
     def get_data_stop(self) -> dict[str, str]:
@@ -200,7 +199,6 @@ class Data:
             "sec-fetch-site": "same-site",
             "user-agent": self.get_user_agent(),
         }
-
 
     def get_area_name_by_id(self, id: int) -> tuple[str, str]:
         """
@@ -438,7 +436,9 @@ def post(url: str, params=None, cookies=None, headers=None, data=None):
             url=url, params=params, cookies=cookies, headers=headers, data=data
         )
     except ConnectionResetError as e:
-        raise ConnectionResetError(f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}")
+        raise ConnectionResetError(
+            f"请求api({url})过多，请稍后再尝试\n报错原因：{str(e)}"
+        )
     except Exception as e:
         raise Exception(f"请求api({url})出错\n报错原因：{str(e)}")
     else:
@@ -482,6 +482,7 @@ def get_cookies(url: str, params=None, cookies=None, headers=None, data=None) ->
     res = get(url=url, params=params, cookies=cookies, headers=headers, data=data)
     return res.cookies.get_dict()
 
+
 def sign_data(data: dict):
     """
     对数据签名
@@ -497,10 +498,8 @@ def sign_data(data: dict):
     # 添加必要的字段
     data.update(
         {
-            "access_key": "",
+            # "access_key": "",
             "ts": str(int(time())),
-            "build": LIVEHIME_BUILD,
-            "version": LIVEHIME_VERSION,
             "appkey": APP_KEY,
         }
     )
@@ -508,10 +507,18 @@ def sign_data(data: dict):
     signed_data = dict(sorted(data.items()))
     # 签名
     sign = md5(
-        (urlencode(signed_data, encoding="utf-8") + APP_SECRET).encode(
-            encoding="utf-8"
-        )
+        (urlencode(signed_data, encoding="utf-8") + APP_SECRET).encode(encoding="utf-8")
     ).hexdigest()
     # 添加到尾部
     signed_data.update({"sign": sign})
     return signed_data
+
+
+def wait_print(time: int, prefix: str="", postfix: str=""):
+    try:
+        for i in range(time,0,-1):
+            print(f"\r{prefix}{i}{postfix}",end="" if i>1 else "\n")
+            sleep(1)
+    except KeyboardInterrupt:
+        return True
+    return False

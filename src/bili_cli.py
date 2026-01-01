@@ -6,7 +6,6 @@ from time import sleep
 from qrcode import QRCode
 
 from .bili_lib import (
-    Config,
     Data,
     check_bat,
     check_readme,
@@ -17,6 +16,7 @@ from .bili_lib import (
     is_exist,
     post_json,
     sign_data,
+    wait_print,
 )
 from .constant import (
     AREA_OUTPUT_LINE_NUM,
@@ -24,6 +24,19 @@ from .constant import (
     QR_FACE_IMG,
     QR_IMG,
     TITLE_MAX_CHAR,
+    LIVEHIME_BUILD,
+    LIVEHIME_VERSION,
+    URL_GET_ROOM_ID,
+    URL_GET_QR_RES,
+    URL_GENERATE_QR,
+    URL_GET_AREA_LIST,
+    URL_GET_ROOM_STATUS,
+    URL_UPDATE_ROOM,
+    URL_GET_USER_STATUS,
+    URL_CHECK_FACE,
+    URL_START_LIVE,
+    URL_STOP_LIVE,
+    URL_GET_LIVE_VERSION,
 )
 
 
@@ -31,10 +44,10 @@ class Bili_Live:
     """
     B站直播
     """
+    _data_: Data
 
     def __init__(self, config_file: str = CONFIG_FILE, cookies: str = ""):
-        self._config_ = Config(config_file=config_file)
-        self._data_ = Data()
+        self._data_ = Data(config_file=config_file)
         atexit.register(self._exit_)
         atexit.register(self.save_config)
         check_readme(config_file=config_file)
@@ -167,7 +180,7 @@ class Bili_Live:
         self._data_.csrf = self._data_.cookies.get("bili_jct")
         self._data_.user_id = self._data_.cookies.get("DedeUserID")
         room_data = get_json(
-            url=f"https://api.live.bilibili.com/room/v2/Room/room_id_by_uid?uid={self._data_.user_id}",
+            url=f"{URL_GET_ROOM_ID}?uid={self._data_.user_id}",
             headers={"User-Agent": self._data_.get_user_agent()},
         )
         if room_data.get("code") != 0:
@@ -186,7 +199,7 @@ class Bili_Live:
             dict -- 本次的结果
         """
         login_res = get(
-            url="https://passport.bilibili.com/x/passport-login/web/qrcode/poll",
+            url=URL_GET_QR_RES,
             headers={"User-Agent": self._data_.get_user_agent()},
             params={"qrcode_key": qr_key},
         )
@@ -220,7 +233,7 @@ class Bili_Live:
         ]
         """
         pt_data: dict = get_json(
-            "https://api.live.bilibili.com/room/v1/Area/getList",
+            url=URL_GET_AREA_LIST,
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
         )
@@ -247,7 +260,7 @@ class Bili_Live:
             print("room_id获取失败，请重新尝试")
             raise
         res = post_json(
-            "https://api.live.bilibili.com/room/v1/Room/get_info",
+            url=URL_GET_ROOM_STATUS,
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
             data={"room_id": self._data_.room_id},
@@ -276,10 +289,10 @@ class Bili_Live:
         """
         登录
         """
-        if not is_exist(self._config_.config_file):
+        if not self.check_config():
             self.qr_login()
         elif not self.read_config():
-            print(f"读取{self._config_.config_file}失败，请重新登陆")
+            print(f"读取{self._data_.config_file}失败，请重新登陆")
             self.qr_login()
         else:
             if self.get_user_status() != 0:
@@ -289,7 +302,10 @@ class Bili_Live:
         self._update_room_data_()
 
     def read_config(self):
-        return self._config_.read_config(self._data_)
+        return self._data_.read_config()
+    
+    def check_config(self):
+        return self._data_.check_config()
 
     def qr_login(self):
         """
@@ -299,7 +315,7 @@ class Bili_Live:
             data {Data} -- 数据类
         """
         res = get_json(
-            "https://passport.bilibili.com/x/passport-login/web/qrcode/generate",
+            url=URL_GENERATE_QR,
             headers={"User-Agent": self._data_.get_user_agent()},
         )
         qr_url = res.get("data").get("url")
@@ -338,7 +354,7 @@ class Bili_Live:
                 f"数据错误(room_id={self._data_.room_id},title={self._data_.title},csrf={self._data_.csrf})"
             )
         res = post_json(
-            url="https://api.live.bilibili.com/room/v1/Room/update",
+            url=URL_UPDATE_ROOM,
             headers=self._data_.get_header(),
             cookies=self._data_.cookies,
             data=data,
@@ -373,7 +389,7 @@ class Bili_Live:
                 f"数据错误(room_id={self._data_.room_id},area_id={self._data_.area_id},csrf={self._data_.csrf})"
             )
         data = post_json(
-            "https://api.live.bilibili.com/room/v1/Room/update",
+            url=URL_UPDATE_ROOM,
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
             data=data,
@@ -390,7 +406,7 @@ class Bili_Live:
 
     def get_user_status(self) -> int:
         res = get_json(
-            url="https://api.bilibili.com/x/web-interface/nav/stat",
+            url=URL_GET_USER_STATUS,
             headers=self._data_.get_header(),
             cookies=self._data_.cookies,
         )
@@ -403,12 +419,12 @@ class Bili_Live:
             print("cookies已过期，请重新登录")
         return res.get("code")
 
-    def qr_face(self, qr_url: str):
+    def qr_face(self, qr_url: str) -> bool:
         """
         二维码人脸识别
 
         Arguments:
-            data {Data} -- 数据类
+            qr_url {str} -- 扫码url
         """
         qr = QRCode()
         qr.add_data(qr_url)
@@ -418,47 +434,57 @@ class Bili_Live:
         print(f"若没有弹出二维码，请手动打开目录下的 {QR_FACE_IMG} 进行扫码")
         qr_image.save(QR_FACE_IMG)
 
-        url = "https://api.live.bilibili.com/xlive/app-blink/v1/preLive/IsUserIdentifiedByFaceAuth"
         data = self._data_.get_data_face()
         status = False
         while not status:
-            res = post_json(url, data=data)
-            if res.get("data") and res.get("data").get("is_identified"):
-                status = True
-            sleep(1)
+            try:
+                res = post_json(
+                    URL_CHECK_FACE,
+                    cookies=self._data_.cookies,
+                    headers=self._data_.get_header(),
+                    data=data
+                )
+                print(res)
+                if res.get("data") and res.get("data").get("is_identified"):
+                    status = True
+                else:
+                    sleep(1)
+            except Exception as e:
+                print(f"报错：{str(e)}")
+                return False
+        return True
 
-    def start_live(self):
+    def start_live(self, retry: int = 0) -> bool:
         """
         启动直播
         """
-        if (data := self._data_.get_data_start()) is None:
-            raise Exception(
-                f"数据错误(room_id={self._data_.room_id},area_id={self._data_.area_id},csrf={self._data_.csrf})"
-            )
+        self.update_live_version()
+        data = self._data_.get_data_start()
         res = post_json(
-            "https://api.live.bilibili.com/room/v1/Room/startLive",
+            url=URL_START_LIVE,
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
             data=sign_data(data),
         )
         if res.get("code") != 0:
-            if res.get("code") == 60024:
-                print(f"{res.get('msg')}，请用客户端扫码进行人脸识别。")
-                self.qr_face(res.get("data").get("qr"))
-            elif "qr" in res.get("data"):
-                print(
-                    f"{res.get('msg')} ({res.get('code')})，请用客户端扫码进行人脸识别。"
-                )
-                self.qr_face(res.get("data").get("qr"))
-            else:
-                raise Exception(
-                    f"获取推流码失败！\n报错原因：{res.get('msg')} ({res.get('code')})"
-                )
+            if res.get("code") == 60024 or "qr" in res.get("data"):
+                print(f"{res.get('msg')} ({res.get('code')})，请用客户端扫码进行人脸识别。")
+                if self.qr_face(res.get("data").get("qr")):
+                    return self.start_live()
+                else:
+                    raise Exception(
+                        f"请使用app扫码完成人脸识别后，重新使用本软件开播。"
+                    )
+
+            raise Exception(
+                f"获取推流码失败！\n报错原因：{res.get('msg')} ({res.get('code')})"
+            )
         else:
             rtmp = res.get("data").get("rtmp")
             self._data_.rtmp_addr = rtmp.get("addr")
             self._data_.rtmp_code = rtmp.get("code")
             print("已开播")
+            return True
 
     def stop_live(self):
         """
@@ -469,7 +495,7 @@ class Bili_Live:
                 f"数据错误(room_id={self._data_.room_id},csrf={self._data_.csrf})"
             )
         res = post_json(
-            "https://api.live.bilibili.com/room/v1/Room/stopLive",
+            url=URL_STOP_LIVE,
             cookies=self._data_.cookies,
             headers=self._data_.get_header(),
             data=data,
@@ -486,7 +512,7 @@ class Bili_Live:
         print("")
         if self._data_.cookies_str != "" and self._data_.user_id != -1:
             print("正在保存配置...")
-            self._config_.save_config(self._data_)
+            self._data_.save_config()
         else:
             print("无数据，跳过保存。")
 
@@ -510,7 +536,7 @@ class Bili_Live:
     def get_area_id_by_name(self, name: str) -> int:
         return self._data_.get_area_id_by_name(name=name, area_id=-1)
 
-    def get_room_info(self) -> str:
+    def print_room_info(self):
         data = self._data_.room_data
         res = [
             "当前正在直播" if self.get_live_status() == 1 else "当前不在直播",
@@ -522,7 +548,20 @@ class Bili_Live:
             f"直播起始时间：{data.get('live_time')}",
             f"当前在线观众：{data.get('online')}",
         ]
-        return "\n".join(res)
+        print("\n".join(res))
 
     def get_help_info(self) -> str:
         return "\n".join(get_help_content())
+
+    def update_live_version(self):
+        data=sign_data({
+            "system_version":2,
+        })
+        res = get_json(
+            url=f"{URL_GET_LIVE_VERSION}?{'&'.join([f'{k}={v}' for k, v in data.items()])}",
+            headers=self._data_.get_header(),
+        )
+        if res.get("code")==0:
+            self._data_.live_version = res.get("data").get("curr_version")
+            self._data_.live_build = str(res.get("data").get("build"))
+            
