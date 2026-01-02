@@ -46,7 +46,7 @@ def auto(live: Bili_Live):
         return False
 
 
-def choose() -> int | None:
+def choose(options: list[str]) -> str | None:
     print("输入以下选项，手动选择：")
     print("0 自动开播")
     print("1 手动选择开播")
@@ -56,7 +56,7 @@ def choose() -> int | None:
     try:
         i = int(input(" ："))
         if 0 <= i < len(options):
-            return i
+            return options[i]
     except:
         return None
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     elif wait_print(
         time=3, postfix="秒后自动开播，按 Ctrl + C 进入手动选择："
     ):
-        option = choose()
+        option = choose(options)
 
     try:
         if option == "auto":
