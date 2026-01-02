@@ -517,8 +517,10 @@ def sign_data(data: dict):
 def wait_print(time: int, prefix: str="", postfix: str=""):
     try:
         for i in range(time,0,-1):
-            print(f"\r{prefix}{i}{postfix}",end="" if i>1 else "\n")
+            print(f"\r{prefix}{i}{postfix}", end="")
             sleep(1)
     except KeyboardInterrupt:
+        print("")
         return True
+    print("")
     return False
