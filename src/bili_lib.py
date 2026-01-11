@@ -537,7 +537,6 @@ def _key_listener_(stop_key_list, stop_event):
             stop_event.set()
         if e.name == "enter":
             input()
-
     hook = keyboard.hook(callback)
     while not stop_event.is_set():
         if stop_event.wait(timeout=0.1):
@@ -566,10 +565,15 @@ def wait_print(time: int, prefix: str = "", postfix: str = "") -> bool:
             stop_event,
         ),
     )
-    print_thread.start()
-    stop_listener.start()
-    print_thread.join()
-    stop_event.set()
-    stop_listener.join()
-    stdin.flush()
+    try:
+        print_thread.start()
+        stop_listener.start()
+        while print_thread.is_alive():
+            print_thread.join(timeout=0.1)
+        stop_event.set()
+        stop_listener.join()
+        stdin.flush()
+    except(KeyboardInterrupt):
+        stop_event.set()
+        exit()
     return stop_type.is_set()
