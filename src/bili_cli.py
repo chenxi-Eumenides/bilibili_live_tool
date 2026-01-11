@@ -13,10 +13,8 @@ from .bili_lib import (
     get_help_content,
     get_json,
     get_version,
-    is_exist,
     post_json,
     sign_data,
-    wait_print,
 )
 from .constant import (
     AREA_OUTPUT_LINE_NUM,
@@ -24,8 +22,6 @@ from .constant import (
     QR_FACE_IMG,
     QR_IMG,
     TITLE_MAX_CHAR,
-    LIVEHIME_BUILD,
-    LIVEHIME_VERSION,
     URL_GET_ROOM_ID,
     URL_GET_QR_RES,
     URL_GENERATE_QR,
@@ -44,6 +40,7 @@ class Bili_Live:
     """
     B站直播
     """
+
     _data_: Data
 
     def __init__(self, config_file: str = CONFIG_FILE, cookies: str = ""):
@@ -282,7 +279,7 @@ class Bili_Live:
                 os.remove(QR_FACE_IMG)
             print("按 Enter回车 结束程序 或 直接关闭窗口")
             input()
-        except (EOFError,KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt,ValueError):
             pass
 
     def login(self) -> dict:
@@ -303,7 +300,7 @@ class Bili_Live:
 
     def read_config(self):
         return self._data_.read_config()
-    
+
     def check_config(self):
         return self._data_.check_config()
 
@@ -442,7 +439,7 @@ class Bili_Live:
                     URL_CHECK_FACE,
                     cookies=self._data_.cookies,
                     headers=self._data_.get_header(),
-                    data=data
+                    data=data,
                 )
                 if res.get("data") and res.get("data").get("is_identified"):
                     status = True
@@ -467,7 +464,10 @@ class Bili_Live:
         )
         if res.get("code") != 0:
             if res.get("code") == 60024 or "qr" in res.get("data"):
-                print(f"{res.get('msg')} ({res.get('code')})，请用客户端扫码进行人脸识别。")
+                print(
+                    f"{res.get('msg')} ({res.get('code')})，请用客户端扫码进行人脸识别。"
+                )
+                print("")
                 if self.qr_face(res.get("data").get("qr")):
                     return self.start_live()
                 else:
@@ -553,14 +553,16 @@ class Bili_Live:
         return "\n".join(get_help_content())
 
     def update_live_version(self):
-        data=sign_data({
-            "system_version":2,
-        })
+        data = sign_data(
+            {
+                "system_version": 2,
+            }
+        )
         res = get_json(
-            url=f"{URL_GET_LIVE_VERSION}?{'&'.join([f'{k}={v}' for k, v in data.items()])}",
+            url=f"{URL_GET_LIVE_VERSION}",
+            params=data,
             headers=self._data_.get_header(),
         )
-        if res.get("code")==0:
+        if res.get("code") == 0:
             self._data_.live_version = res.get("data").get("curr_version")
             self._data_.live_build = str(res.get("data").get("build"))
-            

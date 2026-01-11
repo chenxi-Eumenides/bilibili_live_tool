@@ -2,11 +2,15 @@ import json
 import os
 import platform
 import subprocess
+import threading
 from dataclasses import dataclass, field
 from hashlib import md5
-from sys import argv
+from sys import argv,stdin
 from time import sleep, time
 from urllib.parse import urlencode
+
+# from pynput import keyboard
+import keyboard
 
 import requests
 
@@ -28,7 +32,6 @@ def gen_list():
 
 def gen_dict():
     return {}
-
 
 
 @dataclass
@@ -56,6 +59,7 @@ class Data:
     area: list[dict[str, str | int | dict[str, str | int]]] = field(
         default_factory=gen_list
     )
+
     def read_config(self) -> bool:
         """
         读取config
@@ -514,13 +518,58 @@ def sign_data(data: dict):
     return signed_data
 
 
-def wait_print(time: int, prefix: str="", postfix: str=""):
-    try:
-        for i in range(time,0,-1):
-            print(f"\r{prefix}{i}{postfix}", end="")
-            sleep(1)
-    except KeyboardInterrupt:
-        print("")
-        return True
-    print("")
-    return False
+def _print_loop_(time, prefix, postfix, stop_event, stop_type):
+    i = time
+    while i > 0 and not stop_event.is_set():
+        print(f"\r{prefix}{i}{postfix}", end="")
+        i -= 1
+        if stop_event.wait(timeout=1):
+            print("")
+            stop_type.set()
+            break
+    else:
+        print(f"\r{prefix}{i}{postfix}")
+
+
+def _key_listener_(stop_key_list, stop_event):
+    def callback(e):
+        if e.name in stop_key_list:
+            stop_event.set()
+        if e.name == "enter":
+            input()
+
+    hook = keyboard.hook(callback)
+    while not stop_event.is_set():
+        if stop_event.wait(timeout=0.1):
+            break
+    keyboard.unhook(hook)
+
+
+def wait_print(time: int, prefix: str = "", postfix: str = "") -> bool:
+    stop_key_list = ["enter", "esc"]
+    stop_event = threading.Event()
+    stop_type = threading.Event()
+    print_thread = threading.Thread(
+        target=_print_loop_,
+        args=(
+            time,
+            prefix,
+            postfix,
+            stop_event,
+            stop_type,
+        ),
+    )
+    stop_listener = threading.Thread(
+        target=_key_listener_,
+        args=(
+            stop_key_list,
+            stop_event,
+        ),
+    )
+    print_thread.start()
+    stop_listener.start()
+    print_thread.join()
+    stop_event.set()
+    stop_listener.join()
+    stdin.flush()
+    return stop_type.is_set()
