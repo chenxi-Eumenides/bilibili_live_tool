@@ -46,7 +46,7 @@ def auto(live: Bili_Live):
         return False
 
 
-def choose(options: list[str]) -> str | None:
+def choose(options: list[callable]) -> callable:
     print("输入以下选项，手动选择：")
     print("0 自动开播")
     print("1 手动选择开播")
@@ -60,9 +60,11 @@ def choose(options: list[str]) -> str | None:
     except:
         return None
 
+def nothing(live: Bili_Live):
+    pass
 
 if __name__ == "__main__":
-    options = ["auto", "manual", "area", "title", "help", "info"]
+    options = [auto, manual, area, title, help, nothing]
     option = None
     live = Bili_Live()
     live.login()
@@ -73,24 +75,13 @@ if __name__ == "__main__":
 
     if len(argv) > 1:
         option = argv[1]
-    elif wait_print(
-        time=3, postfix="秒后自动开播，按 Ctrl + C 进入手动选择："
-    ):
+    elif wait_print(time=3, postfix="秒后自动开播，按 Enter 进入手动选择："):
+        print("")
         option = choose(options)
 
     try:
-        if option == "auto":
-            auto(live)
-        elif option == "manual":
-            manual(live)
-        elif option == "title":
-            title(live)
-        elif option == "area":
-            area(live)
-        elif option == "help":
-            help(live)
-        elif option == "info":
-            pass
+        if option is not None:
+            option(live)
         else:
             if not live.check_config():
                 manual(live)
