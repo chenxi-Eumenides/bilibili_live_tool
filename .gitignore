@@ -196,6 +196,7 @@ cython_debug/
 # custom
 # folder
 other/
+test/
 # file
 使用说明.txt
 test.py
@@ -205,3 +206,4 @@ learn_unittest.py
 *.ini
 *.bat
 *.zip
+*.code-workspace
