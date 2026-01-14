@@ -71,11 +71,13 @@ if __name__ == "__main__":
     options = [auto, manual, area, title, help, nothing]
     option = None
     live = Bili_Live()
-    live.login()
-
-    print("")
-    live.print_room_info()
-    print("")
+    try:
+        live.login()
+        print("")
+        live.print_room_info()
+        print("")
+    except KeyboardInterrupt:
+        exit()
 
     if len(argv) > 1:
         option = argv[1]
@@ -92,6 +94,6 @@ if __name__ == "__main__":
             else:
                 auto(live)
     except KeyboardInterrupt:
-        pass
+        exit()
     except BaseException as e:
         print(f"出错了，报错信息：{e}")
