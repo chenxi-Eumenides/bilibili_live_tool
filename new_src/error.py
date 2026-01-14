@@ -1,37 +1,28 @@
-from enum import IntEnum, auto
+from enum import auto, StrEnum
 
 
-class Fail(IntEnum):
-    NotFail = 0
-    ApiNeedIDAuth = auto()
-    ApiNeedFaceAuth = auto()
-    ApiAreaNotFound = auto()
-    ApiOnlyBiliLive = auto()
-    ApiCannotLiveFromWeb = auto()
-    ArgError = auto()
-    FileNotFound = auto()
-    ReadFileFail = auto()
-    WriteFileFail = auto()
-    EmptyConfig = auto()
-    InvalidCookies = auto()
-    NoPermission = auto()
-    NoResult = auto()
+class FAIL(StrEnum):
+    NOT_FAIL = auto()
+    # 函数调用相关
+    ARG_ERROR = auto()
+    # api相关
+    API_ERROR = auto()
+    INVALID_COOKIES = auto()
+    NO_RESULT = auto()
+    # 配置相关
+    EMPTY_CONFIG = auto()
+    # 文件相关
+    FILE_NOT_FOUND = auto()
+    READ_FILE_FAIL = auto()
+    WRITE_FILE_FAIL = auto()
+    NOT_PERMISSION = auto()
 
 
-Fail_Bili_Code: dict[int, Fail] = {
-    60009: Fail.ApiAreaNotFound,
-    60013: Fail.ApiNeedIDAuth,
-    60024: Fail.ApiNeedFaceAuth,
-    60034: Fail.ApiOnlyBiliLive,
-    60037: Fail.ApiCannotLiveFromWeb,
-}
-
-
-class Base_Error(Exception):
+class BASE_ERROR(Exception):
     pass
 
 
-class BASE_API_ERROR(Base_Error):
+class BASE_API_ERROR(BASE_ERROR):
     pass
 
 
@@ -40,10 +31,6 @@ class API_ERROR(BASE_API_ERROR):
 
 
 class API_ARG_ERROR(BASE_API_ERROR):
-    pass
-
-
-class API_TOO_MUCH_ERROR(BASE_API_ERROR):
     pass
 
 
@@ -59,7 +46,16 @@ class API_DATA_ERROR(BASE_API_ERROR):
     pass
 
 
-Fail_STATUS_Code: dict[int, str] = {
+FAIL_BILI_CODE: dict[int, str] = {
+    60009: "分区已下线",
+    60013: "所在地区受实名认证限制无法开播",
+    60024: "目标分区需要人脸认证",
+    60034: "系统维护仅支持直播姬开/关播",
+    60037: "web在线开播已下线",
+    65530: "token错误（登录错误）",
+}
+
+FAIL_STATUS_CODE: dict[int, str] = {
     -1: "应用程序不存在或已被封禁",
     -2: "Access Key 错误",
     -3: "API 校验密匙错误",
