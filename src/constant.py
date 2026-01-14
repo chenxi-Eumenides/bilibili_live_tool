@@ -3,7 +3,7 @@
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
 # V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
-VERSION = (0, 3, 12)
+VERSION = (0, 3, 13)
 
 # 文件名
 README_FILE = "使用说明.txt"
