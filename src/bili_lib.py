@@ -5,11 +5,10 @@ import subprocess
 import threading
 from dataclasses import dataclass, field
 from hashlib import md5
-from sys import argv,stdin
+from sys import argv, stdin, exit
 from time import sleep, time
 from urllib.parse import urlencode
 
-# from pynput import keyboard
 import keyboard
 
 import requests
@@ -537,6 +536,7 @@ def _key_listener_(stop_key_list, stop_event):
             stop_event.set()
         if e.name == "enter":
             input()
+
     hook = keyboard.hook(callback)
     while not stop_event.is_set():
         if stop_event.wait(timeout=0.1):
@@ -573,7 +573,7 @@ def wait_print(time: int, prefix: str = "", postfix: str = "") -> bool:
         stop_event.set()
         stop_listener.join()
         stdin.flush()
-    except(KeyboardInterrupt):
+    except KeyboardInterrupt:
         stop_event.set()
         exit()
     return stop_type.is_set()

@@ -1,4 +1,4 @@
-from sys import argv
+from sys import argv, exit
 
 from src.bili_cli import Bili_Live
 from src.bili_lib import wait_print
@@ -57,11 +57,15 @@ def choose(options: list[callable]) -> callable:
         i = int(input(" ："))
         if 0 <= i < len(options):
             return options[i]
+    except KeyboardInterrupt:
+        exit()
     except:
         return None
 
+
 def nothing(live: Bili_Live):
     pass
+
 
 if __name__ == "__main__":
     options = [auto, manual, area, title, help, nothing]
