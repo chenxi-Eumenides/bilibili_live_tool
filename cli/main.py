@@ -1,7 +1,8 @@
 from sys import argv, exit
+from os import path
 
-from src.bili_cli import Bili_Live
-from src.bili_lib import wait_print
+from bili_cli import Bili_Live
+from bili_lib import wait_print
 
 
 def help(live: Bili_Live):
@@ -70,7 +71,7 @@ def nothing(live: Bili_Live):
 if __name__ == "__main__":
     options = [auto, manual, area, title, help, nothing]
     option = None
-    live = Bili_Live()
+    live = Bili_Live(path.dirname(argv[0]) + "/" + "config.json")
     try:
         live.login()
         print("")

@@ -13,7 +13,7 @@ import keyboard
 
 import requests
 
-from .constant import (
+from constant import (
     APP_KEY,
     APP_SECRET,
     CONFIG_FILE,

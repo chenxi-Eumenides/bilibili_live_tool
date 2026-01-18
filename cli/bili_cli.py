@@ -5,7 +5,7 @@ from time import sleep
 
 from qrcode import QRCode
 
-from .bili_lib import (
+from bili_lib import (
     Data,
     check_bat,
     check_readme,
@@ -16,7 +16,7 @@ from .bili_lib import (
     post_json,
     sign_data,
 )
-from .constant import (
+from constant import (
     AREA_OUTPUT_LINE_NUM,
     CONFIG_FILE,
     QR_FACE_IMG,
