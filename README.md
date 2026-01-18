@@ -27,7 +27,7 @@ git clone https://github.com/chenxi-Eumenides/bilibili_live_tool.git
 # 安装依赖
 uv sync
 # 运行脚本
-uv run main_cli.py
+uv run cli/main.py
 # 扫码登录
 ```
 
