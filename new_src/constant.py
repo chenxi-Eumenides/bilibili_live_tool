@@ -5,10 +5,10 @@
 # V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
 VERSION: tuple[int, int, int, str, int] = (0, 3, 8)
 
-README_FILE: str = "使用说明.txt"
-CONFIG_FILE: str = "config.json"
-QR_IMG: str = "qr.jpg"
-QR_FACE_IMG: str = "qr_face.jpg"
+DEFAULT_README_FILE: str = "使用说明.txt"
+DEFAULT_CONFIG_FILE: str = "config.json"
+DEFAULT_QR_IMG: str = "qr.jpg"
+DEFAULT_QR_FACE_IMG: str = "qr_face.jpg"
 
 TITLE_MAX_CHAR: int = 40
 AREA_OUTPUT_LINE_NUM: int = 4

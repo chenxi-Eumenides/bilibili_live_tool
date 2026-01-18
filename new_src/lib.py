@@ -3,7 +3,7 @@ import os
 import platform
 import subprocess
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import auto, StrEnum
 from functools import reduce
 from hashlib import md5, sha256
@@ -17,7 +17,6 @@ from .constant import (
     APP_KEY,
     APP_SECRET,
     MIXIN_KEY_ENC_TAB,
-    PLATFORM,
 )
 from .error import FAIL
 
@@ -25,14 +24,6 @@ from .error import FAIL
 class RES_STATUS(StrEnum):
     OK = auto()
     FAIL = auto()
-
-
-def gen_list():
-    return []
-
-
-def gen_dict():
-    return {}
 
 
 @dataclass
@@ -51,25 +42,6 @@ class RES:
             f"REASON : {self.FAIL_REASON.name}",
         ]
         return "\n".join(lines)
-
-
-@dataclass
-class CONFIG:
-    cookies: dict = None
-    csrf: str = ""
-    csrf_token: str = ""
-
-    uid: int = 0
-    room_id: int = 0
-    title: str = ""
-    area_id: int = 0
-    parent_area_id: int = 0
-    area_v2: int = 0
-    description: str = ""
-    platform: str = PLATFORM
-
-    build: str = ""
-    version: str = ""
 
 
 @dataclass
