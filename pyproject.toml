@@ -5,14 +5,22 @@ description = "a simple tool to start or stop bilibili live and get stream code.
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
+]
+
+[dependency-groups]
+cli = [
     "image>=1.5.33",
     "keyboard>=0.13.5",
     "pypinyin>=0.55.0",
     "qrcode>=8.2",
     "requests>=2.32.3",
 ]
-
-[dependency-groups]
 dev = [
     "pyinstaller>=6.14.0",
 ]
+tui = [
+    "textual>=7.3.0",
+]
+
+[tool.uv]
+default-groups = ["cli"]
