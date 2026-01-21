@@ -4,6 +4,8 @@ from textual.widgets import Label, Static
 
 
 class InfoPage(VerticalGroup):
+    can_focus_children = False
+
     def compose(self) -> ComposeResult:
         with Vertical(id="info-page-container"):
             yield Static("账户信息", id="info-title")

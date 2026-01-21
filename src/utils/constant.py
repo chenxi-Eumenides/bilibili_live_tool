@@ -10,6 +10,10 @@ DEFAULT_CONFIG_FILE: str = "config.json"
 DEFAULT_QR_IMG: str = "qr.jpg"
 DEFAULT_QR_FACE_IMG: str = "qr_face.jpg"
 
+CSS_APP: str = "./ui/styles/App.tcss"
+CSS_MAIN_SCREEN: str = "../styles/MainScreen.tcss"
+CSS_QUIT_SCREEN: str = "../styles/QuitScreen.tcss"
+
 TITLE_MAX_CHAR: int = 40
 AREA_OUTPUT_LINE_NUM: int = 4
 
@@ -104,9 +108,7 @@ DATA: dict[str, dict] = {
     },
 }
 
-USER_AGENT: str = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
-)
+USER_AGENT: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
 HEADERS: dict = {
     "accept": "application/json, text/plain, */*",
     "accept-language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",

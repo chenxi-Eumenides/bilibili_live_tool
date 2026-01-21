@@ -4,6 +4,8 @@ from textual.widgets import Label, Static
 
 
 class DanmuPage(VerticalGroup):
+    can_focus_children = False
+
     def compose(self) -> ComposeResult:
         with Vertical(id="danmu-page-container"):
             yield Static("弹幕列表", id="danmu-title")
