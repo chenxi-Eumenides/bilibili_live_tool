@@ -1,0 +1,15 @@
+MainScreen {
+    align: center middle;
+    padding: 1;
+}
+
+#buttons {
+    height: auto;
+    width: 20;
+}
+
+ContentSwitcher {
+    border: round $primary;
+    width: 90%;
+    height: 1fr;
+}
