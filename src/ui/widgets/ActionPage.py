@@ -4,6 +4,8 @@ from textual.widgets import Button, Static
 
 
 class ActionPage(VerticalGroup):
+    can_focus_children = False
+
     def compose(self) -> ComposeResult:
         with Vertical(id="action-page-container"):
             yield Static("直播操作", id="action-title")

@@ -4,13 +4,15 @@ from textual.containers import Grid
 from textual.screen import Screen
 from textual.widgets import Button, Label
 
+from utils.constant import CSS_QUIT_SCREEN
+
 
 class QuitScreen(Screen):
     """退出确认屏幕"""
 
     current_choice = "quit-confirm"  # 默认选中取消按钮
 
-    CSS_PATH = "../styles/QuitScreen.tcss"
+    CSS_PATH = CSS_QUIT_SCREEN
     BINDINGS = [
         Binding("enter", "confirm_choice", "确认选择"),
         Binding("escape", "cancel", "取消退出"),

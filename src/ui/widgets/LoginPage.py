@@ -1,9 +1,11 @@
+from textual import on
 from textual.app import ComposeResult
 from textual.containers import CenterMiddle, VerticalGroup
 from textual.widgets import Button, Static
 
 
 class LoginPage(VerticalGroup):
+    can_focus_children = False
     login_help = (
         "欢迎使用直播管理工具\n\n"
         "请点击下方按钮进行扫码登录\n"
@@ -20,6 +22,6 @@ class LoginPage(VerticalGroup):
             yield Static("", id="login-spacer-2")
             yield Button("扫码登录", id="login_button")
 
-    def on_button_pressed(self, event: Button.Pressed):
-        if event.button.id == "login_button":
-            self.app.is_login = True
+    @on(Button.Pressed, "#login_button")
+    def press_login_button(self):
+        self.notify("login")
