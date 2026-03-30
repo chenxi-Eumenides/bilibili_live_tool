@@ -16,6 +16,7 @@ import requests
 from constant import (
     APP_KEY,
     APP_SECRET,
+    CONFIG_DEFAULT_VERSION,
     CONFIG_FILE,
     LIVEHIME_BUILD,
     LIVEHIME_VERSION,
@@ -58,10 +59,12 @@ class Data:
     area: list[dict[str, str | int | dict[str, str | int]]] = field(
         default_factory=gen_list
     )
+    config_version: int = 1
 
     def read_config(self) -> bool:
         """
-        读取config
+        读取config，支持版本1和版本2
+        无版本标识时默认为版本1，读取结果不符合时视为版本2
 
         Returns:
             bool -- 是否成功
@@ -73,22 +76,18 @@ class Data:
                 config: dict = json.load(f)
         except Exception:
             return False
+
+        # 根据版本字段判断使用哪个版本读取
+        # 没有版本标识或版本标识不符合时默认为版本1，读取结果不符合时视为版本2
+        version = config.get("version", 1)
+        if version == 1:
+            self.from_dict_v1(config)
+        elif version == 2:
+            self.from_dict_v2(config)
         else:
-            self.user_id = config.get("user_id", -1)
-            self.room_id = config.get("room_id", -1)
-            self.area_id = config.get("area_id", -1)
-            self.title = config.get("title", "")
-            self.rtmp_addr = config.get("rtmp_addr", "")
-            self.rtmp_code = config.get("rtmp_code", "")
-            self.rtmp_code_old = config.get("rtmp_code", "")
-            self.cookies_str = config.get("cookies_str", "")
-            self.cookies_str_old = config.get("cookies_str", "")
-            self.csrf = config.get("csrf", "")
-            self.refresh_token = config.get("refresh_token", "")
-            self.area = config.get("area", [])
-            self.room_data = config.get("room_data", {})
-            self.live_version = config.get("live_version", LIVEHIME_VERSION)
-            self.live_build = config.get("live_build", LIVEHIME_BUILD)
+            # 未知版本，尝试版本1
+            self.from_dict_v1(config)
+
         if self.cookies_str == "":
             return False
         try:
@@ -97,11 +96,68 @@ class Data:
             return False
         return True
 
-    def save_config(self) -> bool:
-        """
-        保存config
-        """
-        config = {
+    def from_dict_v1(self, data: dict) -> None:
+        """从版本1字典加载，不符合时尝试版本2"""
+        # 检查是否是版本1格式（有user_id字段）
+        if "user_id" not in data:
+            # 不是版本1格式，尝试版本2
+            self.from_dict_v2(data)
+            return
+        self.config_version = 1
+        self.user_id = data.get("user_id", -1)
+        self.room_id = data.get("room_id", -1)
+        self.area_id = data.get("area_id", -1)
+        self.title = data.get("title", "")
+        self.rtmp_addr = data.get("rtmp_addr", "")
+        self.rtmp_code = data.get("rtmp_code", "")
+        self.rtmp_code_old = data.get("rtmp_code", "")
+        self.cookies_str = data.get("cookies_str", "")
+        self.cookies_str_old = data.get("cookies_str", "")
+        self.csrf = data.get("csrf", "")
+        self.refresh_token = data.get("refresh_token", "")
+        self.area = data.get("area", [])
+        self.room_data = data.get("room_data", {})
+        self.live_version = data.get("live_version", LIVEHIME_VERSION)
+        self.live_build = data.get("live_build", LIVEHIME_BUILD)
+
+    def from_dict_v2(self, data: dict) -> None:
+        """从版本2字典加载，不符合时尝试版本1"""
+        # 检查是否是版本2格式（有user字段）
+        if "user" not in data:
+            # 不是版本2格式，尝试版本1
+            self.from_dict_v1(data)
+            return
+        self.config_version = 2
+        # 新的嵌套结构
+        user_data = data.get("user", {})
+        live_data = data.get("live", {})
+        room_data = data.get("data", {}).get("room", {})
+
+        # 用户信息
+        self.user_id = int(user_data.get("uid", -1))
+        self.csrf = user_data.get("csrf", "")
+        self.refresh_token = user_data.get("refresh_token", "")
+        self.cookies_str = user_data.get("cookies_str", "")
+
+        # 直播设置
+        self.room_id = int(live_data.get("room_id", -1))
+        self.title = live_data.get("title", "")
+        self.area_id = int(live_data.get("area_id", -1))
+        self.rtmp_addr = live_data.get("rtmp_addr", "")
+        self.rtmp_code = live_data.get("rtmp_code", "")
+
+        # 房间数据
+        if room_data:
+            self.room_data = room_data
+            self.live_status = int(room_data.get("live_status", -1))
+
+        # 分区列表（版本2中可能在data.area）
+        self.area = data.get("data", {}).get("area", [])
+
+    def to_dict_v1(self) -> dict:
+        """转换为版本1字典"""
+        return {
+            "version": 1,
             "user_id": self.user_id,
             "room_id": self.room_id,
             "area_id": self.area_id,
@@ -112,10 +168,45 @@ class Data:
             "csrf": self.csrf,
             "refresh_token": self.refresh_token,
             "room_data": self.room_data,
-            "live_version": self.live_version,
-            "live_build": self.live_build,
+            "live_version": self.live_version or LIVEHIME_VERSION,
+            "live_build": self.live_build or LIVEHIME_BUILD,
             "area": self.area,
         }
+
+    def to_dict_v2(self) -> dict:
+        """转换为版本2字典"""
+        return {
+            "version": 2,
+            "user": {
+                "uid": self.user_id,
+                "cookies_str": self.cookies_str,
+                "csrf": self.csrf,
+                "refresh_token": self.refresh_token,
+                "refresh_time": 0,
+            },
+            "live": {
+                "room_id": self.room_id,
+                "title": self.title,
+                "area_id": self.area_id,
+                "rtmp_addr": self.rtmp_addr,
+                "rtmp_code": self.rtmp_code,
+            },
+            "data": {
+                "room": self.room_data,
+                "area": self.area,
+            },
+        }
+
+    def save_config(self) -> bool:
+        """
+        保存config，默认使用版本2格式
+        """
+        # 使用 CONFIG_DEFAULT_VERSION 作为默认保存版本
+        if CONFIG_DEFAULT_VERSION == 1:
+            config = self.to_dict_v1()
+        else:
+            config = self.to_dict_v2()
+
         try:
             with open(self.config_file, "w", encoding="utf-8") as f:
                 json.dump(config, f, ensure_ascii=False, indent=4)
