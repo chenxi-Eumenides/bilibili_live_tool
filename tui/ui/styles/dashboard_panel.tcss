@@ -1,0 +1,58 @@
+/* ===== DashboardPanel - 信息面板样式 ===== */
+
+DashboardPanel {
+    height: 100%;
+    padding: 1;
+}
+DashboardPanel .info-card {
+    background: #2a2a2a;
+    border: solid #006f95;
+    padding: 1 2;
+    margin: 0;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-size: 1 1;
+}
+
+DashboardPanel .section-title {
+    color: #00a1d6;
+    text-style: bold;
+    margin-bottom: 1;
+    height: 1;
+}
+
+DashboardPanel .info-grid {
+    grid-size: 2;
+    height: auto;
+}
+
+DashboardPanel .info-label {
+    color: #999999;
+    height: 1;
+}
+
+DashboardPanel .info-value {
+    color: #e5e5e5;
+    text-style: bold;
+    height: 1;
+    margin-bottom: 1;
+}
+
+DashboardPanel .column-top {
+    height: auto;
+    width: 100%;
+    padding: 0 0;
+    margin: 0;
+}
+
+DashboardPanel .column-left {
+    height: auto;
+    width: 100%;
+    padding-right: 1;
+}
+
+DashboardPanel .column-right {
+    height: auto;
+    width: 100%;
+    padding-left: 1;
+}

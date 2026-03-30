@@ -1,0 +1,32 @@
+/* ===== AuthPanel - 登录面板样式 ===== */
+
+AuthPanel {
+    align: center middle;
+    height: 100%;
+}
+
+AuthPanel #qr-container {
+    width: auto;
+    height: auto;
+    padding: 2;
+    background: #2a2a2a;
+    border: solid #00a1d6;
+}
+
+AuthPanel #qr-title {
+    text-align: center;
+    margin-bottom: 1;
+}
+
+AuthPanel #qr-placeholder {
+    text-align: center;
+}
+
+AuthPanel #status-text {
+    text-align: center;
+    margin-top: 1;
+}
+
+AuthPanel #login-button {
+    margin-top: 2;
+}

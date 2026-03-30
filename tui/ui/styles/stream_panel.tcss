@@ -1,0 +1,45 @@
+/* ===== StreamPanel - 推流信息面板样式 ===== */
+
+StreamPanel {
+    height: 100%;
+}
+
+StreamPanel .scroll-container {
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-size: 1 1;
+}
+
+StreamPanel .stream-card {
+    background: #2a2a2a;
+    border: solid #00a1d6;
+    padding: 2;
+    margin: 1 0;
+    height: auto;
+}
+
+StreamPanel .stream-label {
+    color: #999999;
+    margin-bottom: 1;
+}
+
+StreamPanel .stream-value {
+    background: #3a3a3a;
+    color: #e5e5e5;
+    padding: 1;
+    text-style: bold;
+    margin-bottom: 2;
+}
+
+StreamPanel .button-row {
+    height: auto;
+    margin-top: 2;
+    align: center middle;
+}
+
+StreamPanel #live-indicator {
+    text-align: center;
+    text-style: bold;
+    color: #f5222d;
+    margin-bottom: 2;
+}

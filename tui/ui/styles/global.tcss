@@ -1,0 +1,100 @@
+/* ===== 全局样式 ===== */
+
+/* 应用级别 */
+App {
+    background: #1a1a1a;
+    color: #e5e5e5;
+}
+
+/* 通用组件 */
+Button {
+    background: #00a1d6;
+    color: white;
+    border: none;
+    padding: 0 2;
+}
+
+Button:hover {
+    background: #0089b6;
+}
+
+Button:focus {
+    background: #006f95;
+}
+
+Button.primary {
+    background: #00a1d6;
+}
+
+Button.success {
+    background: #52c41a;
+}
+
+Button.error {
+    background: #f5222d;
+}
+
+Input {
+    background: #2a2a2a;
+    border: solid #006f95;
+    padding: 0 1;
+}
+
+Input:focus {
+    border: solid #00a1d6;
+}
+
+Static {
+    color: #e5e5e5;
+}
+
+Select {
+    background: #2a2a2a;
+    border: solid #006f95;
+}
+
+Select:focus {
+    border: solid #00a1d6;
+}
+
+/* 状态指示 */
+.status-online {
+    color: #52c41a;
+}
+
+.status-offline {
+    color: #999999;
+}
+
+.status-live {
+    color: #f5222d;
+}
+
+/* 日志样式 */
+Log {
+    background: #3a3a3a;
+    border: solid #005574;
+    padding: 0 1;
+}
+
+/* 帮助文本 */
+.help-text {
+    color: #999999;
+    text-style: italic;
+}
+
+/* 加载状态 */
+.loading {
+    text-style: bold;
+    color: #00a1d6;
+}
+
+/* 滚动条 */
+Scrollbar {
+    background: #2a2a2a;
+    color: #00a1d6;
+}
+
+Scrollbar:hover {
+    background: #3a3a3a;
+}
