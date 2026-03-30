@@ -1,0 +1,56 @@
+/* ===== HelpPanel - 帮助面板样式 ===== */
+
+HelpPanel {
+    height: 100%;
+    align: center middle;
+}
+
+HelpPanel .help-card {
+    width: 70;
+    height: auto;
+    background: #2a2a2a;
+    border: solid #00a1d6;
+    padding: 2 3;
+}
+
+HelpPanel .help-title {
+    text-align: center;
+    text-style: bold;
+    color: #e5e5e5;
+    margin-bottom: 2;
+}
+
+HelpPanel .section-title {
+    color: #00a1d6;
+    text-style: bold;
+    margin: 1 0;
+    height: 1;
+}
+
+HelpPanel .key-row {
+    layout: horizontal;
+    height: auto;
+    margin: 0 2;
+}
+
+HelpPanel .key-name {
+    width: 15;
+    color: #e5e5e5;
+    text-style: bold;
+}
+
+HelpPanel .key-desc {
+    width: 1fr;
+    color: #999999;
+}
+
+HelpPanel .help-text {
+    color: #999999;
+    margin: 0 2;
+}
+
+HelpPanel .button-row {
+    height: auto;
+    margin-top: 2;
+    align: center middle;
+}

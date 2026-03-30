@@ -1,0 +1,62 @@
+/* ===== SettingsPanel - 管理面板样式 ===== */
+
+SettingsPanel {
+    height: 100%;
+    padding: 0;
+}
+
+SettingsPanel .settings-content {
+    padding: 0;
+    margin: 0;
+}
+
+SettingsPanel .settings-card {
+    background: #2a2a2a;
+    border: solid #00a1d6;
+    padding: 1 2;
+    margin: 1;
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-size: 1 1;
+}
+
+SettingsPanel .settings-label {
+    color: #999999;
+    margin: 1 0 0 0;
+    height: 1;
+}
+
+SettingsPanel Input {
+    height: 3;
+    margin: 0 0 1 0;
+}
+
+SettingsPanel .area-row {
+    height: auto;
+    margin: 0;
+}
+
+SettingsPanel .area-select {
+    width: 1fr;
+    margin: 0;
+    padding: 0;
+}
+
+SettingsPanel Select {
+    height: 5;
+    margin: 0;
+    padding: 0;
+}
+
+SettingsPanel Select Overlay {
+    max-height: 15;
+}
+
+SettingsPanel .button-row {
+    height: auto;
+    dock: bottom;
+    padding: 0;
+    margin: 0;
+    align: center middle;
+    background: #1a1a1a;
+}
