@@ -1,8 +1,9 @@
 from sys import argv, exit
 from os import path
+from typing import Callable
 
-from bili_cli import Bili_Live
-from bili_lib import wait_print
+from .bili_cli import Bili_Live
+from .bili_lib import wait_print
 
 
 def help(live: Bili_Live):
@@ -47,7 +48,7 @@ def auto(live: Bili_Live):
         return False
 
 
-def choose(options: list[callable]) -> callable:
+def choose(options: list[Callable]) -> Callable | None:
     print("输入以下选项，手动选择：")
     print("0 自动开播")
     print("1 手动选择开播")
@@ -68,8 +69,8 @@ def nothing(live: Bili_Live):
     pass
 
 
-if __name__ == "__main__":
-    options = [auto, manual, area, title, help, nothing]
+def main():
+    options: list[Callable] = [auto, manual, area, title, help, nothing]
     option = None
     live = Bili_Live(path.dirname(argv[0]) + "/" + "config.json")
     try:
@@ -82,6 +83,9 @@ if __name__ == "__main__":
 
     if len(argv) > 1:
         option = argv[1]
+        print(option)
+        option = {o.__name__: o for o in options}.get(option, None)
+        print(option)
     elif wait_print(time=3, postfix="秒后自动开播，按 Enter 进入手动选择："):
         print("")
         option = choose(options)
@@ -98,3 +102,7 @@ if __name__ == "__main__":
         exit()
     except BaseException as e:
         print(f"出错了，报错信息：{e}")
+
+
+if __name__ == "__main__":
+    main()
