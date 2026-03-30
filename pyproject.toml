@@ -12,6 +12,9 @@ dependencies = [
     "requests>=2.32.3",
 ]
 
+[project.scripts]
+bili-tui = "tui.app.main:main"
+
 [dependency-groups]
 cli = [
 ]
