@@ -66,29 +66,8 @@ class HelpPanel(ScrollableContainer):
 
             yield Static("快捷键", classes="section-title")
             with Horizontal(classes="key-row"):
-                yield Static("Space", classes="key-name")
-                yield Static("开播/下播切换", classes="key-desc")
-            with Horizontal(classes="key-row"):
-                yield Static("T", classes="key-name")
-                yield Static("修改直播标题", classes="key-desc")
-            with Horizontal(classes="key-row"):
-                yield Static("A", classes="key-name")
-                yield Static("修改直播分区", classes="key-desc")
-            with Horizontal(classes="key-row"):
-                yield Static("R", classes="key-name")
-                yield Static("刷新状态", classes="key-desc")
-            with Horizontal(classes="key-row"):
-                yield Static("C", classes="key-name")
-                yield Static("复制推流码", classes="key-desc")
-            with Horizontal(classes="key-row"):
-                yield Static("Shift+C", classes="key-name")
-                yield Static("复制全部推流信息", classes="key-desc")
-            with Horizontal(classes="key-row"):
                 yield Static("Q / Esc", classes="key-name")
                 yield Static("退出程序", classes="key-desc")
-            with Horizontal(classes="key-row"):
-                yield Static("Tab", classes="key-name")
-                yield Static("切换焦点", classes="key-desc")
 
             yield Static("", classes="section-title")
             yield Static("使用说明", classes="section-title")
@@ -100,11 +79,3 @@ class HelpPanel(ScrollableContainer):
             yield Static("", classes="section-title")
             yield Static("版本信息", classes="section-title")
             yield Static("BiliLiveTool v0.4.0", classes="help-text")
-
-            with Horizontal(classes="button-row"):
-                yield Button("返回", id="btn-back", variant="primary")
-
-    def on_button_pressed(self, event: Button.Pressed):
-        """处理按钮点击"""
-        if event.button.id == "btn-back":
-            self.app.show_info_panel()

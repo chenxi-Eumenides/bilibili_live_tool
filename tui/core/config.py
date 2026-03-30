@@ -9,7 +9,7 @@ from typing import Optional
 import json
 import logging
 
-from ..utils.constants import CONFIG_FILE, LIVEHIME_BUILD, LIVEHIME_VERSION
+from ..utils.constants import CONFIG_DEFAULT_VERSION, CONFIG_FILE, LIVEHIME_BUILD, LIVEHIME_VERSION
 
 logger = logging.getLogger(__name__)
 
@@ -49,16 +49,16 @@ class Config:
     live_version: str = LIVEHIME_VERSION
     live_build: str = LIVEHIME_BUILD
 
-    config_version: int = 1
+    config_version: int = CONFIG_DEFAULT_VERSION
 
     def to_dict(self) -> dict:
-        """转换为字典"""
-        if self.config_version == 1:
+        """转换为字典，默认使用 CONFIG_DEFAULT_VERSION"""
+        if CONFIG_DEFAULT_VERSION == 1:
             return self.to_dict_v1()
-        elif self.config_version == 2:
+        elif CONFIG_DEFAULT_VERSION == 2:
             return self.to_dict_v2()
         else:
-            return self.to_dict_v1()
+            return self.to_dict_v2()
 
     def to_dict_v1(self) -> dict:
         """转换为字典"""
@@ -106,17 +106,24 @@ class Config:
         return result
 
     def from_dict(self, data: dict) -> None:
-        if data.get("version", -1) == 1:
-            self.from_dict_v1(data)
-        elif data.get("version", -1) == 2:
-            self.from_dict_v2(data)
+        """从字典加载，支持版本1和版本2
+        没有版本标识或版本标识不符合时默认为版本1，读取结果不符合时视为版本2
+        """
+        version = data.get("version", 1)
+        if version == 1:
+            success = self.from_dict_v1(data)
+        elif version == 2:
+            success = self.from_dict_v2(data)
         else:
-            self.from_dict_v1(data)
+            # 未知版本，尝试版本1
+            success = self.from_dict_v1(data)
 
     def from_dict_v1(self, data: dict) -> bool:
-        """从字典加载"""
-        if data.get("version", -1) != 1:
-            return False
+        """从版本1字典加载，不符合时尝试版本2"""
+        # 检查是否是版本1格式（有user_id字段）
+        if "user_id" not in data:
+            # 不是版本1格式，尝试版本2
+            return self.from_dict_v2(data)
         self.config_version = 1
         self.user_id = data.get("user_id", -1)
         self.room_id = data.get("room_id", -1)
@@ -142,9 +149,11 @@ class Config:
         return True
 
     def from_dict_v2(self, data: dict) -> bool:
-        """从字典加载"""
-        if data.get("version", -1) != 2:
-            return False
+        """从版本2字典加载，不符合时尝试版本1"""
+        # 检查是否是版本2格式（有user字段）
+        if "user" not in data:
+            # 不是版本2格式，尝试版本1
+            return self.from_dict_v1(data)
         self.config_version = 2
         # 新的嵌套结构
         user_data = data.get("user", {})

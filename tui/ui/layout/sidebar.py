@@ -3,17 +3,16 @@
 显示导航按钮和状态信息。
 """
 
-from textual.widgets import Static, Button
+from textual.widgets import Button
 from textual.containers import Vertical
 from textual.app import ComposeResult
-from textual.reactive import reactive
 
-import requests
-import threading
+from ...utils.constants import AppState
 
-from ...utils.constants import AppState, Messages, ApiEndpoints
-from ...core.config import ConfigManager
-from ...core.live import LiveManager
+# 类型声明
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..app import BiliLiveApp
 
 
 class Sidebar(Vertical):
@@ -37,6 +36,10 @@ class Sidebar(Vertical):
         dock: bottom;
     }
     """
+
+    @property
+    def app(self) -> BiliLiveApp:
+        return super().app  # type: ignore
 
     def compose(self) -> ComposeResult:
         """组合导航按钮"""

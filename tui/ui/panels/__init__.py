@@ -5,7 +5,6 @@
 
 from .auth_panel import AuthPanel
 from .dashboard_panel import DashboardPanel
-from .stream_panel import StreamPanel
 from .settings_panel import SettingsPanel
 
-__all__ = ["AuthPanel", "DashboardPanel", "StreamPanel", "SettingsPanel"]
+__all__ = ["AuthPanel", "DashboardPanel", "SettingsPanel"]

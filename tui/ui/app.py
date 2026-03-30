@@ -3,6 +3,10 @@
 定义BiliLiveApp主类和全局状态管理。
 """
 
+import logging
+import threading
+from typing import TypeVar
+
 from textual.app import App
 from textual.reactive import reactive
 from textual.binding import Binding
@@ -19,8 +23,8 @@ from .layout.main_panel import MainPanel
 from .layout.status_bar import StatusBar
 from .screen.QRDisplayScreen import QRDisplayScreen
 
-import logging
-import threading
+
+BiliLiveAppType = TypeVar("BiliLiveAppType", bound=App)
 
 class BiliLiveApp(App):
     """B站直播工具TUI应用主类"""
@@ -249,7 +253,7 @@ class BiliLiveApp(App):
         """开播/下播切换"""
         if self.app_state == AppState.UNAUTH:
             # 未登录，弹出提示
-            self.app.show_notification(Messages.NOT_LOGGED_IN)
+            self.show_notification(Messages.NOT_LOGGED_IN)
             return
 
         if self.app_state == AppState.IDLE:

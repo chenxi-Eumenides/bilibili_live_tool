@@ -7,9 +7,18 @@ from textual.widgets import Static, Button, Input, Select
 from textual.containers import Vertical, Horizontal, ScrollableContainer
 from textual.app import ComposeResult
 
+from textual.types import NoSelection
+
+# 类型声明
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..app import BiliLiveApp
 
 class SettingsPanel(Vertical):
     """设置面板"""
+    @property
+    def app(self) -> BiliLiveApp:
+        return super().app # type: ignore
 
     def __init__(self):
         super().__init__()
@@ -24,13 +33,13 @@ class SettingsPanel(Vertical):
 
                 yield Static("选择分区", classes="settings-label")
                 with Horizontal(classes="area-row"):
-                    yield Select(
+                    yield Select[int](
                         [],
                         id="parent-area-select",
                         prompt="主分区",
                         classes="area-select",
                     )
-                    yield Select(
+                    yield Select[int](
                         [],
                         id="child-area-select",
                         prompt="子分区",
@@ -105,7 +114,7 @@ class SettingsPanel(Vertical):
             pass
 
     def _load_child_areas(
-        self, child_areas: list[dict[str, int | str]], default_child_id: int = None
+        self, child_areas: list[dict[str, int | str]], default_child_id: int = 0
     ):
         """加载子分区列表"""
         try:
@@ -113,10 +122,10 @@ class SettingsPanel(Vertical):
 
             if child_areas:
                 # 准备选项
-                options = [(child["name"], child["id"]) for child in child_areas]
+                options: list[tuple] = [(child["name"], child["id"]) for child in child_areas]
 
                 # 如果没有指定或找不到，使用第一个
-                if default_child_id is None and child_areas:
+                if default_child_id == 0 and child_areas:
                     target_child_id = child_areas[0]["id"]
                 else:
                     target_child_id = default_child_id
@@ -146,7 +155,7 @@ class SettingsPanel(Vertical):
         """处理选择器变化"""
         if event.select.id == "parent-area-select":
             parent_id = event.value
-            if parent_id:
+            if isinstance(parent_id, int) and parent_id:
                 area = self.app.config_manager.get_child_areas(parent_id)
                 self._load_child_areas(area)
 
@@ -162,7 +171,7 @@ class SettingsPanel(Vertical):
     def _save_config(self):
         """更新配置"""
         title_input = self.query_one("#title-input", Input)
-        child_select = self.query_one("#child-area-select", Select)
+        child_select = self.query_one("#child-area-select", Select[int])
 
         title = title_input.value.strip()
         area_id = child_select.value
@@ -171,7 +180,7 @@ class SettingsPanel(Vertical):
             self.app.show_notification("请输入直播标题")
             return
 
-        if not area_id:
+        if isinstance(area_id, NoSelection) or area_id == 0:
             self.app.show_notification("请选择直播分区")
             return
 
