@@ -39,7 +39,7 @@ class AuthPanel(Vertical):
     }
     """
     @property
-    def app(self) -> BiliLiveApp:
+    def app(self) -> "BiliLiveApp":
         return super().app # type: ignore
 
     def __init__(self):

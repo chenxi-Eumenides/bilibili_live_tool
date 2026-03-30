@@ -5,7 +5,6 @@
 
 import logging
 import threading
-from typing import TypeVar
 
 from textual.app import App
 from textual.reactive import reactive
@@ -23,8 +22,6 @@ from .layout.main_panel import MainPanel
 from .layout.status_bar import StatusBar
 from .screen.QRDisplayScreen import QRDisplayScreen
 
-
-BiliLiveAppType = TypeVar("BiliLiveAppType", bound=App)
 
 class BiliLiveApp(App):
     """B站直播工具TUI应用主类"""
