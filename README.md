@@ -31,17 +31,15 @@ uv sync
 
 ```bash
 # 运行TUI应用
-uv run python -m tui.app.main
+uv run --group tui -m tui.main
 ```
 
 #### CLI 模式
 
 ```bash
 # 运行CLI脚本
-uv run cli/main.py
-# 扫码登录
+uv run --group cli -m cli.main
 ```
-
 
 ## 使用方法
 
