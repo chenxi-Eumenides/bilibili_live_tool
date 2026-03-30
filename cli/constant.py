@@ -3,7 +3,7 @@
 # tuple[int, int, int, str, int]
 # 0.0.1 (0, 0, 1)
 # V0.0.1-alpha-1 (0, 0, 1, "alpha", 1)
-VERSION = (0, 3, 13)
+VERSION = (0, 3, 14)
 
 # 文件名
 README_FILE = "使用说明.txt"
@@ -20,6 +20,9 @@ LIVEHIME_VERSION: str = "7.40.0.10082"
 # 配置
 TITLE_MAX_CHAR: int = 40
 AREA_OUTPUT_LINE_NUM: int = 4
+
+# 配置文件版本
+CONFIG_DEFAULT_VERSION: int = 2  # 默认保存的配置版本
 
 # URL
 URL_GET_ROOM_ID: str = "https://api.live.bilibili.com/room/v2/Room/room_id_by_uid"
