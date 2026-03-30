@@ -7,8 +7,6 @@ from textual.widgets import Static
 from textual.containers import Horizontal
 from textual.app import ComposeResult
 
-from ...utils.constants import AppState, KeyBindings
-
 
 class StatusBar(Horizontal):
     """底部状态栏组件"""

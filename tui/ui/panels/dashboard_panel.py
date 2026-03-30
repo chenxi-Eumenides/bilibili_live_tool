@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 class DashboardPanel(Vertical):
     """主控制台面板"""
     @property
-    def app(self) -> BiliLiveApp:
+    def app(self) -> "BiliLiveApp":
         return super().app # type: ignore
 
     def __init__(self):

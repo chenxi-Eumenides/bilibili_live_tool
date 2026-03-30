@@ -8,6 +8,10 @@ from textual.containers import Container
 from textual.app import ComposeResult
 
 from ...utils.constants import AppState
+from ..panels.auth_panel import AuthPanel
+from ..panels.dashboard_panel import DashboardPanel
+from ..panels.settings_panel import SettingsPanel
+from ..panels.help_panel import HelpPanel
 
 
 class MainPanel(Container):
@@ -46,24 +50,18 @@ class MainPanel(Container):
             if panel == "info":
                 # 信息面板
                 if state == AppState.UNAUTH:
-                    from ..panels.auth_panel import AuthPanel
                     self.mount(AuthPanel())
                 else:
-                    from ..panels.dashboard_panel import DashboardPanel
                     self.mount(DashboardPanel())
             elif panel == "manage":
                 # 管理面板
                 if state == AppState.UNAUTH:
-                    from ..panels.auth_panel import AuthPanel
                     self.mount(AuthPanel())
                 else:
-                    from ..panels.settings_panel import SettingsPanel
                     self.mount(SettingsPanel())
             elif panel == "help":
                 # 帮助面板 - 始终显示
-                from ..panels.help_panel import HelpPanel
                 self.mount(HelpPanel())
         except Exception as e:
             # 如果面板加载失败，显示错误信息
-            from textual.widgets import Static
             self.mount(Static(f"加载面板失败: {e}"))

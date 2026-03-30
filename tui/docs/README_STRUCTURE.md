@@ -21,8 +21,7 @@ tui/
 │   ├── __init__.py             # 导出核心管理器类（必需，聚合Auth/Live/Config）
 │   ├── auth.py                 # 登录管理（二维码登录、扫码状态轮询）
 │   ├── config.py               # 配置管理（Config数据类/ConfigManager持久化）
-│   ├── live.py                 # 直播操作（开播/下播/信息获取/分区列表）
-│   └── stream.py               # 推流码管理（StreamInfo数据展示）
+│   └── live.py                 # 直播操作（开播/下播/信息获取/分区列表）
 │
 ├── ui/                         # 用户界面层
 │   ├── __init__.py             # UI包入口（必需，标识为包）
@@ -40,7 +39,6 @@ tui/
 │   │   ├── auth_panel.py       # 登录面板（二维码显示/登录流程）
 │   │   ├── dashboard_panel.py  # 控制台面板（直播间信息/时长计时）
 │   │   ├── settings_panel.py   # 设置面板（标题/分区配置）
-│   │   ├── stream_panel.py     # 推流面板（推流码显示/OBS配置）
 │   │   └── help_panel.py       # 帮助面板（快捷键/使用说明）
 │   │
 │   ├── screen/                 # 屏幕层（弹窗/全屏）

@@ -9,7 +9,7 @@ from textual.app import ComposeResult
 
 from ...utils.constants import AppState
 
-# 类型声明
+# 修复类型提示报错
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from ..app import BiliLiveApp
@@ -38,7 +38,7 @@ class Sidebar(Vertical):
     """
 
     @property
-    def app(self) -> BiliLiveApp:
+    def app(self) -> "BiliLiveApp": # 修复类型提示报错
         return super().app  # type: ignore
 
     def compose(self) -> ComposeResult:
