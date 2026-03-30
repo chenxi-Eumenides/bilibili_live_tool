@@ -51,6 +51,9 @@ __all__ = [
 TITLE_MAX_CHAR: int = 40
 AREA_OUTPUT_LINE_NUM: int = 4
 
+# ===== 配置文件版本 =====
+CONFIG_DEFAULT_VERSION: int = 2  # 默认保存的配置版本
+
 # ===== API端点 =====
 class ApiEndpoints:
     """B站API端点"""

@@ -5,12 +5,15 @@
 """
 
 import threading
-import time
 
 from textual.widgets import Static, Button
 from textual.containers import Vertical
 from textual.app import ComposeResult
 
+# 类型声明
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..app import BiliLiveApp
 
 class AuthPanel(Vertical):
     """二维码登录面板"""
@@ -35,6 +38,9 @@ class AuthPanel(Vertical):
         margin-top: 2;
     }
     """
+    @property
+    def app(self) -> BiliLiveApp:
+        return super().app # type: ignore
 
     def __init__(self):
         super().__init__()

@@ -10,10 +10,19 @@ from textual.containers import Vertical, Horizontal, Grid, ScrollableContainer
 from textual.app import ComposeResult
 
 from ...utils.constants import AppState
+from ...core.config import Config
+from ..layout.header import Header
 
+# 类型声明
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from ..app import BiliLiveApp
 
 class DashboardPanel(Vertical):
     """主控制台面板"""
+    @property
+    def app(self) -> BiliLiveApp:
+        return super().app # type: ignore
 
     def __init__(self):
         super().__init__()
@@ -47,6 +56,11 @@ class DashboardPanel(Vertical):
                     yield Static("--", id="room-area", classes="info-value")
                     yield Static("直播时长", classes="info-label")
                     yield Static("--", id="room-duration", classes="info-value")
+            with Vertical(classes="column-bottom"):
+                yield Static("推流地址", classes="info-label")
+                yield Static("--", id="rtmp-addr", classes="info-value")
+                yield Static("推流码", classes="info-label")
+                yield Static("--", id="rtmp-code", classes="info-value")
 
     def on_mount(self):
         """组件挂载时更新信息"""
@@ -142,7 +156,7 @@ class DashboardPanel(Vertical):
     def _update_from_config(self):
         """从配置更新显示"""
         try:
-            config = self.app.config_manager.get_config()
+            config: Config = self.app.config_manager.get_config()
             room_data = config.room_data if config else {}
 
             if room_data:
@@ -164,6 +178,12 @@ class DashboardPanel(Vertical):
                 )
                 self.query_one("#room-id", Static).update(
                     str(config.room_id) if config.room_id > 0 else "--"
+                )
+                self.query_one("#rtmp-addr", Static).update(
+                    str(config.rtmp_addr) if config.rtmp_addr else "--"
+                )
+                self.query_one("#rtmp-code", Static).update(
+                    str(config.rtmp_code) if config.rtmp_code else "--"
                 )
 
                 # 处理直播时长
@@ -208,6 +228,7 @@ class DashboardPanel(Vertical):
 
             # 获取最新直播间信息
             info = self.app.live_manager.fetch_room_info()
+            config: Config = self.app.config_manager.get_config()
 
             if info:
                 # 更新UI基本信息
@@ -233,6 +254,14 @@ class DashboardPanel(Vertical):
                 self.app.call_from_thread(
                     self.query_one("#follower-count", Static).update,
                     str(info.attention) if info.attention is not None else "--",
+                )
+                self.app.call_from_thread(
+                    self.query_one("#rtmp-addr", Static).update,
+                    str(config.rtmp_addr) if config.rtmp_addr else "--"
+                )
+                self.app.call_from_thread(
+                    self.query_one("#rtmp-code", Static).update,
+                    str(config.rtmp_code) if config.rtmp_code else "--"
                 )
 
                 # 处理直播时长
@@ -279,7 +308,7 @@ class DashboardPanel(Vertical):
             color: 颜色 (red, green, yellow, blue)
         """
         try:
-            header = self.app.query_one("Header")
+            header: Header = self.app.query_one("Header", Header)
             header.set_update_status(status_text, color)
         except Exception:
             pass
