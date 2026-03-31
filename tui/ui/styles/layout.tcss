@@ -43,23 +43,32 @@ Header #status-indicator {
 }
 
 Sidebar {
-    width: 20;
+    width: 20%;
+    min-width: 19;
+    max-width: 23;
     background: #3a3a3a;
     border-right: solid #006f95;
     padding: 1;
 }
 
-Sidebar .nav-button {
-    margin: 1 0;
-}
-
 Sidebar .nav-buttons-top {
     height: auto;
+    width: 100%;
+    align: center middle;
 }
 
 Sidebar .nav-buttons-bottom {
     height: auto;
+    width: 100%;
+    align: center middle;
     dock: bottom;
+}
+
+Sidebar .nav-button {
+    height: 3;
+    width: 100%;
+    margin: 1 0;
+    text-align: center;
 }
 
 MainPanel {
@@ -71,4 +80,10 @@ StatusBar {
     height: 2;
     background: #2a2a2a;
     border-top: solid #006f95;
+    dock: bottom;
+    content-align: center middle;
+}
+
+StatusBar #shortcuts-text {
+    content-align: center middle;
 }

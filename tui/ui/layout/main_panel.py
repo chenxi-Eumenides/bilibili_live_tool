@@ -21,13 +21,6 @@ class MainPanel(Container):
     根据全局状态和当前选中的面板自动切换显示内容。
     """
 
-    DEFAULT_CSS = """
-    MainPanel {
-        background: $surface;
-        padding: 1;
-    }
-    """
-
     def __init__(self):
         super().__init__()
 

@@ -7,7 +7,7 @@ from enum import Enum, auto
 from pathlib import Path
 
 # ===== 版本信息 =====
-VERSION = (0, 4, 1)
+VERSION = (0, 4, 2)
 VERSION_STR = ".".join(map(str, VERSION))
 
 # ===== 基础路径 =====
@@ -49,6 +49,7 @@ __all__ = [
     "Messages",
     "Styles",
 ]
+
 
 # ===== 配置限制 =====
 TITLE_MAX_CHAR: int = 40
@@ -129,14 +130,16 @@ class Messages:
 
 # ===== 样式常量 =====
 class Styles:
-    """UI样式常量"""
+    """UI样式常量 - 深色主题"""
 
-    PRIMARY_COLOR = "#00a1d6"  # B站蓝
-    SUCCESS_COLOR = "#52c41a"  # 成功绿
-    WARNING_COLOR = "#faad14"  # 警告黄
-    ERROR_COLOR = "#f5222d"  # 错误红
-    TEXT_PRIMARY = "#e5e5e5"  # 主要文字
-    TEXT_SECONDARY = "#999999"  # 次要文字
-    BG_DARK = "#1a1a1a"  # 深色背景
-    BG_CARD = "#2a2a2a"  # 卡片背景
-    BORDER_COLOR = "#3a3a3a"  # 边框颜色
+    ACCENT_COLOR = "#06b6d4"      # 青色强调色
+    SUCCESS_COLOR = "#22c55e"     # 成功绿
+    WARNING_COLOR = "#f59e0b"     # 警告黄
+    ERROR_COLOR = "#ef4444"       # 错误红
+    TEXT_PRIMARY = "#ffffff"      # 主文字 - 纯白
+    TEXT_SECONDARY = "#a1a1aa"    # 次文字 - 淡灰
+    TEXT_MUTED = "#71717a"        # 辅助文字 - 中灰
+    BG_PRIMARY = "#09090b"        # 最深背景 - 近黑
+    BG_SECONDARY = "#18181b"      # 二级背景 - 深灰
+    BG_TERTIARY = "#27272a"       # 三级背景 - 中深灰
+    BORDER_COLOR = "#3f3f46"      # 边框颜色

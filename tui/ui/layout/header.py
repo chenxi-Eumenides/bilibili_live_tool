@@ -7,46 +7,11 @@ from textual.widgets import Static
 from textual.containers import Horizontal
 from textual.app import ComposeResult
 
-from ...utils.constants import VERSION_STR
+from ...utils.constants import VERSION_STR, Styles
 
 
 class Header(Static):
     """顶部标题栏组件"""
-
-    DEFAULT_CSS = """
-    Header {
-        height: 1;
-        background: $surface-darken-1;
-        color: $text;
-        padding: 0 2;
-        dock: top;
-        border-bottom: solid $primary-darken-2;
-    }
-    Header #header-container {
-        height: auto;
-        width: 100%;
-        layout: horizontal;
-    }
-    Header #app-title {
-        width: auto;
-        content-align: center middle;
-        text-style: bold;
-    }
-    Header #app-version {
-        width: auto;
-        content-align: center middle;
-        color: $text-muted;
-    }
-    Header #update-status {
-        width: auto;
-        content-align: right middle;
-        margin-right: 1;
-    }
-    Header #status-indicator {
-        width: auto;
-        content-align: right middle;
-    }
-    """
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="header-container"):
@@ -67,10 +32,10 @@ class Header(Static):
         status_widget = self.query_one("#status-indicator", Static)
 
         color_map = {
-            "red": "#f5222d",
-            "green": "#52c41a",
-            "yellow": "#faad14",
-            "blue": "#00a1d6",
+            "red": Styles.ERROR_COLOR,
+            "green": Styles.SUCCESS_COLOR,
+            "yellow": Styles.WARNING_COLOR,
+            "blue": Styles.ACCENT_COLOR,
         }
 
         indicator_color = color_map.get(color, "white")
@@ -90,10 +55,10 @@ class Header(Static):
             return
 
         color_map = {
-            "red": "#f5222d",
-            "green": "#52c41a",
-            "yellow": "#faad14",
-            "blue": "#00a1d6",
+            "red": Styles.ERROR_COLOR,
+            "green": Styles.SUCCESS_COLOR,
+            "yellow": Styles.WARNING_COLOR,
+            "blue": Styles.ACCENT_COLOR,
         }
 
         text_color = color_map.get(color, "white")

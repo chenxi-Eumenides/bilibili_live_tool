@@ -5,6 +5,21 @@ AuthPanel {
     height: 100%;
 }
 
+AuthPanel #login-container {
+    width: auto;
+    height: auto;
+    padding: 2;
+    background: #2a2a2a;
+    border: solid #00a1d6;
+}
+AuthPanel #status-text {
+    text-align: center;
+    margin-top: 1;
+}
+AuthPanel #login-button {
+    margin-top: 2;
+}
+
 AuthPanel #qr-container {
     width: auto;
     height: auto;
@@ -20,13 +35,4 @@ AuthPanel #qr-title {
 
 AuthPanel #qr-placeholder {
     text-align: center;
-}
-
-AuthPanel #status-text {
-    text-align: center;
-    margin-top: 1;
-}
-
-AuthPanel #login-button {
-    margin-top: 2;
 }
