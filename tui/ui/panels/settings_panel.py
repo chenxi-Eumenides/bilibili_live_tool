@@ -26,26 +26,29 @@ class SettingsPanel(Vertical):
 
     def compose(self) -> ComposeResult:
         with Vertical(classes="settings-content"):
-            # 居中的内容容器
             with ScrollableContainer(classes="settings-card"):
-                yield Static("直播标题", classes="settings-label")
-                yield Input(placeholder="输入直播标题", id="title-input")
+                # 直播标题
+                with Vertical(classes="settings-row"):
+                    yield Static("直播标题", classes="settings-label")
+                    yield Input(placeholder="输入直播标题", id="title-input")
 
-                yield Static("选择分区", classes="settings-label")
-                with Horizontal(classes="area-row"):
-                    yield Select[int](
-                        [],
-                        id="parent-area-select",
-                        prompt="主分区",
-                        classes="area-select",
-                    )
-                    yield Select[int](
-                        [],
-                        id="child-area-select",
-                        prompt="子分区",
-                        disabled=True,
-                        classes="area-select",
-                    )
+                # 选择分区
+                with Vertical(classes="settings-row"):
+                    yield Static("选择分区", classes="settings-label")
+                    with Horizontal(classes="area-row"):
+                        yield Select[int](
+                            [],
+                            id="parent-area-select",
+                            prompt="主分区",
+                            classes="area-select",
+                        )
+                        yield Select[int](
+                            [],
+                            id="child-area-select",
+                            prompt="子分区",
+                            disabled=True,
+                            classes="area-select",
+                        )
 
             # 固定在底部的按钮
             with Horizontal(classes="button-row"):

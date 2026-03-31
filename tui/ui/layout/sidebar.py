@@ -11,6 +11,7 @@ from ...utils.constants import AppState
 
 # 修复类型提示报错
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ..app import BiliLiveApp
 
@@ -18,27 +19,8 @@ if TYPE_CHECKING:
 class Sidebar(Vertical):
     """左侧导航栏组件"""
 
-    DEFAULT_CSS = """
-    Sidebar {
-        width: 20;
-        background: $surface-darken-2;
-        border-right: solid $primary-darken-2;
-        padding: 1;
-    }
-    Sidebar .nav-button {
-        margin: 1 0;
-    }
-    Sidebar .nav-buttons-top {
-        height: auto;
-    }
-    Sidebar .nav-buttons-bottom {
-        height: auto;
-        dock: bottom;
-    }
-    """
-
     @property
-    def app(self) -> "BiliLiveApp": # 修复类型提示报错
+    def app(self) -> "BiliLiveApp":  # 修复类型提示报错
         return super().app  # type: ignore
 
     def compose(self) -> ComposeResult:

@@ -197,6 +197,8 @@ cython_debug/
 # folder
 other/
 test/
+plans/
+docs/
 # file
 使用说明.txt
 test.py

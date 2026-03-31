@@ -11,55 +11,6 @@ from textual.app import ComposeResult
 class HelpPanel(ScrollableContainer):
     """帮助面板 - 可滚动"""
 
-    DEFAULT_CSS = """
-    HelpPanel {
-        height: 100%;
-        align: center middle;
-    }
-    HelpPanel .help-card {
-        width: 70;
-        height: auto;
-        background: $surface-darken-1;
-        border: solid $primary;
-        padding: 2 3;
-    }
-    HelpPanel .help-title {
-        text-align: center;
-        text-style: bold;
-        color: $text;
-        margin-bottom: 2;
-    }
-    HelpPanel .section-title {
-        color: $primary;
-        text-style: bold;
-        margin: 1 0;
-        height: 1;
-    }
-    HelpPanel .key-row {
-        layout: horizontal;
-        height: auto;
-        margin: 0 2;
-    }
-    HelpPanel .key-name {
-        width: 15;
-        color: $text;
-        text-style: bold;
-    }
-    HelpPanel .key-desc {
-        width: 1fr;
-        color: $text-muted;
-    }
-    HelpPanel .help-text {
-        color: $text-muted;
-        margin: 0 2;
-    }
-    HelpPanel .button-row {
-        height: auto;
-        margin-top: 2;
-        align: center middle;
-    }
-    """
-
     def compose(self) -> ComposeResult:
         with Vertical(classes="help-card"):
             yield Static("BiliLiveTool 帮助", classes="help-title")
@@ -69,13 +20,11 @@ class HelpPanel(ScrollableContainer):
                 yield Static("Q / Esc", classes="key-name")
                 yield Static("退出程序", classes="key-desc")
 
-            yield Static("", classes="section-title")
             yield Static("使用说明", classes="section-title")
             yield Static("1. 首次使用需扫描二维码登录", classes="help-text")
             yield Static("2. 登录后可设置直播标题和分区", classes="help-text")
             yield Static("3. 点击开播按钮开始直播", classes="help-text")
             yield Static("4. 直播前请先在OBS配置推流信息", classes="help-text")
 
-            yield Static("", classes="section-title")
             yield Static("版本信息", classes="section-title")
-            yield Static("BiliLiveTool v0.4.0", classes="help-text")
+            yield Static("BiliLiveTool v0.4.1", classes="help-text")

@@ -35,7 +35,6 @@ class BiliLiveApp(App):
         "styles/settings_panel.tcss",
         "styles/danmaku_panel.tcss",
         "styles/help_panel.tcss",
-        "styles/stream_panel.tcss",
     ]
 
     # 全局状态 - 响应式属性

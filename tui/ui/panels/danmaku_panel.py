@@ -19,6 +19,8 @@ from ...utils.danmaku_config import (
     DanmakuType,
     DanmakuCategory,
     DANMAKU_COLORS,
+)
+from ...utils.danmaku_utils import (
     get_danmaku_color,
     get_danmaku_category,
     get_badge_type,
@@ -39,7 +41,7 @@ DEFAULT_AUTO_SCROLL_LINES = 10  # 默认自动滚动范围（行数）
 DEFAULT_MAX_DANMAKU_COUNT = 300  # 默认最大弹幕数量
 
 
-class DanmakuMessage:
+class DisplayDanmakuMessage:
     """弹幕消息数据类（UI层）"""
 
     def __init__(
@@ -57,9 +59,8 @@ class DanmakuMessage:
         self.timestamp = timestamp or datetime.now()
 
     @classmethod
-    def from_fetcher_message(cls, msg: FetcherDanmakuMessage) -> "DanmakuMessage":
+    def from_fetcher_message(cls, msg: FetcherDanmakuMessage) -> "DisplayDanmakuMessage":
         """从获取器消息创建UI消息"""
-        logger = logging.getLogger(__name__)
         
         # 根据勋章信息判断用户类型
         danmaku_type = DanmakuType.USER_NORMAL
@@ -122,7 +123,7 @@ class DanmakuMessage:
 class DanmakuPanel(Vertical):
     """弹幕面板 - 显示弹幕列表和发送弹幕"""
 
-    messages: reactive[list[DanmakuMessage]] = reactive([])
+    messages: reactive[list[DisplayDanmakuMessage]] = reactive([])
 
     @property
     def app(self) -> "BiliLiveApp":
@@ -161,18 +162,57 @@ class DanmakuPanel(Vertical):
         """组件卸载时停止弹幕获取"""
         self._stop_danmaku_fetch()
 
-    async def _fetch_room_info(self, session: aiohttp.ClientSession, room_id: int) -> dict:
-        """获取直播间信息"""
-        try:
-            url = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}"
-            async with session.get(url, headers={"User-Agent": "Mozilla/5.0"}) as resp:
-                if resp.status == 200:
-                    data = await resp.json()
-                    if data.get("code") == 0:
-                        return data.get("data", {})
-        except Exception:
-            pass
-        return {}
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id == "danmaku-send":
+            self._send_danmaku()
+        elif event.button.id == "new-danmaku-hint":
+            # 点击"有新弹幕"提示，滚动到底部
+            try:
+                danmaku_list = self.query_one("#danmaku-list", ScrollableContainer)
+                danmaku_list.scroll_end(animate=False)
+                # 隐藏提示
+                hint = self.query_one("#new-danmaku-hint", Button)
+                hint.add_class("hidden")
+            except Exception:
+                pass
+
+    def on_input_submitted(self, event: Input.Submitted):
+        if event.input.id == "danmaku-input":
+            self._send_danmaku()
+
+    # ===== 对外接口方法 =====
+
+    def add_message(self, username: str, content: str, badge: str = "", danmaku_type: DanmakuType | None = None):
+        """添加新弹幕消息（本地发送时使用）"""
+        if danmaku_type is None:
+            danmaku_type = get_badge_type(badge)
+        self.messages.append(DisplayDanmakuMessage(username, content, badge, danmaku_type))
+        self._cleanup_messages()
+        self._incremental_refresh()
+
+    # ===== DanmakuHandler 回调方法 =====
+
+    def on_danmaku(self, room_id: int, message: FetcherDanmakuMessage):
+        """收到弹幕消息（回调）
+        
+        注意：此回调可能在异步协程中执行，需要使用 call_later 确保UI更新在主线程
+        """
+        # 使用 call_later 在主事件循环中执行UI更新
+        self.app.call_later(self._add_message_from_fetcher, message)
+
+    def on_connect(self, room_id: int):
+        """连接成功"""
+        logger.info(f"弹幕连接成功 [房间:{room_id}]")
+
+    def on_disconnect(self, room_id: int):
+        """断开连接"""
+        logger.info(f"弹幕连接断开 [房间:{room_id}]")
+
+    def on_error(self, room_id: int, error: Exception):
+        """连接错误"""
+        logger.error(f"弹幕错误 [房间:{room_id}]: {error}")
+
+    # ===== 内部逻辑方法 =====
 
     def _start_danmaku_fetch(self):
         """启动弹幕获取"""
@@ -247,15 +287,18 @@ class DanmakuPanel(Vertical):
         except Exception:
             pass
 
-    # ===== DanmakuHandler 回调方法 =====
-
-    def on_danmaku(self, room_id: int, message: FetcherDanmakuMessage):
-        """收到弹幕消息（回调）
-        
-        注意：此回调可能在异步协程中执行，需要使用 call_later 确保UI更新在主线程
-        """
-        # 使用 call_later 在主事件循环中执行UI更新
-        self.app.call_later(self._add_message_from_fetcher, message)
+    async def _fetch_room_info(self, session: aiohttp.ClientSession, room_id: int) -> dict:
+        """获取直播间信息"""
+        try:
+            url = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}"
+            async with session.get(url, headers={"User-Agent": "Mozilla/5.0"}) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    if data.get("code") == 0:
+                        return data.get("data", {})
+        except Exception:
+            pass
+        return {}
 
     def _add_message_from_fetcher(self, msg: FetcherDanmakuMessage):
         """添加来自获取器的消息"""
@@ -268,24 +311,10 @@ class DanmakuPanel(Vertical):
             except Exception:
                 pass
         
-        danmaku_msg = DanmakuMessage.from_fetcher_message(msg)
+        danmaku_msg = DisplayDanmakuMessage.from_fetcher_message(msg)
         self.messages.append(danmaku_msg)
         self._cleanup_messages()
         self._incremental_refresh()
-
-    def on_connect(self, room_id: int):
-        """连接成功"""
-        logger.info(f"弹幕连接成功 [房间:{room_id}]")
-
-    def on_disconnect(self, room_id: int):
-        """断开连接"""
-        logger.info(f"弹幕连接断开 [房间:{room_id}]")
-
-    def on_error(self, room_id: int, error: Exception):
-        """连接错误"""
-        logger.error(f"弹幕错误 [房间:{room_id}]: {error}")
-
-    # ===== UI 更新方法 =====
 
     def _is_near_bottom(self, container: ScrollableContainer) -> bool:
         """检查是否接近底部"""
@@ -338,40 +367,11 @@ class DanmakuPanel(Vertical):
         except Exception:
             pass
 
-
     def _cleanup_messages(self):
         """清理弹幕数量"""
         if len(self.messages) > self._max_danmaku_count:
             self.messages = self.messages[-(self._max_danmaku_count // 2):]
             self._last_message_count = len(self.messages)
-
-    # ===== 用户交互方法 =====
-
-    def add_message(self, username: str, content: str, badge: str = "", danmaku_type: DanmakuType | None = None):
-        """添加新弹幕消息（本地发送时使用）"""
-        if danmaku_type is None:
-            danmaku_type = get_badge_type(badge)
-        self.messages.append(DanmakuMessage(username, content, badge, danmaku_type))
-        self._cleanup_messages()
-        self._incremental_refresh()
-
-    def on_button_pressed(self, event: Button.Pressed):
-        if event.button.id == "danmaku-send":
-            self._send_danmaku()
-        elif event.button.id == "new-danmaku-hint":
-            # 点击"有新弹幕"提示，滚动到底部
-            try:
-                danmaku_list = self.query_one("#danmaku-list", ScrollableContainer)
-                danmaku_list.scroll_end(animate=False)
-                # 隐藏提示
-                hint = self.query_one("#new-danmaku-hint", Button)
-                hint.add_class("hidden")
-            except Exception:
-                pass
-
-    def on_input_submitted(self, event: Input.Submitted):
-        if event.input.id == "danmaku-input":
-            self._send_danmaku()
 
     def _send_danmaku(self):
         """发送弹幕"""

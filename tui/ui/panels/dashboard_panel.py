@@ -32,38 +32,47 @@ class DashboardPanel(Vertical):
 
     def compose(self) -> ComposeResult:
         with ScrollableContainer(classes="info-card"):
-            # 直播间信息卡片
             yield Static("直播间信息", classes="section-title")
-            with Vertical(classes="column-top"):
+            # 标题（全宽）
+            with Vertical(classes="full-width"):
                 yield Static("标题", classes="info-label")
                 yield Static("--", id="room-title", classes="info-value")
-            # 两列显示
+            # 2列信息网格
             with Grid(classes="info-grid"):
-                # 左侧列：标题、分区、在线人数、直播时长
+                # 左侧列
                 with Vertical(classes="column-left"):
-                    yield Static("主播UID", classes="info-label")
-                    yield Static("--", id="anchor-uid", classes="info-value")
-                    yield Static("粉丝数", classes="info-label")
-                    yield Static("--", id="follower-count", classes="info-value")
-                    yield Static("在线人数", classes="info-label")
-                    yield Static("--", id="room-online", classes="info-value")
-
-                # 右侧列：主播UID、粉丝数、房间号
+                    with Vertical(classes="info-item"):
+                        yield Static("主播UID", classes="info-label")
+                        yield Static("--", id="anchor-uid", classes="info-value")
+                    with Vertical(classes="info-item"):
+                        yield Static("粉丝数", classes="info-label")
+                        yield Static("--", id="follower-count", classes="info-value")
+                    with Vertical(classes="info-item"):
+                        yield Static("在线人数", classes="info-label")
+                        yield Static("--", id="room-online", classes="info-value")
+                # 右侧列
                 with Vertical(classes="column-right"):
-                    yield Static("房间号", classes="info-label")
-                    yield Static("--", id="room-id", classes="info-value")
-                    yield Static("分区", classes="info-label")
-                    yield Static("--", id="room-area", classes="info-value")
-                    yield Static("直播时长", classes="info-label")
-                    yield Static("--", id="room-duration", classes="info-value")
-            with Vertical(classes="column-bottom"):
+                    with Vertical(classes="info-item"):
+                        yield Static("房间号", classes="info-label")
+                        yield Static("--", id="room-id", classes="info-value")
+                    with Vertical(classes="info-item"):
+                        yield Static("分区", classes="info-label")
+                        yield Static("--", id="room-area", classes="info-value")
+                    with Vertical(classes="info-item"):
+                        yield Static("直播时长", classes="info-label")
+                        yield Static("--", id="room-duration", classes="info-value")
+            # 推流地址（全宽）
+            with Vertical(classes="full-width"):
                 yield Static("推流地址", classes="info-label")
                 yield Static("--", id="rtmp-addr", classes="info-value")
+            # 推流码（全宽）
+            with Vertical(classes="full-width"):
                 yield Static("推流码", classes="info-label")
                 yield Static("--", id="rtmp-code", classes="info-value")
 
     def on_mount(self):
         """组件挂载时更新信息"""
+        self._update_from_config()
         # DashboardPanel 初始化时获取一次直播间信息
         self.run_worker(self._fetch_and_update, thread=True)
         # 启动5分钟定时刷新

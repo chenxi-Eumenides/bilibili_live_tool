@@ -17,27 +17,6 @@ if TYPE_CHECKING:
 
 class AuthPanel(Vertical):
     """二维码登录面板"""
-
-    DEFAULT_CSS = """
-    AuthPanel {
-        align: center middle;
-        height: 100%;
-    }
-    AuthPanel #login-container {
-        width: auto;
-        height: auto;
-        padding: 2;
-        background: $surface-darken-1;
-        border: solid $primary;
-    }
-    AuthPanel #status-text {
-        text-align: center;
-        margin-top: 1;
-    }
-    AuthPanel #login-button {
-        margin-top: 2;
-    }
-    """
     @property
     def app(self) -> "BiliLiveApp":
         return super().app # type: ignore

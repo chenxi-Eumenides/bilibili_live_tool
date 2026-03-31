@@ -1,6 +1,6 @@
 [project]
 name = "bili_live_tool"
-version = "0.4.1"
+version = "0.4.2"
 description = "a simple tool to start or stop bilibili live and get stream code."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -20,6 +20,8 @@ dev = [
 ]
 tui = [
     "textual>=7.3.0",
+    "aiohttp>=3.9.0",
+    "brotli>=1.2.0",
 ]
 
 [tool.uv]

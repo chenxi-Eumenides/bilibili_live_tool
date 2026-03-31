@@ -1,4 +1,4 @@
-"""弹幕获取模块
+"""弹幕客户端模块
 
 参考blivedm的实现重新设计，采用分层架构：
 - DanmuClient: Web端弹幕客户端
@@ -7,22 +7,30 @@
 """
 
 import asyncio
-import enum
-import hashlib
 import json
 import logging
-import struct
-import urllib.parse
 import weakref
-import zlib
 from datetime import datetime, timedelta
-from typing import Callable, NamedTuple, Optional, Union
+from typing import Callable, Optional, Union
 
 import aiohttp
 import brotli
 import yarl
+import zlib
 
 from . import danmaku_handler, danmaku_models
+from .danmaku_protocol import (
+    HeaderTuple,
+    HEADER_STRUCT,
+    ProtoVer,
+    Operation,
+    AuthReplyCode,
+    InitError,
+    AuthError,
+    make_packet,
+)
+from .danmaku_wbi import USER_AGENT, get_wbi_signer
+
 
 logger = logging.getLogger(__name__)
 
@@ -34,13 +42,8 @@ __all__ = (
 # 导出数据模型
 DanmakuMessage = danmaku_models.DanmakuMessage
 
-# ===== 常量定义 =====
-
-USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
-
 # API地址
 UID_INIT_URL = 'https://api.bilibili.com/x/web-interface/nav'
-WBI_INIT_URL = UID_INIT_URL
 BUVID_INIT_URL = 'https://www.bilibili.com/'
 ROOM_INIT_URL = 'https://api.live.bilibili.com/room/v1/Room/get_info'
 DANMAKU_SERVER_CONF_URL = 'https://api.live.bilibili.com/xlive/web-room/v1/index/getDanmuInfo'
@@ -50,191 +53,13 @@ DEFAULT_DANMAKU_SERVER_LIST = [
     {'host': 'broadcastlv.chat.bilibili.com', 'port': 2243, 'wss_port': 443, 'ws_port': 2244}
 ]
 
-# 头部结构: pack_len(4) + header_len(2) + ver(2) + operation(4) + seq_id(4)
-HEADER_STRUCT = struct.Struct('>I2H2I')
-
-
-class HeaderTuple(NamedTuple):
-    """头部元组"""
-    pack_len: int
-    raw_header_size: int
-    ver: int
-    operation: int
-    seq_id: int
-
-
-# 协议版本
-class ProtoVer(enum.IntEnum):
-    NORMAL = 0
-    HEARTBEAT = 1
-    DEFLATE = 2
-    BROTLI = 3
-
-
-# 操作码 (参考 go-common/app/service/main/broadcast/model/operation.go)
-class Operation(enum.IntEnum):
-    HANDSHAKE = 0
-    HANDSHAKE_REPLY = 1
-    HEARTBEAT = 2
-    HEARTBEAT_REPLY = 3
-    SEND_MSG = 4
-    SEND_MSG_REPLY = 5
-    DISCONNECT_REPLY = 6
-    AUTH = 7
-    AUTH_REPLY = 8
-    RAW = 9
-
-
-# 认证回复码
-class AuthReplyCode(enum.IntEnum):
-    OK = 0
-    TOKEN_ERROR = -101
-
-
-# 异常定义
-class InitError(Exception):
-    """初始化失败"""
-    pass
-
-
-class AuthError(Exception):
-    """认证失败"""
-    pass
-
-
 # 默认重连策略：固定1秒间隔
 def _constant_retry_policy(interval: float):
     def get_interval(_retry_count: int, _total_retry_count: int):
         return interval
     return get_interval
 
-
 DEFAULT_RECONNECT_POLICY = _constant_retry_policy(1)
-
-
-# ===== WBI签名器 =====
-
-_session_to_wbi_signer: weakref.WeakKeyDictionary = weakref.WeakKeyDictionary()
-
-
-def _get_wbi_signer(session: aiohttp.ClientSession) -> '_WbiSigner':
-    """获取WBI签名器（每个session一个）"""
-    wbi_signer = _session_to_wbi_signer.get(session, None)
-    if wbi_signer is None:
-        wbi_signer = _session_to_wbi_signer[session] = _WbiSigner(session)
-    return wbi_signer
-
-
-class _WbiSigner:
-    """WBI签名器"""
-    
-    WBI_KEY_INDEX_TABLE = [
-        46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35,
-        27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13
-    ]
-    """WBI密钥索引表"""
-    
-    WBI_KEY_TTL = timedelta(hours=11, minutes=59, seconds=30)
-    """WBI密钥有效期"""
-    
-    def __init__(self, session: aiohttp.ClientSession):
-        self._session = session
-        self._wbi_key = ''
-        self._refresh_future: Optional[asyncio.Future] = None
-        self._last_refresh_time: Optional[datetime] = None
-    
-    @property
-    def wbi_key(self) -> str:
-        """缓存的WBI鉴权口令"""
-        return self._wbi_key
-    
-    def reset(self):
-        """重置密钥"""
-        self._wbi_key = ''
-        self._last_refresh_time = None
-    
-    @property
-    def need_refresh_wbi_key(self) -> bool:
-        """是否需要刷新WBI密钥"""
-        if self._wbi_key == '':
-            return True
-        if self._last_refresh_time is None:
-            return True
-        return datetime.now() - self._last_refresh_time >= self.WBI_KEY_TTL
-    
-    def refresh_wbi_key(self) -> asyncio.Future:
-        """刷新WBI密钥（避免并发刷新）"""
-        if self._refresh_future is None:
-            self._refresh_future = asyncio.create_task(self._do_refresh_wbi_key())
-            
-            def on_done(_fu):
-                self._refresh_future = None
-            self._refresh_future.add_done_callback(on_done)
-        return self._refresh_future
-    
-    async def _do_refresh_wbi_key(self):
-        """执行刷新"""
-        wbi_key = await self._get_wbi_key()
-        if wbi_key:
-            self._wbi_key = wbi_key
-            self._last_refresh_time = datetime.now()
-    
-    async def _get_wbi_key(self) -> str:
-        """从API获取WBI密钥"""
-        try:
-            async with self._session.get(
-                WBI_INIT_URL,
-                headers={'User-Agent': USER_AGENT},
-            ) as res:
-                if res.status != 200:
-                    logger.warning('WbiSigner failed to get wbi key: status=%d %s', res.status, res.reason)
-                    return ''
-                data = await res.json()
-        except (aiohttp.ClientConnectionError, asyncio.TimeoutError):
-            logger.exception('WbiSigner failed to get wbi key:')
-            return ''
-        
-        try:
-            wbi_img = data['data']['wbi_img']
-            img_key = wbi_img['img_url'].rpartition('/')[2].partition('.')[0]
-            sub_key = wbi_img['sub_url'].rpartition('/')[2].partition('.')[0]
-        except (KeyError, TypeError):
-            logger.warning('WbiSigner failed to get wbi key: data=%s', data)
-            return ''
-        
-        # 混淆密钥
-        shuffled_key = img_key + sub_key
-        wbi_key = []
-        for index in self.WBI_KEY_INDEX_TABLE:
-            if index < len(shuffled_key):
-                wbi_key.append(shuffled_key[index])
-        return ''.join(wbi_key)
-    
-    def add_wbi_sign(self, params: dict) -> dict:
-        """给参数添加WBI签名"""
-        if self._wbi_key == '':
-            return params
-        
-        wts = str(int(datetime.now().timestamp()))
-        params_to_sign = {**params, 'wts': wts}
-        
-        # 按key字典序排序
-        params_to_sign = {key: params_to_sign[key] for key in sorted(params_to_sign.keys())}
-        
-        # 过滤特殊字符
-        for key, value in params_to_sign.items():
-            value = ''.join(ch for ch in str(value) if ch not in "!'()*")
-            params_to_sign[key] = value
-        
-        # 计算签名
-        str_to_sign = urllib.parse.urlencode(params_to_sign) + self._wbi_key
-        w_rid = hashlib.md5(str_to_sign.encode('utf-8')).hexdigest()
-        
-        return {
-            **params,
-            'wts': wts,
-            'w_rid': w_rid
-        }
 
 
 # ===== DanmuClient =====
@@ -265,7 +90,7 @@ class DanmakuClient:
             self._own_session = False
             assert self._session.loop is asyncio.get_event_loop()
         
-        self._wbi_signer = _get_wbi_signer(self._session)
+        self._wbi_signer = get_wbi_signer(self._session)
         self._heartbeat_interval = heartbeat_interval
         
         # 房间相关
@@ -504,7 +329,7 @@ class DanmakuClient:
             return
         
         try:
-            await self._websocket.send_bytes(self._make_packet({}, Operation.HEARTBEAT))
+            await self._websocket.send_bytes(make_packet({}, Operation.HEARTBEAT))
         except (ConnectionResetError, aiohttp.ClientConnectionError) as e:
             logger.warning('room=%d _send_heartbeat() failed: %r', self.room_id, e)
         except Exception:
@@ -583,7 +408,7 @@ class DanmakuClient:
             if command['code'] != AuthReplyCode.OK:
                 raise AuthError(f"auth reply error, code={command['code']}, body={command}")
             # 认证成功后立即发送心跳
-            await self._websocket.send_bytes(self._make_packet({}, Operation.HEARTBEAT))
+            await self._websocket.send_bytes(make_packet({}, Operation.HEARTBEAT))
         
         else:
             logger.warning('room=%d unknown message operation=%d', self.room_id, header.operation)
@@ -777,28 +602,4 @@ class DanmakuClient:
             auth_params['key'] = self._host_server_token
         
         logger.debug('room=%d sending auth, uid=%s', self.room_id, self._uid)
-        await self._websocket.send_bytes(self._make_packet(auth_params, Operation.AUTH))
-    
-    @staticmethod
-    def _make_packet(data: Union[dict, str, bytes], operation: int) -> bytes:
-        """创建数据包
-        
-        :param data: 包体数据
-        :param operation: 操作码
-        :return: 完整的包数据
-        """
-        if isinstance(data, dict):
-            body = json.dumps(data).encode('utf-8')
-        elif isinstance(data, str):
-            body = data.encode('utf-8')
-        else:
-            body = data
-        
-        header = HEADER_STRUCT.pack(*HeaderTuple(
-            pack_len=HEADER_STRUCT.size + len(body),
-            raw_header_size=HEADER_STRUCT.size,
-            ver=1,
-            operation=operation,
-            seq_id=1
-        ))
-        return header + body
+        await self._websocket.send_bytes(make_packet(auth_params, Operation.AUTH))
