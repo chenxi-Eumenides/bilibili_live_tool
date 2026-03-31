@@ -43,11 +43,14 @@ class Sidebar(Vertical):
 
     def compose(self) -> ComposeResult:
         """组合导航按钮"""
-        # 顶部按钮：信息、管理、开播/下播
+        # 顶部按钮：信息、管理、弹幕、开播/下播
         with Vertical(classes="nav-buttons-top"):
             yield Button("信息", id="nav-info", variant="primary", classes="nav-button")
             yield Button(
                 "管理", id="nav-manage", variant="default", classes="nav-button"
+            )
+            yield Button(
+                "弹幕", id="nav-danmu", variant="default", classes="nav-button"
             )
             yield Button(
                 "开播", id="nav-toggle", variant="default", classes="nav-button"
@@ -65,6 +68,8 @@ class Sidebar(Vertical):
                 self.app.show_info_panel()
             elif button_id == "nav-manage":
                 self.app.show_manage_panel()
+            elif button_id == "nav-danmu":
+                self.app.show_danmu_panel()
             elif button_id == "nav-toggle":
                 self.app.action_toggle_live()
             elif button_id == "nav-help":
@@ -80,12 +85,14 @@ class Sidebar(Vertical):
         try:
             info_btn = self.query_one("#nav-info", Button)
             manage_btn = self.query_one("#nav-manage", Button)
+            danmu_btn = self.query_one("#nav-danmu", Button)
             toggle_btn = self.query_one("#nav-toggle", Button)
             help_btn = self.query_one("#nav-help", Button)
 
             # 重置所有按钮样式
             info_btn.variant = "default"
             manage_btn.variant = "default"
+            danmu_btn.variant = "default"
             toggle_btn.variant = "default"
             help_btn.variant = "default"
 
@@ -94,6 +101,8 @@ class Sidebar(Vertical):
                 info_btn.variant = "primary"
             elif current_panel == "manage":
                 manage_btn.variant = "primary"
+            elif current_panel == "danmu":
+                danmu_btn.variant = "primary"
             elif current_panel == "help":
                 help_btn.variant = "primary"
 

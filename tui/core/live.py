@@ -3,22 +3,15 @@
 处理开播、下播、获取直播间信息、修改标题和分区等操作。
 """
 
-import json
 import logging
 import threading
-import time
 from dataclasses import dataclass
-from typing import Optional, Callable
+from typing import Optional
 
 import requests
 
-from ..utils.constants import (
-    APP_KEY,
-    APP_SECRET,
-    LIVEHIME_VERSION,
-    LIVEHIME_BUILD,
-    ApiEndpoints,
-)
+from ..utils.constants import LIVEHIME_VERSION, LIVEHIME_BUILD, ApiEndpoints
+from ..utils.crypto import sign_api_data
 from .config import ConfigManager
 
 logger = logging.getLogger(__name__)
@@ -84,28 +77,10 @@ class LiveManager:
         """获取当前房间ID"""
         return self.config_manager.get_config().room_id
 
-    def _sign_data(self, data: dict) -> dict:
+    @staticmethod
+    def _sign_data(data: dict) -> dict:
         """对请求数据进行签名（APP端API需要）"""
-        from urllib.parse import urlencode
-        from hashlib import md5
-        from time import time
-
-        # 添加必要的字段（参考cli/bili_lib.py的sign_data）
-        data.update({
-            "ts": str(int(time())),
-            "appkey": APP_KEY,
-        })
-
-        # 按key排序并编码
-        sorted_data = dict(sorted(data.items()))
-        query = urlencode(sorted_data, encoding="utf-8")
-
-        # 添加签名（拼接appsecret后md5）
-        sign_str = query + APP_SECRET
-        sign = md5(sign_str.encode(encoding="utf-8")).hexdigest()
-
-        sorted_data["sign"] = sign
-        return sorted_data
+        return sign_api_data(data)
 
     def fetch_room_id(self, uid: int) -> bool:
         """根据UID获取直播间ID

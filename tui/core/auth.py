@@ -3,24 +3,17 @@
 处理二维码登录、登录状态检测和凭证刷新。
 """
 
-import json
 import logging
 from time import sleep
 from typing import Optional, Callable
 from dataclasses import dataclass
 from enum import Enum, auto
-from pathlib import Path
 
 import requests
 from qrcode import QRCode
 
-from ..utils.constants import (
-    ApiEndpoints,
-    QR_IMG,
-    QR_FACE_IMG,
-    APP_KEY,
-    APP_SECRET,
-)
+from ..utils.constants import ApiEndpoints, QR_IMG
+from ..utils.cleanup import cleanup_qr_files
 from .config import ConfigManager
 
 logger = logging.getLogger(__name__)
@@ -28,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 class LoginStatus(Enum):
     """登录状态"""
-
     PENDING = auto()  # 等待扫码
     SCANNED = auto()  # 已扫描，等待确认
     SUCCESS = auto()  # 登录成功
@@ -39,7 +31,6 @@ class LoginStatus(Enum):
 @dataclass
 class QRLoginResult:
     """二维码登录结果"""
-
     status: LoginStatus
     cookies: Optional[dict] = None
     refresh_token: Optional[str] = None
@@ -47,22 +38,21 @@ class QRLoginResult:
 
 
 class AuthManager:
-    """登录管理器
+    """登录管理器 - 处理B站二维码登录流程"""
 
-    处理B站二维码登录流程。
-    """
+    _USER_AGENT = (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
+    )
 
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
-        self._user_agent = (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
-        )
 
-    def _get_headers(self) -> dict[str, str]:
+    @classmethod
+    def _get_headers(cls) -> dict[str, str]:
         """获取请求头"""
         return {
-            "User-Agent": self._user_agent,
+            "User-Agent": cls._USER_AGENT,
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "zh-CN,zh;q=0.9",
         }
@@ -103,13 +93,11 @@ class AuthManager:
             return qr_url, qr_key
 
         except requests.RequestException as e:
-            if QR_IMG.exists():
-                QR_IMG.unlink()
+            cleanup_qr_files()
             logger.error(f"网络请求失败: {e}")
             raise Exception(f"网络请求失败: {e}")
         except Exception as e:
-            if QR_IMG.exists():
-                QR_IMG.unlink()
+            cleanup_qr_files()
             logger.error(f"生成二维码失败: {e}")
             raise
 
@@ -140,8 +128,7 @@ class AuthManager:
                 cookies = response.cookies.get_dict()
                 refresh_token = data["data"].get("refresh_token", "")
                 logger.info("二维码登录成功")
-                if QR_IMG.exists():
-                    QR_IMG.unlink()
+                cleanup_qr_files()
                 return QRLoginResult(
                     status=LoginStatus.SUCCESS,
                     cookies=cookies,
@@ -149,7 +136,7 @@ class AuthManager:
                     message="登录成功",
                 )
 
-            elif code == 86038:
+            if code == 86038:
                 # 二维码过期
                 logger.warning("二维码已过期")
                 return QRLoginResult(
@@ -157,7 +144,7 @@ class AuthManager:
                     message="二维码已过期，请重新生成",
                 )
 
-            elif code == 86090:
+            if code == 86090:
                 # 已扫描，等待确认
                 if scanned_callback:
                     scanned_callback()
@@ -166,12 +153,11 @@ class AuthManager:
                     message="二维码已扫描，请在手机上确认登录",
                 )
 
-            else:
-                # 其他状态，继续等待
-                return QRLoginResult(
-                    status=LoginStatus.PENDING,
-                    message="等待扫码...",
-                )
+            # 其他状态，继续等待
+            return QRLoginResult(
+                status=LoginStatus.PENDING,
+                message="等待扫码...",
+            )
 
         except requests.RequestException as e:
             logger.error(f"轮询登录状态失败: {e}")
@@ -204,7 +190,7 @@ class AuthManager:
             # 生成二维码
             notify("正在生成二维码...")
             qr_url, qr_key = self.generate_qr()
-            notify(f"二维码已生成，请使用B站APP扫码")
+            notify("二维码已生成，请使用B站APP扫码")
 
             # 轮询等待登录
             scanned_notified = False
@@ -216,33 +202,28 @@ class AuthManager:
                     # 保存登录信息
                     if result.cookies is None:
                         notify("登录失败：未获取到凭证")
-                        if QR_IMG.exists():
-                            QR_IMG.unlink()
+                        cleanup_qr_files()
                         return False
                     self.config_manager.update_cookies(
                         result.cookies,
                         result.refresh_token or "",
                     )
-                    # 登录信息更新到内存，不立即保存，退出时统一保存
                     notify("登录成功！")
-                    if QR_IMG.exists():
-                        QR_IMG.unlink()
+                    cleanup_qr_files()
                     return True
 
-                elif result.status == LoginStatus.EXPIRED:
+                if result.status == LoginStatus.EXPIRED:
                     notify("二维码已过期，请重试")
-                    if QR_IMG.exists():
-                        QR_IMG.unlink()
+                    cleanup_qr_files()
                     return False
 
-                elif result.status == LoginStatus.SCANNED and not scanned_notified:
+                if result.status == LoginStatus.SCANNED and not scanned_notified:
                     notify("二维码已扫描，请在手机上确认")
                     scanned_notified = True
 
-                elif result.status == LoginStatus.ERROR:
+                if result.status == LoginStatus.ERROR:
                     notify(f"登录出错: {result.message}")
-                    if QR_IMG.exists():
-                        QR_IMG.unlink()
+                    cleanup_qr_files()
                     return False
 
                 sleep(1)
@@ -286,9 +267,9 @@ class AuthManager:
             logger.warning(f"登录态检查返回未知状态: {data}")
             return False
 
-        except requests.RequestException as e:
-            logger.error(f"检查登录态网络错误: {e}")
+        except requests.RequestException:
             # 网络错误时不判定为未登录，避免频繁要求重新登录
+            logger.warning("检查登录态网络错误，假设登录态有效")
             return True
         except Exception as e:
             logger.error(f"检查登录态异常: {e}")

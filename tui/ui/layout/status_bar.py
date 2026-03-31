@@ -24,15 +24,6 @@ class StatusBar(Horizontal):
     }
     """
 
-    def __init__(self):
-        super().__init__()
-        self._log_visible = False
-
     def compose(self) -> ComposeResult:
         """组合状态栏"""
-        # 只显示退出提示
-        yield Static("按 q 退出;", id="shortcuts-text")
-
-    def _create_shortcuts_text(self) -> Static:
-        """创建快捷键提示文本"""
-        return Static("按 q 退出", id="shortcuts-text")
+        yield Static("按 q 退出", id="shortcuts-text")

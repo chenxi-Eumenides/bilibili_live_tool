@@ -20,7 +20,7 @@ from .layout.header import Header
 from .layout.sidebar import Sidebar
 from .layout.main_panel import MainPanel
 from .layout.status_bar import StatusBar
-from .screen.QRDisplayScreen import QRDisplayScreen
+from .screen.qr_display_screen import QRDisplayScreen
 
 
 class BiliLiveApp(App):
@@ -33,6 +33,7 @@ class BiliLiveApp(App):
         "styles/auth_panel.tcss",
         "styles/dashboard_panel.tcss",
         "styles/settings_panel.tcss",
+        "styles/danmaku_panel.tcss",
         "styles/help_panel.tcss",
         "styles/stream_panel.tcss",
     ]
@@ -44,7 +45,7 @@ class BiliLiveApp(App):
     qr_status = reactive(True)
 
     # 当前选中的侧边栏项目
-    current_panel = reactive("info")  # "info", "manage", "help"
+    current_panel = reactive("info")  # "info", "manage", "danmu", "help"
 
     # 快捷键绑定
     BINDINGS = [
@@ -99,9 +100,9 @@ class BiliLiveApp(App):
             if not self.config_manager.config.area_list:
                 self.live_manager.fetch_area_list()
 
-            # 从服务器获取真实直播状态
-            room_info = self.live_manager.fetch_room_info()
-            if room_info and room_info.live_status == 1:
+            # 从本地配置获取直播状态（DashboardPanel挂载时会从服务器获取）
+            live_status = self.config_manager.config.live_status
+            if live_status == 1:
                 self.app_state = AppState.LIVE
             else:
                 self.app_state = AppState.IDLE
@@ -187,6 +188,10 @@ class BiliLiveApp(App):
     def show_help_panel(self):
         """显示帮助面板"""
         self.current_panel = "help"
+
+    def show_danmu_panel(self):
+        """显示弹幕面板"""
+        self.current_panel = "danmu"
 
     # ===== 登录回调 =====
 

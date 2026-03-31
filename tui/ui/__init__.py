@@ -3,4 +3,6 @@
 包含Textual App主类、布局组件、面板和小组件。
 """
 
-__all__ = []
+from .app import BiliLiveApp
+
+__all__ = ["BiliLiveApp"]
