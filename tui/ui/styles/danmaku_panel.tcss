@@ -1,0 +1,113 @@
+/* ===== DanmakuPanel - 弹幕面板样式 ===== */
+
+DanmakuPanel {
+    height: 100%;
+    padding: 0;
+}
+
+DanmakuPanel .danmaku-container {
+    height: 100%;
+    padding: 0;
+}
+
+/* 弹幕列表包装器 */
+DanmakuPanel .danmaku-list-wrapper {
+    height: 1fr;
+}
+
+/* 新弹幕提示（位于顶部中央） */
+DanmakuPanel #new-danmaku-hint {
+    dock: top;
+    height: auto;
+    background: #3a3a3a;
+    color: $primary;
+    text-style: bold;
+    border: none;
+    padding: 0;
+    content-align: center middle;
+    width: 100%;
+}
+
+DanmakuPanel #new-danmaku-hint.hidden {
+    display: none;
+}
+
+/* 弹幕列表区域 */
+DanmakuPanel .danmaku-list {
+    height: 1fr;
+    background: #3a3a3a;
+    border: none;
+    padding: 0 1;
+    overflow-y: auto;
+    scrollbar-size: 1 1;
+    align-vertical: bottom;
+}
+
+/* 弹幕项 */
+DanmakuPanel .danmaku-item {
+    height: auto;
+    padding: 0 1;
+    text-wrap: wrap;
+}
+
+DanmakuPanel .danmaku-item:hover {
+    background: #2a2a2a;
+}
+
+/* 弹幕占位符 - 垂直居中 */
+DanmakuPanel #danmaku-placeholder {
+    color: #999999;
+    text-align: center;
+    content-align: center middle;
+    height: 100%;
+}
+
+/* 输入区域 */
+DanmakuPanel .danmaku-input-row {
+    height: auto;
+    padding: 0;
+    background: #3a3a3a;
+    border-top: none;
+    dock: bottom;
+}
+
+DanmakuPanel .danmaku-input {
+    width: 1fr;
+    height: 3;
+    padding: 0 1;
+    background: #3a3a3a;
+    border: solid #555555;
+}
+
+/* 发送按钮 - 与输入框同高 */
+DanmakuPanel .danmaku-send-btn {
+    width: auto;
+    height: 3;
+    margin-left: 1;
+    content-align: center middle;
+    background: #3a3a3a;
+    border: solid #555555;
+}
+
+/* 弹幕颜色样式 - 通过rich text实现 */
+/* 头衔颜色 */
+DanmakuPanel .badge-tidu {
+    color: #0066CC;
+}
+
+DanmakuPanel .badge-jianzhang {
+    color: #66CCFF;
+}
+
+DanmakuPanel .badge-fan {
+    color: #FFB6C1;
+}
+
+/* 系统通知颜色 */
+DanmakuPanel .system-light {
+    color: #FF6B6B;
+}
+
+DanmakuPanel .system-dark {
+    color: #CC0000;
+}

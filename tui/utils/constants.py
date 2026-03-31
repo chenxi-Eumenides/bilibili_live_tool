@@ -10,6 +10,9 @@ from pathlib import Path
 VERSION = (0, 4, 1)
 VERSION_STR = ".".join(map(str, VERSION))
 
+# ===== 基础路径 =====
+BASE_DIR = Path.cwd()
+
 # ===== 文件路径 =====
 # 使用工作目录下的配置文件
 CONFIG_FILE = Path("config.json")

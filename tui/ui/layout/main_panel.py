@@ -12,6 +12,7 @@ from ..panels.auth_panel import AuthPanel
 from ..panels.dashboard_panel import DashboardPanel
 from ..panels.settings_panel import SettingsPanel
 from ..panels.help_panel import HelpPanel
+from ..panels.danmaku_panel import DanmakuPanel
 
 
 class MainPanel(Container):
@@ -39,7 +40,7 @@ class MainPanel(Container):
 
         Args:
             state: 当前应用状态
-            panel: 当前选中的面板 ("info", "manage", "help")
+            panel: 当前选中的面板 ("info", "manage", "danmu", "help")
         """
         # 清除当前内容
         for child in list(self.children):
@@ -59,6 +60,12 @@ class MainPanel(Container):
                     self.mount(AuthPanel())
                 else:
                     self.mount(SettingsPanel())
+            elif panel == "danmu":
+                # 弹幕面板 - 需要登录
+                if state == AppState.UNAUTH:
+                    self.mount(AuthPanel())
+                else:
+                    self.mount(DanmakuPanel())
             elif panel == "help":
                 # 帮助面板 - 始终显示
                 self.mount(HelpPanel())

@@ -4,6 +4,7 @@
 """
 
 from textual.widgets import Static
+from textual.containers import Horizontal
 from textual.app import ComposeResult
 
 from ...utils.constants import VERSION_STR
@@ -48,15 +49,11 @@ class Header(Static):
     """
 
     def compose(self) -> ComposeResult:
-        from textual.containers import Horizontal
         with Horizontal(id="header-container"):
-            yield Static(f"BiliLiveTool", id="app-title")
+            yield Static("BiliLiveTool", id="app-title")
             yield Static(f"v{VERSION_STR}", id="app-version")
             # 使用一个填充区域将右侧内容推到右边
-            from textual.widgets import Static as StaticWidget
-            spacer = StaticWidget("")
-            spacer.styles.width = "1fr"
-            yield spacer
+            yield Static("", id="spacer")
             yield Static("", id="update-status")  # 刷新状态
             yield Static("● 未登录", id="status-indicator")  # 登录状态显示在最右边
 

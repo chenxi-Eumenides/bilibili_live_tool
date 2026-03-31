@@ -136,7 +136,7 @@ class Config:
         self.cookies_str_old = data.get("cookies_str", "")
         self.csrf = data.get("csrf", "")
         self.refresh_token = data.get("refresh_token", "")
-        self.area = data.get("area", [])
+        self.area_list = data.get("area", [])
         self.room_data = data.get("room_data", {})
         self.live_version = data.get("live_version", LIVEHIME_VERSION)
         self.live_build = data.get("live_build", LIVEHIME_BUILD)
@@ -393,21 +393,14 @@ class ConfigManager:
 
     def is_valid_title(self, title: str) -> bool:
         """检查标题是否有效"""
-        if not title:
-            return False
-        elif not (0 < len(title) <= 40):
-            return False
-        return True
+        return bool(title) and 0 < len(title) <= 40
 
     def can_start_live(self) -> bool:
         """检查开播条件是否合法"""
-        if (
+        return (
             self.is_valid_area_id(self.config.area_id)
             and self.is_valid_title(self.config.title)
-        ):
-            return True
-        else:
-            return False
+        )
     
 
     def get_stream_info(self) -> Optional[tuple[str, str]]:
@@ -426,14 +419,6 @@ class ConfigManager:
             self.config.rtmp_code,
         )
 
-    def get_rtmp_addr(self) -> str:
-        """获取推流地址"""
-        return self.config.rtmp_addr or ""
-
-    def get_rtmp_code(self) -> str:
-        """获取推流码"""
-        return self.config.rtmp_code or ""
-    
     def is_stream_code_changed(self) -> bool:
         """检查推流码是否发生变化
 

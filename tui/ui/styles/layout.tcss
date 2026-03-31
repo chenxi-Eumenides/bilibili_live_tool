@@ -27,6 +27,10 @@ Header #app-version {
     color: #999999;
 }
 
+Header #spacer {
+    width: 1fr;
+}
+
 Header #update-status {
     width: auto;
     content-align: right middle;
