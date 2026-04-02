@@ -21,43 +21,6 @@ class QRDisplayScreen(ModalScreen):
         Binding(KeyBindings.QUIT, "quit_action", "退出"),
     ]
 
-    DEFAULT_CSS = """
-    QRDisplayScreen {
-        align: center middle;
-        background: $surface 30%;
-    }
-
-    QRDisplayScreen #qr-card {
-        width: 90%;
-        height: 90%;
-        padding: 0 2;
-        background: $surface;
-        border: thick $primary;
-    }
-
-    QRDisplayScreen #qr-title {
-        text-align: center;
-        text-style: bold;
-        color: $primary;
-        margin: 1;
-        padding: 0;
-    }
-
-    QRDisplayScreen #qr-content {
-        content-align: center middle;
-        text-align: center;
-        height: auto;
-        width: 100%;
-    }
-
-    QRDisplayScreen #qr-too-small {
-        text-align: center;
-        color: $warning;
-        text-style: bold;
-        display: none;
-    }
-    """
-
     qr_url = reactive("")
     qr_text = reactive("")
 
