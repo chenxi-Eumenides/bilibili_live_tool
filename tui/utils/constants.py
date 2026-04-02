@@ -5,6 +5,7 @@
 
 from enum import Enum, auto
 from pathlib import Path
+from dataclasses import dataclass
 
 # ===== 版本信息 =====
 VERSION = (0, 4, 2)
@@ -26,31 +27,6 @@ APP_SECRET: str = "af125a0d5279fd576c1b4418a3e8276d"
 LIVEHIME_BUILD: str = "10082"
 LIVEHIME_VERSION: str = "7.40.0.10082"
 
-# ===== 导出所有常量 =====
-__all__ = [
-    "VERSION",
-    "VERSION_STR",
-    "BASE_DIR",
-    "CONFIG_FILE",
-    "README_FILE",
-    "QR_IMG",
-    "QR_FACE_IMG",
-    "APP_KEY",
-    "APP_SECRET",
-    "LIVEHIME_BUILD",
-    "LIVEHIME_VERSION",
-    "TITLE_MAX_CHAR",
-    "AREA_OUTPUT_LINE_NUM",
-    "ApiEndpoints",
-    # 枚举
-    "AppState",
-    "LiveStatus",
-    "KeyBindings",
-    "Messages",
-    "Styles",
-]
-
-
 # ===== 配置限制 =====
 TITLE_MAX_CHAR: int = 40
 AREA_OUTPUT_LINE_NUM: int = 4
@@ -59,8 +35,9 @@ AREA_OUTPUT_LINE_NUM: int = 4
 CONFIG_DEFAULT_VERSION: int = 2  # 默认保存的配置版本
 
 # ===== API端点 =====
+@dataclass
 class ApiEndpoints:
-    """B站API端点"""
+    """B站API"""
 
     GET_ROOM_ID: str = "https://api.live.bilibili.com/room/v2/Room/room_id_by_uid"
     GET_QR_RES: str = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
@@ -74,6 +51,14 @@ class ApiEndpoints:
     STOP_LIVE: str = "https://api.live.bilibili.com/room/v1/Room/stopLive"
     GET_LIVE_VERSION: str = "https://api.live.bilibili.com/xlive/app-blink/v1/liveVersionInfo/getHomePageLiveVersion"
     SET_LIVE_TIMESHIFT: str = "https://api.live.bilibili.com/xlive/app-blink/v1/upStreamConfig/SetAnchorSelfStreamTimeShift"
+    GET_WBI_KEY: str = "https://api.bilibili.com/x/web-interface/nav"
+
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
+
+WBI_KEY_INDEX_TABLE = [
+    46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35,
+    27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13
+]
 
 # ===== 应用状态枚举 =====
 class AppState(Enum):
@@ -143,3 +128,56 @@ class Styles:
     BG_SECONDARY = "#18181b"      # 二级背景 - 深灰
     BG_TERTIARY = "#27272a"       # 三级背景 - 中深灰
     BORDER_COLOR = "#3f3f46"      # 边框颜色
+
+class DanmakuType(Enum):
+    """弹幕类型"""
+    DEFAULT = auto()  # 默认类型
+
+    # 通知类
+    NOTICE_IMPORTANT = auto()  # 重要通知
+    NOTICE_SYSTEM = auto()  # 系统通知
+    NOTICE_NORMAL = auto()  # 普通通知
+
+    # 用户类
+    USER_NORMAL = auto()  # 普通用户
+    USER_FAN = auto()  # 粉丝用户
+    USER_JIANZHANG = auto()  # 舰长用户
+    USER_TIDU = auto()  # 提督用户
+    USER_ZONGDU = auto()  # 总督用户
+    USER_ADMIN = auto()  # 房管用户
+
+    # 礼物类
+    GIFT_JIANZHANG = auto()  # 舰长礼物
+    GIFT_IMPORTENT = auto()  # 重要礼物
+    GIFT_DENGPAI = auto()  # 灯牌礼物
+    GIFT_NORMAL = auto()  # 普通礼物
+
+
+@dataclass(frozen=True)
+class DanmakuColors:
+    """弹幕颜色配置 - 所有颜色统一管理"""
+
+    DEFAULT: str = "#FFFFFF"  # 默认颜色 - 白色
+
+    # ===== 常规类型颜色 =====
+    CONTENT: str = "#FFFFFF"  # 弹幕内容 - 白色
+    TIMESTAMP: str = "#999999"  # 时间戳 - 灰色
+
+    # ===== 通知类颜色（全部内容都显示此颜色，不含时间戳） =====
+    NOTICE_IMPORTANT: str = "#CC0000"  # 重要通知 - 深红色
+    NOTICE_SYSTEM: str = "#FF6B6B"  # 系统通知 - 浅红色
+    NOTICE_NORMAL: str = "#979797"  # 普通通知 - 浅灰色（欢迎信息等）
+
+    # ===== 用户类颜色（仅类型和用户名显示此颜色） =====
+    USER_NORMAL: str = "#FFFFFF"  # 普通用户 - 白色
+    USER_FAN: str = "#FFB6C1"  # 粉丝用户 - 浅粉色
+    USER_JIANZHANG: str = "#66CCFF"  # 舰长用户 - 浅蓝色
+    USER_TIDU: str = "#0066CC"  # 提督用户 - 深蓝色
+    USER_ZONGDU: str = "#FFD700"  # 总督用户 - 金色
+    USER_ADMIN: str = "#00CC00"  # 房管用户 - 绿色
+
+    # ===== 礼物类颜色（全部内容都显示此颜色，不含时间戳） =====
+    GIFT_JIANZHANG: str = "#66CCFF"  # 舰长礼物 - 浅蓝色
+    GIFT_IMPORTENT: str = "#CC0000"  # 重要礼物 - 深红色
+    GIFT_DENGPAI: str = "#FFB6C1"  # 灯牌礼物 - 浅粉色
+    GIFT_NORMAL: str = "#AAAAAA"  # 普通礼物 - 浅灰色

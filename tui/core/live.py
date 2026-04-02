@@ -10,7 +10,7 @@ from typing import Optional
 
 import requests
 
-from ..utils.constants import LIVEHIME_VERSION, LIVEHIME_BUILD, ApiEndpoints
+from ..utils.constants import LIVEHIME_VERSION, LIVEHIME_BUILD, ApiEndpoints, USER_AGENT
 from ..utils.crypto import sign_api_data
 from .config import ConfigManager
 
@@ -42,10 +42,6 @@ class LiveManager:
 
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
-        self._user_agent = (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
-        )
 
     def _get_headers(self) -> dict[str, str]:
         """获取请求头"""
@@ -62,7 +58,7 @@ class LiveManager:
             "sec-fetch-dest": "empty",
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-site",
-            "user-agent": self._user_agent,
+            "user-agent": USER_AGENT,
         }
 
     def _get_cookies(self) -> dict:
@@ -94,7 +90,7 @@ class LiveManager:
         try:
             response = requests.get(
                 ApiEndpoints.GET_ROOM_ID,
-                headers={"User-Agent": self._user_agent},
+                headers={"User-Agent": USER_AGENT},
                 params={"uid": uid},
                 timeout=10,
             )
@@ -183,7 +179,7 @@ class LiveManager:
 
     def is_living(self) -> bool:
         """是否正在直播
-        
+
         仅从配置读取状态，不发起网络请求
         """
         return self.get_live_status() == 1
@@ -279,11 +275,11 @@ class LiveManager:
         """
         # 更新直播姬版本
         self.update_live_version()
-        
+
         room_id = self._get_room_id()
         csrf = self._get_csrf()
         config = self.config_manager.get_config()
-        
+
         if room_id <= 0 or not csrf or config.area_id <= 0:
             return False, "参数错误：房间ID、CSRF或分区ID无效", False, ""
 
@@ -351,7 +347,7 @@ class LiveManager:
 
         room_id = self._get_room_id()
         csrf = self._get_csrf()
-        
+
         if room_id <= 0 or not csrf:
             logger.error("房间ID或CSRF无效")
             return False

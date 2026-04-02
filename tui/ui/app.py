@@ -280,7 +280,6 @@ class BiliLiveApp(App):
                 # 开播成功，重新获取直播间信息并更新UI
                 self._refresh_room_info_after_start()
                 self.app_state = AppState.LIVE
-                self.status_message = "开播成功"
             elif need_face_auth and self.qr_status and qr_url:
                 # 需要人脸识别且二维码URL有效
                 self._do_face_auth(qr_url)
@@ -288,9 +287,6 @@ class BiliLiveApp(App):
                 # 回到主线程重新开播
                 self.call_from_thread(self._start_live)
                 self.qr_status = True
-            else:
-                # 开播失败
-                self.status_message = f"开播失败: {message}"
         except Exception as e:
             self.status_message = f"开播异常: {e}"
         finally:
