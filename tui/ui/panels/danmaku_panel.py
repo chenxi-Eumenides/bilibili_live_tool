@@ -3,127 +3,39 @@
 显示直播间弹幕列表，支持发送弹幕。
 """
 
-import http.cookies
-import logging
-from datetime import datetime
+from http.cookies import SimpleCookie
+from logging import getLogger
 from typing import TYPE_CHECKING
 
-import aiohttp
+from aiohttp import ClientSession
 from textual.widgets import Static, Input, Button
 from textual.containers import Vertical, Horizontal, ScrollableContainer
 from textual.app import ComposeResult
 from textual.reactive import reactive
 
-from ...utils.constants import AppState
-from ...utils.danmaku_config import (
-    DanmakuType,
-    DanmakuCategory,
-    DANMAKU_COLORS,
-)
-from ...utils.danmaku_utils import (
-    get_danmaku_color,
-    get_danmaku_category,
-    get_badge_type,
-    get_notice_type,
-)
-from ...core.danmaku_models import DanmakuMessage as FetcherDanmakuMessage
+from ...utils.constants import AppState, USER_AGENT
+from ...core.danmaku_models import DanmakuMessage, GiftMessage, BaseMessage
 from ...core.danmaku_fetcher import DanmakuClient
 from ...core.danmaku_handler import UIPanelHandler
 
 if TYPE_CHECKING:
     from ..app import BiliLiveApp
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 
 
 # 配置常量
 DEFAULT_AUTO_SCROLL_LINES = 10  # 默认自动滚动范围（行数）
-DEFAULT_MAX_DANMAKU_COUNT = 300  # 默认最大弹幕数量
+DEFAULT_MAX_DANMAKU_COUNT = 500  # 默认最大弹幕数量
 
-
-class DisplayDanmakuMessage:
-    """弹幕消息数据类（UI层）"""
-
-    def __init__(
-        self,
-        username: str,
-        content: str,
-        badge: str = "",
-        danmaku_type: DanmakuType = DanmakuType.USER_NORMAL,
-        timestamp: datetime | None = None,
-    ):
-        self.username = username
-        self.content = content
-        self.badge = badge
-        self.danmaku_type = danmaku_type
-        self.timestamp = timestamp or datetime.now()
-
-    @classmethod
-    def from_fetcher_message(cls, msg: FetcherDanmakuMessage) -> "DisplayDanmakuMessage":
-        """从获取器消息创建UI消息"""
-        
-        # 根据勋章信息判断用户类型
-        danmaku_type = DanmakuType.USER_NORMAL
-        badge = msg.badge_text
-        
-        # 根据badge映射到类型，优先舰队等级
-        if msg.privilege_type == 1:
-            danmaku_type = DanmakuType.USER_ZONGDU
-        elif msg.privilege_type == 2:
-            danmaku_type = DanmakuType.USER_TIDU
-        elif msg.privilege_type == 3:
-            danmaku_type = DanmakuType.USER_JIANZHANG
-        elif msg.admin:
-            danmaku_type = DanmakuType.USER_ADMIN
-            badge = "房管" if not badge else badge
-        elif msg.medal_name:
-            # 用户佩戴了粉丝牌，视为粉丝
-            danmaku_type = DanmakuType.USER_FAN
-        
-        logger.debug(f"弹幕用户: {msg.uname}, privilege_type={msg.privilege_type}, badge={badge}, medal={msg.medal_name}, type={danmaku_type}")
-            
-        return cls(
-            username=msg.uname,
-            content=msg.msg,
-            badge=badge,
-            danmaku_type=danmaku_type,
-            timestamp=datetime.fromtimestamp(msg.timestamp / 1000),
-        )
-
-    def format_rich(self) -> str:
-        """格式化为富文本显示"""
-        time_str = self.timestamp.strftime("%H:%M:%S")
-        time_part = f"[{DANMAKU_COLORS.TIMESTAMP}]{time_str}[/{DANMAKU_COLORS.TIMESTAMP}]"
-
-        category = get_danmaku_category(self.danmaku_type)
-        color = get_danmaku_color(self.danmaku_type)
-
-        if category == DanmakuCategory.NOTICE:
-            type_name = self._get_notice_type_name()
-            content_part = f"[{color}]{type_name} {self.content}[/{color}]"
-            return f"{time_part} {content_part}"
-
-        parts = [time_part]
-        if self.badge:
-            parts.append(f"[{color}][{self.badge}][/{color}]")
-        parts.append(f"[{color}]{self.username}:[/{color}]")
-        parts.append(f"[{DANMAKU_COLORS.CONTENT}]{self.content}[/{DANMAKU_COLORS.CONTENT}]")
-
-        return " ".join(parts)
-
-    def _get_notice_type_name(self) -> str:
-        """获取通知类型名称"""
-        return {
-            DanmakuType.NOTICE_IMPORTANT: "[重要]",
-            DanmakuType.NOTICE_SYSTEM: "[系统]",
-            DanmakuType.NOTICE_NORMAL: "[通知]",
-        }.get(self.danmaku_type, "[通知]")
+OVERWRITE_ROOM = 0
 
 
 class DanmakuPanel(Vertical):
     """弹幕面板 - 显示弹幕列表和发送弹幕"""
 
-    messages: reactive[list[DisplayDanmakuMessage]] = reactive([])
+    messages: reactive[list[BaseMessage]] = reactive([])
+    room_id: int = 0
 
     @property
     def app(self) -> "BiliLiveApp":
@@ -140,7 +52,8 @@ class DanmakuPanel(Vertical):
         self._last_message_count = 0
         self._fetcher: DanmakuClient | None = None
         self._placeholder_removed = False
-        self._session: 'aiohttp.ClientSession | None' = None
+        self._session: ClientSession | None = None
+        self.room_id = self.app.config_manager.config.room_id if OVERWRITE_ROOM <= 0 else OVERWRITE_ROOM
 
     def compose(self) -> ComposeResult:
         with Vertical(classes="danmaku-container"):
@@ -182,22 +95,24 @@ class DanmakuPanel(Vertical):
 
     # ===== 对外接口方法 =====
 
-    def add_message(self, username: str, content: str, badge: str = "", danmaku_type: DanmakuType | None = None):
+    def add_message(self, username: str, content: str):
         """添加新弹幕消息（本地发送时使用）"""
-        if danmaku_type is None:
-            danmaku_type = get_badge_type(badge)
-        self.messages.append(DisplayDanmakuMessage(username, content, badge, danmaku_type))
-        self._cleanup_messages()
-        self._incremental_refresh()
+        # self.messages.append(DanmakuMessage.from_manual(username, content))
+        # self._cleanup_messages()
+        # self._incremental_refresh()
+        pass
 
     # ===== DanmakuHandler 回调方法 =====
 
-    def on_danmaku(self, room_id: int, message: FetcherDanmakuMessage):
+    def on_danmaku(self, room_id: int, message: DanmakuMessage):
         """收到弹幕消息（回调）
         
         注意：此回调可能在异步协程中执行，需要使用 call_later 确保UI更新在主线程
         """
-        # 使用 call_later 在主事件循环中执行UI更新
+        message.live_room_id = room_id
+        self.app.call_later(self._add_message_from_fetcher, message)
+    
+    def on_gift(self, room_id: int, message: GiftMessage):
         self.app.call_later(self._add_message_from_fetcher, message)
 
     def on_connect(self, room_id: int):
@@ -216,31 +131,27 @@ class DanmakuPanel(Vertical):
 
     def _start_danmaku_fetch(self):
         """启动弹幕获取"""
-        # 从配置获取房间ID
-        room_id = self.app.config_manager.config.room_id
         
         # 没有房间ID则不启动
-        if room_id <= 0:
+        if self.room_id <= 0:
             return
         
         async def do_start():
-            try:
-                # 获取cookies
-                cookies_str = self.app.config_manager.config.cookies_str
-                
+            try:                
                 # 创建带cookie的session
-                if cookies_str:
-                    cookies = http.cookies.SimpleCookie()
-                    cookies.load(cookies_str)
-                    self._session = aiohttp.ClientSession()
+                if self.app.config_manager.config.cookies:
+                    cookies = SimpleCookie()
+                    cookies['SESSDATA'] = self.app.config_manager.config.cookies['SESSDATA']
+                    cookies['SESSDATA']['domain'] = 'bilibili.com'
+                    self._session = ClientSession()
                     self._session.cookie_jar.update_cookies(cookies)
                 else:
-                    self._session = aiohttp.ClientSession()
+                    self._session = ClientSession()
                 
                 # 获取直播间信息
-                room_info = await self._fetch_room_info(self._session, room_id)
+                room_info = await self._fetch_room_info(self._session, self.room_id)
                 room_title = room_info.get("title", "")
-                logger.info(f"弹幕直播间信息: [{room_id}] {room_title}")
+                logger.info(f"弹幕直播间信息: [{self.room_id}] {room_title}")
                 
                 # 移除占位符文字
                 try:
@@ -250,7 +161,7 @@ class DanmakuPanel(Vertical):
                     pass
                 
                 # 创建客户端和处理器，传入带cookie的session
-                self._fetcher = DanmakuClient(room_id, session=self._session)
+                self._fetcher = DanmakuClient(self.room_id, session=self._session)
                 handler = UIPanelHandler(self)
                 self._fetcher.set_handler(handler)
                 
@@ -287,11 +198,11 @@ class DanmakuPanel(Vertical):
         except Exception:
             pass
 
-    async def _fetch_room_info(self, session: aiohttp.ClientSession, room_id: int) -> dict:
+    async def _fetch_room_info(self, session: ClientSession, room_id: int) -> dict:
         """获取直播间信息"""
         try:
             url = f"https://api.live.bilibili.com/room/v1/Room/get_info?room_id={room_id}"
-            async with session.get(url, headers={"User-Agent": "Mozilla/5.0"}) as resp:
+            async with session.get(url, headers={"User-Agent": USER_AGENT}) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     if data.get("code") == 0:
@@ -300,7 +211,7 @@ class DanmakuPanel(Vertical):
             pass
         return {}
 
-    def _add_message_from_fetcher(self, msg: FetcherDanmakuMessage):
+    def _add_message_from_fetcher(self, msg: BaseMessage):
         """添加来自获取器的消息"""
         # 第一次收到消息时移除占位符
         if not self._placeholder_removed:
@@ -311,8 +222,7 @@ class DanmakuPanel(Vertical):
             except Exception:
                 pass
         
-        danmaku_msg = DisplayDanmakuMessage.from_fetcher_message(msg)
-        self.messages.append(danmaku_msg)
+        self.messages.append(msg)
         self._cleanup_messages()
         self._incremental_refresh()
 
@@ -369,9 +279,14 @@ class DanmakuPanel(Vertical):
 
     def _cleanup_messages(self):
         """清理弹幕数量"""
-        if len(self.messages) > self._max_danmaku_count:
+        if self._last_message_count > self._max_danmaku_count:
             self.messages = self.messages[-(self._max_danmaku_count // 2):]
-            self._last_message_count = len(self.messages)
+            self._last_message_count = self._max_danmaku_count // 2
+    
+    def _clear_messages(self):
+        """清理弹幕"""
+        self.messages.clear()
+        self._last_message_count = 0
 
     def _send_danmaku(self):
         """发送弹幕"""
@@ -387,6 +302,6 @@ class DanmakuPanel(Vertical):
             return
 
         # TODO: 调用实际的弹幕发送API
-        self.add_message("我", content, "")
+        self.add_message("我", content)
         input_widget.value = ""
         self.app.show_notification("弹幕发送成功")

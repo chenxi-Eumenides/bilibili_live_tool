@@ -12,7 +12,7 @@ from enum import Enum, auto
 import requests
 from qrcode import QRCode
 
-from ..utils.constants import ApiEndpoints, QR_IMG
+from ..utils.constants import ApiEndpoints, QR_IMG, USER_AGENT
 from ..utils.cleanup import cleanup_qr_files
 from .config import ConfigManager
 
@@ -40,11 +40,6 @@ class QRLoginResult:
 class AuthManager:
     """登录管理器 - 处理B站二维码登录流程"""
 
-    _USER_AGENT = (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
-    )
-
     def __init__(self, config_manager: ConfigManager):
         self.config_manager = config_manager
 
@@ -52,7 +47,7 @@ class AuthManager:
     def _get_headers(cls) -> dict[str, str]:
         """获取请求头"""
         return {
-            "User-Agent": cls._USER_AGENT,
+            "User-Agent": USER_AGENT,
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "zh-CN,zh;q=0.9",
         }
