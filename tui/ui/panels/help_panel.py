@@ -7,6 +7,8 @@ from textual.widgets import Static, Button
 from textual.containers import Vertical, Horizontal, ScrollableContainer
 from textual.app import ComposeResult
 
+from ...utils.constants import VERSION_STR
+
 
 class HelpPanel(ScrollableContainer):
     """帮助面板 - 可滚动"""
@@ -27,4 +29,4 @@ class HelpPanel(ScrollableContainer):
             yield Static("4. 直播前请先在OBS配置推流信息", classes="help-text")
 
             yield Static("版本信息", classes="section-title")
-            yield Static("BiliLiveTool v0.4.1", classes="help-text")
+            yield Static(f"BiliLiveTool v{VERSION_STR}", classes="help-text")
