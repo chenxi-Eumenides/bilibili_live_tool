@@ -91,8 +91,7 @@ ARGS:
 
 ## 致谢
 
-bilibili_live_stream_code项目 (https://github.com/ChaceQC/bilibili_live_stream_code)
-
-bilibili-API-collect项目 (https://github.com/SocialSisterYi/bilibili-API-collect/)
-
-StartLive项目 (https://github.com/Radekyspec/StartLive)
+1. bilibili_live_stream_code项目 [ChaceQC/bilibili_live_stream_code](https://github.com/ChaceQC/bilibili_live_stream_code)
+2. bilibili-API-collect项目 [SocialSisterYi/bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect/)
+3. StartLive项目 [Radekyspec/StartLive](https://github.com/Radekyspec/StartLive)
+4. blivedm项目 [xfgryujk/blivedm](https://github.com/xfgryujk/blivedm)
