@@ -8,7 +8,7 @@ from pathlib import Path
 from dataclasses import dataclass
 
 # ===== 版本信息 =====
-VERSION = (0, 4, 2)
+VERSION = (0, 4, 3)
 VERSION_STR = ".".join(map(str, VERSION))
 
 # ===== 基础路径 =====
