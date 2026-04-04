@@ -4,7 +4,8 @@
 二维码现在显示在顶部面板上。
 """
 
-import threading
+from threading import Event
+from logging import getLogger
 
 from textual.widgets import Static, Button
 from textual.containers import Vertical
@@ -12,19 +13,23 @@ from textual.app import ComposeResult
 
 # 类型声明
 from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from ..app import BiliLiveApp
+logger = getLogger()
+
 
 class AuthPanel(Vertical):
     """二维码登录面板"""
+
     @property
     def app(self) -> "BiliLiveApp":
-        return super().app # type: ignore
+        return super().app  # type: ignore
 
     def __init__(self):
         super().__init__()
         self._polling = False
-        self._stop_event = threading.Event()
+        self._stop_event = Event()
         self._current_qr_key = None
 
     def compose(self) -> ComposeResult:
@@ -44,17 +49,17 @@ class AuthPanel(Vertical):
 
     def _update_status(self, text: str):
         """更新状态文本"""
-        self.app.call_from_thread(
-            self.query_one("#status-text", Static).update, text
-        )
+        self.app.call_from_thread(self.query_one("#status-text", Static).update, text)
 
     def _enable_button(self):
         """启用登录按钮"""
+
         def _do():
             try:
                 self.query_one("#login-button", Button).disabled = False
             except Exception:
                 pass
+
         self.app.call_from_thread(_do)
 
     def stop_login(self):
@@ -79,6 +84,7 @@ class AuthPanel(Vertical):
             # 显示二维码并设置关闭回调
             def show_qr():
                 app.show_qr(qr_url, "扫码登录", callback=on_qr_closed)
+
             app.call_from_thread(show_qr)
 
             # 轮询登录状态
@@ -86,7 +92,15 @@ class AuthPanel(Vertical):
             while not self._stop_event.is_set():
                 result = app.auth_manager.poll_login_status(qr_key)
 
-                if result.status.name == "SUCCESS":
+                if (
+                    result.status.name == "SUCCESS"
+                    and result.cookies
+                ):
+                    app.config_manager.update_cookies(
+                        result.cookies, result.refresh_token
+                    )
+                    app.live_manager.fetch_room_id(app.config_manager.config.user_id)
+                    app.config_manager.save()
                     self._update_status("登录成功！")
                     app.call_from_thread(app.on_login_success)
                     break

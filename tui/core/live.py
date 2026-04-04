@@ -45,7 +45,7 @@ class LiveManager:
 
     def _get_headers(self) -> dict[str, str]:
         """获取请求头"""
-        config = self.config_manager.get_config()
+        config = self.config_manager.config
         return {
             "accept": "application/json, text/plain, */*",
             "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
@@ -63,15 +63,15 @@ class LiveManager:
 
     def _get_cookies(self) -> dict:
         """获取当前cookies"""
-        return self.config_manager.get_config().cookies
+        return self.config_manager.config.cookies
 
     def _get_csrf(self) -> str:
         """获取csrf token"""
-        return self.config_manager.get_config().csrf
+        return self.config_manager.config.csrf
 
     def _get_room_id(self) -> int:
         """获取当前房间ID"""
-        return self.config_manager.get_config().room_id
+        return self.config_manager.config.room_id
 
     @staticmethod
     def _sign_data(data: dict) -> dict:
@@ -88,6 +88,9 @@ class LiveManager:
             bool: 是否成功获取
         """
         try:
+            if uid <= 0:
+                logger.error(f"更新直播间ID失败，传入参数为 uid={uid}")
+                return False
             response = requests.get(
                 ApiEndpoints.GET_ROOM_ID,
                 headers={"User-Agent": USER_AGENT},
@@ -102,7 +105,7 @@ class LiveManager:
                 return False
 
             room_id = data["data"]["room_id"]
-            self.config_manager.get_config().room_id = room_id
+            self.config_manager.config.room_id = room_id
             logger.info(f"获取直播间ID成功: {room_id}")
             return True
 
@@ -118,7 +121,7 @@ class LiveManager:
         """
         room_id = self._get_room_id()
         if room_id <= 0:
-            logger.error("房间ID无效")
+            logger.error(f"直播间ID无效，room_id={room_id}")
             return None
 
         try:
@@ -137,6 +140,8 @@ class LiveManager:
                 return None
 
             room_data = data["data"]
+            if room_data.get("description", ""):
+                room_data["description"].replace("<p>", "").replace("</p>", "")
 
             # 更新配置中的直播间数据
             self.config_manager.update_room_info(room_id, room_data)
@@ -172,7 +177,7 @@ class LiveManager:
         """
         # 仅从配置读取，不发起网络请求
         # 网络请求应在初始化或定时刷新时统一获取
-        config = self.config_manager.get_config()
+        config = self.config_manager.config
         if config.live_status >= 0:
             return config.live_status
         return -1
@@ -250,7 +255,7 @@ class LiveManager:
             res_data = response.json()
 
             if res_data.get("code") == 0:
-                config = self.config_manager.get_config()
+                config = self.config_manager.config
                 config.live_version = res_data["data"].get(
                     "curr_version", LIVEHIME_VERSION
                 )
@@ -278,7 +283,7 @@ class LiveManager:
 
         room_id = self._get_room_id()
         csrf = self._get_csrf()
-        config = self.config_manager.get_config()
+        config = self.config_manager.config
 
         if room_id <= 0 or not csrf or config.area_id <= 0:
             return False, "参数错误：房间ID、CSRF或分区ID无效", False, ""
@@ -459,11 +464,11 @@ class LiveManager:
         error_msg = ""
         if not (0 < len(title) <= 40):
             error_msg += "标题长度 1 ~ 40 个字符。"
-        elif title != self.config_manager.get_config().title:
+        elif title != self.config_manager.config.title:
             data.update({"title": title})
         if area_id <= 0 or not self.config_manager.is_valid_area_id(area_id):
             error_msg += "无效的分区ID。"
-        elif area_id != self.config_manager.get_config().area_id:
+        elif area_id != self.config_manager.config.area_id:
             data.update({"area_id": area_id})
         if error_msg:
             return False, error_msg
@@ -486,9 +491,9 @@ class LiveManager:
 
             # 更新本地配置
             if data.get("title"):
-                self.config_manager.get_config().title = title
+                self.config_manager.config.title = title
             if data.get("area_id"):
-                self.config_manager.get_config().area_id = area_id
+                self.config_manager.config.area_id = area_id
 
             logger.info("更新直播间信息成功")
             return True, "更新直播间信息成功"

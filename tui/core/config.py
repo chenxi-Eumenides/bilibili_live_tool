@@ -281,14 +281,16 @@ class ConfigManager:
         """获取当前配置"""
         return self.config
 
-    def update_cookies(self, cookies: dict, refresh_token: str = "") -> None:
+    def update_cookies(self, cookies: dict, refresh_token: str | None = "") -> None:
         """更新登录凭证"""
+        if not (cookies.get("bili_jct") and cookies.get("DedeUserID")):
+            logger.error(f"Cookies更新失败， cookies中不存在 bili_jct 和 uid。{cookies=}")
         self.config.cookies = cookies
         self.config.csrf = cookies.get("bili_jct", "")
         self.config.user_id = int(cookies.get("DedeUserID", -1))
         if refresh_token:
             self.config.refresh_token = refresh_token
-        logger.info(f"Cookies已更新, user_id={self.config.user_id}")
+        logger.info(f"Cookies已更新, uid={self.config.user_id}")
 
     def update_room_info(self, room_id: int, room_data: dict) -> None:
         """更新直播间信息"""
@@ -309,7 +311,6 @@ class ConfigManager:
     def update_area_list(self, area_list: list) -> None:
         """更新分区列表"""
         self.config.area_list = area_list
-        # 日志在调用方记录，避免重复
 
     def get_parent_area_id(self, area_id: int) -> Optional[int]:
         """根据分区ID获取主分区ID
