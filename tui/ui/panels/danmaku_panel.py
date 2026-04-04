@@ -6,6 +6,8 @@
 from http.cookies import SimpleCookie
 from logging import getLogger
 from typing import TYPE_CHECKING
+from requests import post
+from time import time
 
 from aiohttp import ClientSession
 from textual.widgets import Static, Input, Button
@@ -13,7 +15,7 @@ from textual.containers import Vertical, Horizontal, ScrollableContainer
 from textual.app import ComposeResult
 from textual.reactive import reactive
 
-from ...utils.constants import AppState, USER_AGENT
+from ...utils.constants import AppState, USER_AGENT, ApiEndpoints
 from ...core.danmaku_models import DanmakuMessage, GiftMessage, BaseMessage
 from ...core.danmaku_fetcher import DanmakuClient
 from ...core.danmaku_handler import UIPanelHandler
@@ -95,12 +97,37 @@ class DanmakuPanel(Vertical):
 
     # ===== 对外接口方法 =====
 
-    def add_message(self, username: str, content: str):
+    def send_message(self, content: str):
         """添加新弹幕消息（本地发送时使用）"""
-        # self.messages.append(DanmakuMessage.from_manual(username, content))
-        # self._cleanup_messages()
-        # self._incremental_refresh()
-        pass
+        if not self._fetcher:
+            return
+        wbi_signer = self._fetcher._wbi_signer
+        params = wbi_signer.add_wbi_sign({"web_location": 444.8})
+        data = {
+
+            "mode": 1,
+            "color": 16777215,
+            "fontsize": 16,
+            "msg": content,
+            "roomid": self.room_id,
+            "rnd": int(time()),
+            "csrf": self.app.config_manager.config.csrf,
+            "csrf_token": self.app.config_manager.config.csrf,
+        }
+        res = post(
+            url = ApiEndpoints.SEND_DANMAKU,
+            params = params,
+            data = data,
+        )
+        if res.status_code == 200:
+            code = res.json().get("code")
+            msg = res.json().get("msg")
+            if code == 0:
+                logger.info(f"发送弹幕成功 code:{code} msg:{msg}")
+            else:
+                logger.error(f"发送弹幕失败 code:{code} msg:{msg}")
+        else:
+            logger.error(f"发送弹幕失败 status_code:{res.status_code}")
 
     # ===== DanmakuHandler 回调方法 =====
 
@@ -301,7 +328,5 @@ class DanmakuPanel(Vertical):
             self.app.show_notification("请先登录")
             return
 
-        # TODO: 调用实际的弹幕发送API
-        self.add_message("我", content)
+        self.send_message(content)
         input_widget.value = ""
-        self.app.show_notification("弹幕发送成功")
