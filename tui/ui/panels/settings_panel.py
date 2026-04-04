@@ -174,7 +174,7 @@ class SettingsPanel(Vertical):
     def _save_config(self):
         """更新配置"""
         title_input = self.query_one("#title-input", Input)
-        child_select = self.query_one("#child-area-select", Select[int])
+        child_select = self.query_one("#child-area-select", Select)
 
         title = title_input.value.strip()
         area_id = child_select.value
