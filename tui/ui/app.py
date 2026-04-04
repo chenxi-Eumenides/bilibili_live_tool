@@ -197,14 +197,11 @@ class BiliLiveApp(App):
 
     def on_login_success(self):
         """登录成功回调"""
-        self.live_manager.fetch_room_info()
 
         if self.live_manager.is_living():
             self.app_state = AppState.LIVE
         else:
             self.app_state = AppState.IDLE
-
-        self.status_message = "登录成功"
 
     # ===== 提示框 =====
 
