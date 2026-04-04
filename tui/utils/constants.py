@@ -52,6 +52,7 @@ class ApiEndpoints:
     GET_LIVE_VERSION: str = "https://api.live.bilibili.com/xlive/app-blink/v1/liveVersionInfo/getHomePageLiveVersion"
     SET_LIVE_TIMESHIFT: str = "https://api.live.bilibili.com/xlive/app-blink/v1/upStreamConfig/SetAnchorSelfStreamTimeShift"
     GET_WBI_KEY: str = "https://api.bilibili.com/x/web-interface/nav"
+    SEND_DANMAKU: str = "https://api.live.bilibili.com/msg/send"
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
 
