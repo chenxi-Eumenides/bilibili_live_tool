@@ -154,17 +154,18 @@ class DanmakuMessage:
         # 舰队类型
         privilege_type = info[7] if len(info) > 7 else 0
 
-        # logger.debug(
-        #     " ".join(
-        #         [
-        #             f"用户:{uname} {uid} lv{user_level}",
-        #             f"勋章:{medal_name} lv{medal_level} room{medal_room_id}",
-        #             f"身份:{privilege_type} {admin}",
-        #             f"vip:{vip} svip:{svip} 头衔:{title}",
-        #             f"内容:{msg}",
-        #         ]
-        #     )
-        # )
+        logger.debug(
+            " ".join(
+                [
+                    f"用户:{uname} {uid} lv{user_level}",
+                    f"勋章:{medal_name} lv{medal_level} room{medal_room_id}",
+                    f"身份:{privilege_type} {admin}",
+                    f"vip:{vip} svip:{svip} 头衔:{title}",
+                    f"内容:{msg}",
+                    f"样式:mode:{mode} size:{font_size} color:{font_color} rnd:{rnd}",
+                ]
+            )
+        )
 
         return cls(
             mode=mode,
