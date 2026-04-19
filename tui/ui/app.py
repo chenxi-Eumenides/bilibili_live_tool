@@ -7,18 +7,17 @@ import logging
 import threading
 
 from textual.app import App
-from textual.reactive import reactive
 from textual.binding import Binding
 from textual.containers import Horizontal
+from textual.reactive import reactive
 
-from ..core.config import ConfigManager
 from ..core.auth import AuthManager
+from ..core.config import ConfigManager
 from ..core.live import LiveManager
-from ..utils.constants import AppState, KeyBindings, VERSION_STR, Messages
-
+from ..utils.constants import VERSION_STR, AppState, KeyBindings, Messages
 from .layout.header import Header
-from .layout.sidebar import Sidebar
 from .layout.main_panel import MainPanel
+from .layout.sidebar import Sidebar
 from .layout.status_bar import StatusBar
 from .screen.qr_display_screen import QRDisplayScreen
 
@@ -57,6 +56,7 @@ class BiliLiveApp(App):
 
         # 添加明显分隔线，用于区分不同运行实例的日志
         import logging
+
         logger = logging.getLogger("tui.app")
         logger.info("=" * 40)
 
@@ -170,6 +170,7 @@ class BiliLiveApp(App):
         """停止登录worker"""
         try:
             from ..ui.panels.auth_panel import AuthPanel
+
             auth_panel = self.query_one(AuthPanel)
             auth_panel.stop_login()
         except Exception:
@@ -242,7 +243,7 @@ class BiliLiveApp(App):
             if len(self.screen_stack) > 1:
                 self._logger.info(f"{self.screen_stack[-1].title} 已关闭")
                 self.pop_screen()
-                
+
         except Exception:
             pass
 
@@ -292,23 +293,26 @@ class BiliLiveApp(App):
 
     def _refresh_room_info_after_start(self):
         """开播成功后刷新直播间信息"""
+
         def refresh():
             try:
                 # 重新获取直播间信息
                 self.live_manager.fetch_room_info()
                 # 通知DashboardPanel刷新显示
                 from .panels.dashboard_panel import DashboardPanel
+
                 dashboard = self.query_one(DashboardPanel)
                 if dashboard:
                     dashboard.run_worker(dashboard._fetch_and_update, thread=True)
             except Exception:
                 pass
+
         # 在后台线程执行
         threading.Thread(target=refresh, daemon=True).start()
 
     def _do_face_auth(self, qr_url: str):
         """执行人脸识别流程
-        
+
         Args:
             qr_url: 人脸识别二维码URL
         """
@@ -326,27 +330,11 @@ class BiliLiveApp(App):
         # 显示二维码
         self.show_qr(qr_url, "人脸识别", callback=on_qr_closed)
 
-        # face_success = self.live_manager.check_face_auth(qr_url, stop_event)
-        # face_success_result[0] = face_success
-        
-        # if face_success:
-        #     # 人脸识别成功，关闭二维码（会触发on_qr_closed(True)，但不会停止流程）
-        #     self.call_from_thread(self.close_qr)
-        # else:
-        #     # 人脸识别失败或取消
-        #     if not stop_event.is_set():
-        #         # 不是用户主动取消，显示失败信息
-        #         self.call_from_thread(
-        #             lambda: setattr(self, "status_message", "人脸识别失败或超时")
-        #         )
-        #     self.call_from_thread(self.close_qr)
-        # return
-
         # 在后台线程中检查人脸识别状态
         def check_face_auth_worker():
             face_success = self.live_manager.check_face_auth(qr_url, stop_event)
             face_success_result[0] = face_success
-            
+
             if face_success:
                 # 人脸识别成功，关闭二维码（会触发on_qr_closed(True)，但不会停止流程）
                 self.call_from_thread(self.close_qr)
