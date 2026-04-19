@@ -124,7 +124,9 @@ def raise_for_bili_code(response: Response):
         )
 
 
-def api_start_live(cookies: dict, room_id: int, area_id: int) -> FuncResult:
+def api_start_live(
+    cookies: dict, user_id: int, room_id: int, area_id: int
+) -> FuncResult:
     """
     开播api
 
@@ -185,14 +187,18 @@ def api_start_live(cookies: dict, room_id: int, area_id: int) -> FuncResult:
             data=sign_data(data),
         )
     except API_BILI_CODE_ERROR as e:
-        if e.code not in [60043, 60024]:
+        if e.code == 60024:
+            qr_url = e.data.get("qr")
+        elif e.code == 60043:
+            qr_url = f"https://www.bilibili.com/blackboard/live/face-auth-middle.html?source_event=400&mid={user_id}"
+        else:
             raise e
-        qr_url = e.data.get("qr")
-        v_voucher = None
         if "v_voucher" in e.data.keys():
             v_voucher = e.data["v_voucher"]
         elif "v_voucher" in e.data.get("risk_extra", {}).keys():
             v_voucher = e.data["risk_extra"]["v_voucher"]
+        else:
+            v_voucher = None
         if qr_url:
             return FuncResult(
                 type=FuncType.FAIL,
