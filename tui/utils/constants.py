@@ -3,12 +3,12 @@
 使用标准库的enum和pathlib。
 """
 
+from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from dataclasses import dataclass
 
 # ===== 版本信息 =====
-VERSION = (0, 4, 4)
+VERSION = (0, 4, 5)
 VERSION_STR = ".".join(map(str, VERSION))
 
 # ===== 基础路径 =====
@@ -34,6 +34,7 @@ AREA_OUTPUT_LINE_NUM: int = 4
 # ===== 配置文件版本 =====
 CONFIG_DEFAULT_VERSION: int = 2  # 默认保存的配置版本
 
+
 # ===== API端点 =====
 @dataclass
 class ApiEndpoints:
@@ -41,7 +42,9 @@ class ApiEndpoints:
 
     GET_ROOM_ID: str = "https://api.live.bilibili.com/room/v2/Room/room_id_by_uid"
     GET_QR_RES: str = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll"
-    GENERATE_QR: str = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
+    GENERATE_QR: str = (
+        "https://passport.bilibili.com/x/passport-login/web/qrcode/generate"
+    )
     GET_AREA_LIST: str = "https://api.live.bilibili.com/room/v1/Area/getList"
     GET_ROOM_STATUS: str = "https://api.live.bilibili.com/room/v1/Room/get_info"
     UPDATE_ROOM: str = "https://api.live.bilibili.com/room/v1/Room/update"
@@ -54,12 +57,44 @@ class ApiEndpoints:
     GET_WBI_KEY: str = "https://api.bilibili.com/x/web-interface/nav"
     SEND_DANMAKU: str = "https://api.live.bilibili.com/msg/send"
 
+
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
 
 WBI_KEY_INDEX_TABLE = [
-    46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35,
-    27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13
+    46,
+    47,
+    18,
+    2,
+    53,
+    8,
+    23,
+    32,
+    15,
+    50,
+    10,
+    31,
+    58,
+    3,
+    45,
+    35,
+    27,
+    43,
+    5,
+    49,
+    33,
+    9,
+    42,
+    19,
+    29,
+    28,
+    14,
+    39,
+    12,
+    38,
+    41,
+    13,
 ]
+
 
 # ===== 应用状态枚举 =====
 class AppState(Enum):
@@ -118,20 +153,22 @@ class Messages:
 class Styles:
     """UI样式常量 - 深色主题"""
 
-    ACCENT_COLOR = "#06b6d4"      # 青色强调色
-    SUCCESS_COLOR = "#22c55e"     # 成功绿
-    WARNING_COLOR = "#f59e0b"     # 警告黄
-    ERROR_COLOR = "#ef4444"       # 错误红
-    TEXT_PRIMARY = "#ffffff"      # 主文字 - 纯白
-    TEXT_SECONDARY = "#a1a1aa"    # 次文字 - 淡灰
-    TEXT_MUTED = "#71717a"        # 辅助文字 - 中灰
-    BG_PRIMARY = "#09090b"        # 最深背景 - 近黑
-    BG_SECONDARY = "#18181b"      # 二级背景 - 深灰
-    BG_TERTIARY = "#27272a"       # 三级背景 - 中深灰
-    BORDER_COLOR = "#3f3f46"      # 边框颜色
+    ACCENT_COLOR = "#06b6d4"  # 青色强调色
+    SUCCESS_COLOR = "#22c55e"  # 成功绿
+    WARNING_COLOR = "#f59e0b"  # 警告黄
+    ERROR_COLOR = "#ef4444"  # 错误红
+    TEXT_PRIMARY = "#ffffff"  # 主文字 - 纯白
+    TEXT_SECONDARY = "#a1a1aa"  # 次文字 - 淡灰
+    TEXT_MUTED = "#71717a"  # 辅助文字 - 中灰
+    BG_PRIMARY = "#09090b"  # 最深背景 - 近黑
+    BG_SECONDARY = "#18181b"  # 二级背景 - 深灰
+    BG_TERTIARY = "#27272a"  # 三级背景 - 中深灰
+    BORDER_COLOR = "#3f3f46"  # 边框颜色
+
 
 class DanmakuType(Enum):
     """弹幕类型"""
+
     DEFAULT = auto()  # 默认类型
 
     # 通知类
