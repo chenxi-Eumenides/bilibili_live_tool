@@ -8,34 +8,31 @@
 
 import asyncio
 import json
+import struct
 from logging import getLogger
-from datetime import datetime, timedelta
-from typing import Callable, Optional, Union
+from typing import Callable, Optional
+from zlib import decompress as zlib_decompress
 
 import aiohttp
 import yarl
-from zlib import decompress as zlib_decompress
 from brotli import decompress as brotli_decompress
 
 from .danmaku_handler import HandlerInterface
 from .danmaku_protocol import (
-    HeaderTuple,
     HEADER_STRUCT,
-    ProtoVer,
-    Operation,
-    AuthReplyCode,
-    InitError,
     AuthError,
+    AuthReplyCode,
+    HeaderTuple,
+    InitError,
+    Operation,
+    ProtoVer,
     make_packet,
 )
 from .danmaku_wbi import USER_AGENT, get_wbi_signer
 
-
 logger = getLogger(__name__)
 
-__all__ = (
-    "DanmakuClient",
-)
+__all__ = ("DanmakuClient",)
 
 # API地址
 UID_INIT_URL = "https://api.bilibili.com/x/web-interface/nav"
@@ -375,7 +372,7 @@ class DanmakuClient:
 
         try:
             header = HeaderTuple(*HEADER_STRUCT.unpack_from(data, offset))
-        except struct.error: # type: ignore
+        except struct.error:  # type: ignore
             logger.exception(
                 "room=%d parsing header failed, data=%s", self.room_id, data[:50]
             )
@@ -393,7 +390,7 @@ class DanmakuClient:
 
                 try:
                     header = HeaderTuple(*HEADER_STRUCT.unpack_from(data, offset))
-                except struct.error: # type: ignore
+                except struct.error:  # type: ignore
                     logger.exception(
                         "room=%d parsing header failed, offset=%d", self.room_id, offset
                     )
