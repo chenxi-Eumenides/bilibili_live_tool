@@ -52,9 +52,11 @@ class BaseHandler(HandlerInterface):
     # 已知但不需要处理的命令（避免重复日志）
     _logged_unknown_cmds = {
         "SUPER_CHAT_MESSAGE_JPN",  # SC弹幕
-        "ENTRY_EFFECT",  # 入场信息
         "NOTICE_MSG",  # 全站消息: 全站总督、全区道具抽奖广播
-        "COMBO_SEND",
+        "ENTRY_EFFECT",  # 特效进场消息
+        "INTERACT_WORD", # 进场消息
+        "INTERACT_WORD_V2", # 进场消息
+        "COMBO_SEND", # 连击送礼消息
         "HOT_RANK_CHANGED",
         "HOT_RANK_CHANGED_V2",
         "LIVE",
@@ -77,7 +79,6 @@ class BaseHandler(HandlerInterface):
         "MESSAGEBOX_USER_MEDAL_CHANGE",
         "WATCHED_CHANGE",
         "DM_INTERACTION",
-        "INTERACT_WORD_V2",
         "LIKE_INFO_V3_UPDATE",
         "ONLINE_RANK_V3",
         "LIKE_INFO_V3_CLICK",
