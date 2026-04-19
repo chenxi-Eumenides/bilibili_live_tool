@@ -22,17 +22,17 @@ from .constant import (
     QR_FACE_IMG,
     QR_IMG,
     TITLE_MAX_CHAR,
-    URL_GET_ROOM_ID,
-    URL_GET_QR_RES,
+    URL_CHECK_FACE,
     URL_GENERATE_QR,
     URL_GET_AREA_LIST,
+    URL_GET_LIVE_VERSION,
+    URL_GET_QR_RES,
+    URL_GET_ROOM_ID,
     URL_GET_ROOM_STATUS,
-    URL_UPDATE_ROOM,
     URL_GET_USER_STATUS,
-    URL_CHECK_FACE,
     URL_START_LIVE,
     URL_STOP_LIVE,
-    URL_GET_LIVE_VERSION,
+    URL_UPDATE_ROOM,
 )
 
 
@@ -279,7 +279,7 @@ class Bili_Live:
                 os.remove(QR_FACE_IMG)
             print("按 Enter回车 结束程序 或 直接关闭窗口")
             input()
-        except (EOFError, KeyboardInterrupt,ValueError):
+        except (EOFError, KeyboardInterrupt, ValueError):
             pass
 
     def login(self) -> dict:
