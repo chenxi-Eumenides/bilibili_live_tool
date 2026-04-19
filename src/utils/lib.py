@@ -9,10 +9,12 @@ from urllib.parse import urlencode
 from zlib import decompress as zlib_decompress
 
 from brotli import decompress as brotli_decompress
+from qrcode import QRCode
 from websockets import Data
 
 from .constant import (
     MIXIN_KEY_ENC_TABLE,
+    QR_DISPLAY_CHARS,
     WEBSOCKET_HEADER_STRUCT,
     ApiData,
 )
@@ -220,3 +222,28 @@ def hmac_sha256(key, message) -> str:
     # 将哈希值转换为十六进制字符串
     hash_hex = hash_value.hex()
     return hash_hex
+
+
+def generate_qr_text(qr_url: str) -> list[str]:
+    qr_data = []
+    qr = QRCode(
+        version=6,
+        error_correction=1,
+        box_size=1,
+        border=0,
+    )
+    qr.add_data(qr_url)
+    qr.make(fit=False)
+    matrix = qr.get_matrix()
+    size = len(matrix)
+    for row in range(0, size, 2):
+        qr_line: str = ""
+        for line in range(size):
+            qr_line += QR_DISPLAY_CHARS[
+                (
+                    matrix[row][line],
+                    matrix[row + 1][line] if row + 1 < size else False,
+                )
+            ]
+        qr_data.append(qr_line)
+    return qr_data

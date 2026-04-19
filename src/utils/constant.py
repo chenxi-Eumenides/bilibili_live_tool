@@ -122,6 +122,14 @@ class DanmakuColors:
     GIFT_NORMAL: str = "#AAAAAA"  # 普通礼物 - 浅灰色
 
 
+QR_DISPLAY_CHARS = {
+    (False, False): " ",
+    (True, False): "▀",
+    (False, True): "▄",
+    (True, True): "█",
+}
+
+
 class KeyBindings:
     """全局快捷键绑定"""
 
