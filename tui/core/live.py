@@ -10,7 +10,7 @@ from typing import Optional
 
 import requests
 
-from ..utils.constants import LIVEHIME_VERSION, LIVEHIME_BUILD, ApiEndpoints, USER_AGENT
+from ..utils.constants import LIVEHIME_BUILD, LIVEHIME_VERSION, USER_AGENT, ApiEndpoints
 from ..utils.crypto import sign_api_data
 from .config import ConfigManager
 
@@ -314,6 +314,10 @@ class LiveManager:
             # 检查是否需要人脸识别
             if res_data.get("code") == 60024:
                 qr_url = res_data.get("data", {}).get("qr", "")
+                logger.warning("需要人脸识别")
+                return False, "需要人脸验证", True, qr_url
+            elif res_data.get("code") == 60043:
+                qr_url = f"https://www.bilibili.com/blackboard/live/face-auth-middle.html?source_event=400&mid={config.user_id}"
                 logger.warning("需要人脸识别")
                 return False, "需要人脸验证", True, qr_url
 
