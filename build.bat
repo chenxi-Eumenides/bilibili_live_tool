@@ -2,7 +2,7 @@
 uv sync
 
 printf "\n========== packaging CLI version ==========\n\n"
-uv run --dev pyinstaller ^
+uv run --group cli --group build pyinstaller ^
     -n "bili-live-tool" ^
     -c -i .\src\static\bili-icon.ico ^
     --collect-submodules cli ^
@@ -10,7 +10,7 @@ uv run --dev pyinstaller ^
     .\cli\build.py
 
 printf "\n========== packaging TUI version ==========\n\n"
-uv run --dev pyinstaller ^
+uv run --group tui --group build pyinstaller ^
     -n "bili-live-tool-tui" ^
     -c -i .\src\static\bili-icon.ico ^
     --collect-submodules tui ^
