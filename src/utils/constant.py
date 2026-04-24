@@ -11,8 +11,6 @@ VERSION_STR = ".".join(map(str, VERSION))
 # 文件、路径
 BASE_DIR = Path.cwd()
 CONFIG_FILE = Path("config.json")
-ALL_CSS_PATH: list[str] = [""]
-
 # 所需常量
 TITLE_MAX_CHAR: int = 40
 # WEBSOCKET_HEADER_STRUCT = Struct(">I I I I I I")
