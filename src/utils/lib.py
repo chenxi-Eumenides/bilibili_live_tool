@@ -126,10 +126,10 @@ def unpack_ws_message(raw_msg: Data) -> list[WebSocketMessage]:
         message_list: list[BaseMessage]
     """
     if not isinstance(raw_msg, bytes):
-        raise
+        raise FUNC_DATA_ERROR("原始消息类型错误，期望bytes")
     offset = 0
     message_list: list[WebSocketMessage] = []
-    while offset <= len(raw_msg):
+    while offset < len(raw_msg):
         unpack_msg = WEBSOCKET_HEADER_STRUCT.unpack_from(raw_msg, offset)
         if len(unpack_msg) < 5:
             raise FUNC_DATA_ERROR("消息数据解包失败")
@@ -176,10 +176,10 @@ def parse_msg_body(body: bytes, operation: int, ver: int) -> list[WebSocketMessa
             try:
                 info = loads(body.decode("utf-8")).get("info")
                 if not info:
-                    raise
+                    raise FUNC_DATA_ERROR("弹幕数据info字段缺失")
                 message_list.append(DanmakuMessage.from_info(info=info))
-            except Exception:
-                raise
+            except Exception as e:
+                raise FUNC_DATA_ERROR(f"弹幕消息解析失败: {e}") from e
     return message_list
 
 
