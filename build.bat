@@ -1,21 +1,13 @@
 @echo off
 uv sync
 
-printf "\n========== packaging CLI version ==========\n\n"
-uv run --group cli --group build pyinstaller ^
-    -n "bili-live-tool" ^
-    -c -i .\src\static\bili-icon.ico ^
-    --collect-submodules cli ^
-    --onefile --clean ^
-    .\cli\build.py
-
 printf "\n========== packaging TUI version ==========\n\n"
-uv run --group tui --group build pyinstaller ^
+uv run --group build pyinstaller ^
     -n "bili-live-tool-tui" ^
     -c -i .\src\static\bili-icon.ico ^
-    --collect-submodules tui ^
-    --add-data=".\tui\ui\styles;.\tui\ui\styles" ^
+    --collect-submodules src ^
+    --add-data=".\src\ui\styles;.\src\ui\styles" ^
     --onefile --clean ^
-    .\tui\build.py
+    .\src\build.py
 
 printf "\n=================== Done ===================\n"
