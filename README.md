@@ -1,6 +1,8 @@
-# bilibili_live_tool
+# bilibili_live_tool (重构版)
 
-一个用于绕过B站直播姬的开播工具，支持开播/下播、修改标题/分区、查看直播间弹幕等功能
+> ⚠️ **开发中分支** — 本分支正在进行 Textual 重构，目前仅 `src/utils/` 为完成代码，其余部分为占位模板。
+
+基于 Textual 重构的 B 站直播终端工具（TUI），支持开播/下播、修改标题/分区、查看直播间弹幕等功能。
 
 ## 声明
 
@@ -8,26 +10,16 @@
 
 ## 安装/运行
 
-### 二进制文件
-
-[releases](https://github.com/chenxi-Eumenides/bilibili_live_tool/releases/latest)
-
-[蓝奏云(CN)](https://wwzt.lanzoul.com/b00zxtbjrg)  密码:chenxi
-
-双击程序运行。
-
-### 源码
+### 源码运行
 
 ```bash
-# 下载库
+# 克隆仓库并切换到 dev 分支
 git clone https://github.com/chenxi-Eumenides/bilibili_live_tool.git
+cd bilibili_live_tool
+git checkout dev
+
 # 安装依赖
 uv sync
-
-# 运行TUI软件
-uv run --group tui -m tui.main
-# 运行CLI软件
-uv run --group cli -m cli.main
 ```
 
 ## 致谢
