@@ -87,7 +87,6 @@ def api(
             res.status_code, f"请求API失败，状态码: {res.status_code}"
         )
     raise_for_bili_code(res)
-    print(res.cookies.get_dict())
     return ApiResult.from_response(res)
 
 
@@ -685,16 +684,7 @@ async def ws_send_auth(
         WebSocketProtoVer.DEFLATE,
         WebSocketOperation.AUTH,
     )
-    result = await ws.send(data)
-    print(f"send auth({ws.state.name}): {result}")
-    # result = await ws.send(
-    #     pack_ws_body(
-    #         {},
-    #         WebSocketProtoVer.DEFLATE,
-    #         WebSocketOperation.HEARTBEAT,
-    #     )
-    # )
-    # print(f"send heart({ws.state.name}): {result}")
+    await ws.send(data)
     try:
         await ws.recv()
     except ConnectionClosedError as e:
@@ -752,6 +742,10 @@ async def ws_listen_danmaku(
             SUCCESS: list[WebSocketMessage]
     """
     if ws.state != State.OPEN:
+        yield FuncResult(
+            type=FuncType.FAIL,
+            result={"reason": "WebSocket 未连接", "state": ws.state.name},
+        )
         return
     try:
         async for raw_message in ws:
@@ -764,4 +758,8 @@ async def ws_listen_danmaku(
             except FUNC_DATA_ERROR:
                 continue
     except ConnectionClosedError:
+        yield FuncResult(
+            type=FuncType.ERROR,
+            result={"reason": "WebSocket 连接被服务端关闭"},
+        )
         return
