@@ -696,11 +696,15 @@ async def ws_send_auth(
     # )
     # print(f"send heart({ws.state.name}): {result}")
     try:
-        result = await ws.recv()
-        print(f"recv({ws.state.name}): {result}")
+        await ws.recv()
     except ConnectionClosedError as e:
-        print(
-            f"state={ws.state.name}; code={e.rcvd.code if e.rcvd else None}; reason={e.rcvd.reason if e.rcvd else None}"
+        return FuncResult(
+            type=FuncType.ERROR,
+            result={
+                "reason": "认证时 WebSocket 连接关闭",
+                "code": e.rcvd.code if e.rcvd else None,
+                "ws_reason": e.rcvd.reason if e.rcvd else None,
+            },
         )
 
     return FuncResult(type=FuncType.SUCCESS)
