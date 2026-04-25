@@ -18,9 +18,11 @@ from rich import print
 import argparse
 import asyncio
 import sys
+import sys
 
 from ..logic import (
     Session,
+    SessionEvent,
     _listen_loop,
     auth_generate_qrcode,
     auth_logout,
@@ -205,6 +207,8 @@ def handle_danmaku(session: Session, room_id: str | None = None) -> None:
             print(msg)
 
     session.on("danmaku:received", on_received)
+    session.on(SessionEvent.ERROR, lambda e: print(f"[错误] {e}", file=sys.stderr))
+    session.on(SessionEvent.DANMAKU_STOPPED, lambda: print("[系统] 弹幕监听已停止", file=sys.stderr))
     print("弹幕监听中... 按 Ctrl+C 停止")
     try:
         asyncio.run(_listen_loop(session))
