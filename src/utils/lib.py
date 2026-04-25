@@ -195,7 +195,6 @@ def random_cooldown():
             with lock:
                 wait_time = round(uniform(Tuning.COOLDOWN_MIN, Tuning.COOLDOWN_MAX) + last_call_time - time(), 2) + 0.01
                 if wait_time > 0:
-                    print(f"正在延迟 {wait_time}s")
                     sleep(wait_time)
                 last_call_time = time()
                 return func(*args, **kwargs)
