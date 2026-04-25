@@ -41,17 +41,23 @@ CLI_FLAGS = frozenset({"--login", "--live", "--title", "--area", "--danmaku", "-
 
 
 def cli_help():
-    print("CLI 模式:")
-    print("  --cli                          login + 自动开/下播")
-    print("  --login                        扫码登录")
-    print("  --live start [-a 分区ID]       开播")
-    print("  --live stop                    下播")
-    print("  --live status                  查看状态")
-    print('  --title "标题" [--area 分区ID] 改标题')
-    print("  --area 分区ID [--title \"标题\"] 改分区")
-    print("  --danmaku                      弹幕监听")
-    print("TUI 模式:")
-    print("  --tui                          启动 TUI")
+    print("\n".join(_cli_help_lines()))
+
+
+def _cli_help_lines():
+    return [
+        "CLI 模式:",
+        "  --cli                          login + 自动开/下播",
+        "  --login                        扫码登录",
+        "  --live start [-a AREA] [--title TITLE]  开播",
+        "  --live stop                    下播",
+        "  --live status                  查看状态",
+        '  --title "标题" [--area AREA]   改标题',
+        "  --area AREA [--title \"标题\"]  改分区",
+        "  --danmaku                      弹幕监听",
+        "TUI 模式:",
+        "  --tui                          启动 TUI",
+    ]
 
 
 def _load_session() -> Session:
@@ -97,13 +103,17 @@ def handle_login(session: Session) -> bool:
 
 def handle_live_start(session: Session, args) -> None:
     result = live_start(session, area_id=args.area or 0)
-    if result.type == FuncType.SUCCESS:
-        data = result.result
-        print(f"开播成功 (房间:{session.room_id})")
-        if data.get("rtmp_addr"):
-            print(f"推流地址: {data['rtmp_addr']}{data.get('rtmp_code','')}")
-    else:
+    if result.type != FuncType.SUCCESS:
         print(f"开播失败: {result.result}")
+        return
+    data = result.result
+    print(f"开播成功 (房间:{session.room_id})")
+    if data.get("rtmp_addr"):
+        print(f"推流地址: {data['rtmp_addr']}{data.get('rtmp_code','')}")
+    if args.title:
+        handle_update(session, args)
+    elif args.area:
+        handle_update(session, args)
 
 
 def handle_live_stop(session: Session) -> None:

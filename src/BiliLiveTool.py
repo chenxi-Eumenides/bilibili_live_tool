@@ -1,32 +1,27 @@
-"""总入口
-
-处理 --help / --set-default（不加载 cli/tui），
-其余参数按 cli/tui 各自导出的 flag 集匹配分发，
-无匹配时使用 config.json 中的 default_mode。
-"""
+"""总入口"""
 
 import sys
 
 
-def main():
-    if "--help" in sys.argv:
-        print("B站直播管理工具")
-        print("  --help          帮助信息")
-        print("  --set-default MODE  设置默认启动模式 (tui|cli|help)")
-        from .cli import cli_help
-        cli_help()
-        return
+def _print_help():
+    from .cli import cli_help
+    print("B站直播管理工具")
+    print("  --help          帮助信息")
+    print("  --set-default MODE  设置默认启动模式 (tui|cli|help)")
+    cli_help()
 
-    if "--set-default" in sys.argv:
-        idx = sys.argv.index("--set-default")
-        mode = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else "help"
-        from .utils.config import CONFIG, CONFIG_FILE
-        config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
-        config.default_mode = mode
-        config.save_config()
-        print(f"默认启动模式已设为: {mode}")
-        return
 
+def _handle_set_default():
+    idx = sys.argv.index("--set-default")
+    mode = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else "help"
+    from .utils.config import CONFIG, CONFIG_FILE
+    config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
+    config.default_mode = mode
+    config.save_config()
+    print(f"默认启动模式已设为: {mode}")
+
+
+def _dispatch():
     from .cli import CLI_FLAGS, run_cli
     from .tui import TUI_FLAGS, run_tui
 
@@ -37,21 +32,33 @@ def main():
     elif given & TUI_FLAGS:
         run_tui()
     else:
-        from .utils.config import CONFIG, CONFIG_FILE
-        config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
-        mode = config.default_mode or "help"
-        if mode == "tui":
-            sys.argv.append("--tui")
-            run_tui()
-        elif mode == "cli":
-            sys.argv.append("--cli")
-            run_cli()
-        else:
-            print("B站直播管理工具")
-            print("  --help          帮助信息")
-            print("  --set-default MODE  设置默认启动模式 (tui|cli|help)")
-            from .cli import cli_help
-            cli_help()
+        _default_mode()
+
+
+def _default_mode():
+    from .utils.config import CONFIG, CONFIG_FILE
+    config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
+    mode = config.default_mode or "help"
+
+    if mode == "tui":
+        sys.argv.append("--tui")
+        from .tui import run_tui
+        run_tui()
+    elif mode == "cli":
+        sys.argv.append("--cli")
+        from .cli import run_cli
+        run_cli()
+    else:
+        _print_help()
+
+
+def main():
+    if "--help" in sys.argv:
+        _print_help()
+    elif "--set-default" in sys.argv:
+        _handle_set_default()
+    else:
+        _dispatch()
 
 
 if __name__ == "__main__":
