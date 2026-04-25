@@ -18,7 +18,6 @@ from rich import print
 import argparse
 import asyncio
 import sys
-import sys
 
 from ..logic import (
     Session,
