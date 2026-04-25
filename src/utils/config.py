@@ -120,7 +120,7 @@ class CONFIG:
             rtmp_code=live.get("rtmp_code", ""),
             room_data=extra.get("room", {}),
             area_data=extra.get("area", [{}]),
-            default_mode=extra.get("app", {}).get("default_mode", ""),
+            default_mode=data.get("app", {}).get("default_mode", ""),
         )
 
     from_old_file = from_file
