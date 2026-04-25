@@ -150,7 +150,7 @@ def unpack_ws_message(raw_msg: Data) -> list[WebSocketMessage]:
         else:
             offset += pack_len
             continue
-        if ver not in WebSocketProtoVer._member_map_:
+        if ver not in (v.value for v in WebSocketProtoVer):
             raise FUNC_DATA_ERROR(f"消息解包数据不符合要求，{ver=}")
         messages = parse_msg_body(body, operation, ver)
         message_list += messages
