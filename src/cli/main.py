@@ -198,10 +198,10 @@ def handle_danmaku(session: Session, room_id: str | None = None) -> None:
         return
 
     def on_received(msg):
-        ts = getattr(msg, "timestamp_str", "")
-        uname = getattr(msg, "uname", "?")
-        content = getattr(msg, "msg", str(msg))
-        print(f"[{ts}] {uname}: {content}")
+        if hasattr(msg, "format_rich"):
+            print(msg.format_rich())
+        else:
+            print(msg)
 
     session.on("danmaku:received", on_received)
     print("弹幕监听中... 按 Ctrl+C 停止")
