@@ -90,6 +90,7 @@ class SessionEvent:
 
     LIVE_STATE_CHANGED = "live:state_changed"
     LIVE_INFO_UPDATED = "live:info_updated"
+    LIVE_FACE_AUTH_REQUIRED = "live:face_auth_required"
 
     DANMAKU_RECEIVED = "danmaku:received"
     DANMAKU_STOPPED = "danmaku:stopped"

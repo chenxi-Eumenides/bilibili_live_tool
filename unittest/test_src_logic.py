@@ -280,6 +280,40 @@ class TestLive(TestCase):
         self.assertIn("未登录", str(result.result))
 
     @patch("src.logic.live.api_start_live")
+    @patch("src.logic.live.api_get_room_id")
+    def test_live_start_auto_room_id(self, mock_room_id, mock_start):
+        self.session.config.room_id = 0
+        self.session.config.uid = 123
+        mock_room_id.return_value = FuncResult(type=FuncType.SUCCESS, result=99999)
+        mock_start.return_value = FuncResult(
+            type=FuncType.SUCCESS,
+            result={"rtmp_addr": "rtmp://x", "rtmp_code": "code"},
+        )
+        result = live_start(self.session, area_id=100)
+        self.assertEqual(result.type, FuncType.SUCCESS)
+        self.assertEqual(self.session.config.room_id, 99999)
+
+    @patch("src.logic.live.api_start_live")
+    def test_live_start_face_auth_event(self, mock_start):
+        mock_start.return_value = FuncResult(
+            type=FuncType.FAIL,
+            result={"face_auth": True, "qr_url": "https://face.auth/qr"},
+        )
+        emit_calls = []
+        self.session.on(SessionEvent.LIVE_FACE_AUTH_REQUIRED, lambda *a: emit_calls.append(a))
+        result = live_start(self.session, area_id=100)
+        self.assertEqual(result.type, FuncType.FAIL)
+        self.assertEqual(len(emit_calls), 1)
+        self.assertIn("face.auth", emit_calls[0][0])
+
+    def test_live_start_no_room_id_no_uid(self):
+        self.session.config.room_id = 0
+        self.session.config.uid = 0
+        result = live_start(self.session, area_id=100)
+        self.assertEqual(result.type, FuncType.FAIL)
+        self.assertIn("房间号", str(result.result))
+
+    @patch("src.logic.live.api_start_live")
     def test_live_start_success(self, mock_start):
         mock_start.return_value = FuncResult(
             type=FuncType.SUCCESS,

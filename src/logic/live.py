@@ -7,11 +7,12 @@
 from __future__ import annotations
 
 from ..utils.api import (
+    api_get_area_list,
+    api_get_room_data,
+    api_get_room_id,
     api_start_live,
     api_stop_live,
     api_update_room,
-    api_get_room_data,
-    api_get_area_list,
 )
 from ..utils.data import FuncResult, FuncType, AppState
 from ..utils.constant import SessionEvent
@@ -23,15 +24,29 @@ def live_start(session: Session, area_id: int) -> FuncResult:
 
     Args:
         session: 会话实例
-        area_id: 开播分区 ID
+        area_id: 开播分区 ID（0 表示使用 config 中已有的 area_id）
+
+    如果 session.room_id 为 0，会先通过 api_get_room_id 自动获取。
+    遇到人脸认证错误时 emit LIVE_FACE_AUTH_REQUIRED 事件。
 
     Returns:
         FuncResult(SUCCESS, {rtmp_addr, rtmp_code, ...}) 或 FAIL/ERROR
 
-    副作用：emit live:state_changed(True, room_info)
+    副作用：emit live:state_changed / live:face_auth_required
     """
     if not session.is_logged_in:
         return FuncResult(type=FuncType.FAIL, result="未登录，无法开播")
+
+    # 自动获取 room_id
+    if session.room_id == 0 and session.user_id:
+        id_result = api_get_room_id(
+            cookies=session.cookies, user_id=session.user_id
+        )
+        if id_result.type == FuncType.SUCCESS:
+            session.config.room_id = id_result.result
+
+    if session.room_id == 0:
+        return FuncResult(type=FuncType.FAIL, result="未设置房间号，且无法自动获取")
 
     result = api_start_live(
         cookies=session.cookies,
@@ -40,6 +55,12 @@ def live_start(session: Session, area_id: int) -> FuncResult:
         area_id=area_id,
     )
     if result.type != FuncType.SUCCESS:
+        data = result.result
+        if isinstance(data, dict) and data.get("face_auth"):
+            session._emit(
+                SessionEvent.LIVE_FACE_AUTH_REQUIRED,
+                data.get("qr_url", ""),
+            )
         return result
 
     data = result.result
