@@ -54,7 +54,8 @@ def help_lines():
         "  --live status                  查看状态",
         '  --title "标题" [--area 分区ID]   改标题',
         "  --area 分区ID [--title \"标题\"]  改分区",
-        "  --area list [父分区ID]          列出可用分区",
+        "  --area list                    列出主分区",
+        "  --area list 主分区ID             列出子分区",
         "  --danmaku [直播间号]            弹幕监听 (默认: 自己的直播间)",
     ]
 
@@ -164,7 +165,9 @@ def handle_update(session: Session, args) -> None:
             return
         parent_id = int(area[1]) if len(area) > 1 else None
         for main in result.result:
-            if parent_id is None or main.id == parent_id:
+            if parent_id is None:
+                print(f"  [{main.id}] {main.name}")
+            elif main.id == parent_id:
                 print(f"  [{main.id}] {main.name}")
                 for sub in main.list:
                     print(f"    [{main.id}/{sub.id}] {sub.name}")
