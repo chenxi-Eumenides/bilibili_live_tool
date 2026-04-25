@@ -551,7 +551,7 @@ def api_get_user_nav(cookies: dict) -> FuncResult:
     Returns:
         FuncResult: {uname, mid, ...}
     """
-    res = api(type=ApiType.GET, url=ApiUrl.GET_WBI_KEY, cookies=cookies)
+    res = api(type=ApiType.GET, url=ApiUrl.GET_USER_STATUS, cookies=cookies)
     return FuncResult(type=FuncType.SUCCESS, result=res.data)
 
 
