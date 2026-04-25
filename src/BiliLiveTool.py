@@ -4,12 +4,13 @@ import sys
 
 
 def _print_help():
-    from .cli import help_lines as cli_help_lines
     print("B站直播管理工具")
     print("  --help          帮助信息")
     print("  --set-default MODE  设置默认启动模式 (tui|cli|help)")
-    for line in cli_help_lines():
-        print(line)
+    from .cli import help_lines as cli_help_lines
+    print("\n".join(cli_help_lines()))
+    from .tui import help_lines as tui_help_lines
+    print("\n".join(tui_help_lines()))
 
 
 def _handle_set_default():

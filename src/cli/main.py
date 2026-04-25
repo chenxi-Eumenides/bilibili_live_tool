@@ -51,8 +51,6 @@ def help_lines():
         '  --title "标题" [--area AREA]   改标题',
         "  --area AREA [--title \"标题\"]  改分区",
         "  --danmaku                      弹幕监听",
-        "TUI 模式:",
-        "  --tui                          启动 TUI",
     ]
 
 
