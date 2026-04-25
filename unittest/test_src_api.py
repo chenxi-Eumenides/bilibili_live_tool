@@ -126,7 +126,7 @@ class Test_Api(IsolatedAsyncioTestCase):
         self.assertEqual(result.type, FuncType.SUCCESS)
         data = result.result
         self.assertIsInstance(data, dict)
-        self.assertIn("mid", data)
+        self.assertIn("following", data)
 
     def test_api_get_user_nav_no_cookies(self):
         with self.assertRaises(API_BILI_CODE_ERROR) as e:
