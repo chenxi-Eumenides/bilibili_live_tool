@@ -248,6 +248,36 @@ class TestAuth(TestCase):
         self.assertIn("过期", result.result)
         self.assertFalse(self.session.is_logged_in)
 
+    @patch("src.logic.auth.api")
+    def test_auth_validate_login_emits_success(self, mock_api):
+        mock_res = MagicMock()
+        mock_res.cookies = {"some": "cookie"}
+        mock_res.data = {"uname": "test_user"}
+        mock_api.return_value = mock_res
+
+        self.session.config.cookies = {"token": "x"}
+        emit_calls = []
+        self.session.on(SessionEvent.AUTH_LOGIN_SUCCESS, lambda: emit_calls.append(1))
+
+        result = auth_validate_login(self.session)
+        self.assertEqual(result.type, FuncType.SUCCESS)
+        self.assertEqual(len(emit_calls), 1)
+
+    @patch("src.logic.auth.api")
+    def test_auth_validate_login_emits_fail(self, mock_api):
+        mock_api.side_effect = API_BILI_CODE_ERROR(
+            -101, "未登录",
+            HTTPError(response=MagicMock(spec=Response))
+        )
+
+        self.session.config.cookies = {"token": "x"}
+        emit_calls = []
+        self.session.on(SessionEvent.AUTH_LOGIN_FAILED, lambda *a: emit_calls.append(a))
+
+        result = auth_validate_login(self.session)
+        self.assertEqual(result.type, FuncType.FAIL)
+        self.assertEqual(len(emit_calls), 1)
+
     def test_auth_logout(self):
         self.session.config.cookies = {"token": "x"}
         self.session.config.csrf = "csrf_val"

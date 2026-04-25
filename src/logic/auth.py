@@ -114,6 +114,7 @@ def auth_validate_login(session: Session) -> FuncResult:
         )
     except API_BILI_CODE_ERROR:
         session._login_verified = False
+        session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录已过期")
         return FuncResult(type=FuncType.FAIL, result="登录已过期")
 
     if not res.cookies:
@@ -121,6 +122,7 @@ def auth_validate_login(session: Session) -> FuncResult:
         return FuncResult(type=FuncType.FAIL, result="登录状态无效")
 
     session._login_verified = True
+    session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
     return FuncResult(type=FuncType.SUCCESS, result=res.data)
 
 
