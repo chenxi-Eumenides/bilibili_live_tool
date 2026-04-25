@@ -139,10 +139,18 @@ def handle_live_status(session: Session) -> None:
             print(f"刷新失败: {refresh.result}")
             return
     data = session.config.room_data
+    is_live = data.get("live_status")
     print(f"房间号: {data.get('room_id','?')}")
     print(f"标题:   {data.get('title','?')}")
-    print(f"状态:   {'直播中' if data.get('live_status') else '未开播'}")
     print(f"分区:   {data.get('area_name','?')} (id={data.get('area_id','?')})")
+    print(f"状态:   {'直播中' if is_live else '未开播'}")
+    if is_live:
+        live_time = data.get("live_time", "00:00:00")
+        if live_time and live_time != "0000-00-00 00:00:00":
+            print(f"直播时长: {live_time}")
+    online = data.get("online", 0)
+    if online:
+        print(f"当前观众: {online}")
 
 
 def handle_update(session: Session, args) -> None:
