@@ -2,8 +2,6 @@
 
 Session 持有全局唯一的 CONFIG 实例，管理当前会话状态（登录态、直播态、监听态），
 并通过回调列表向订阅方（CLI/TUI）推送事件。
-
-事件常量定义在 utils.constant.SessionEvent 中。
 """
 
 from typing import Callable, Any, Optional
@@ -15,33 +13,35 @@ from ..utils.data import AppState
 
 
 class Session:
-    """全局会话状态 + 轻量观察者
+    """会话状态中心。
 
-    持有 CONFIG，管理 AppState，提供事件订阅/取消/触发。
-    内部使用回调列表方案（方案 A），KISS 原则，满足当前需求。
+    持有 CONFIG 并管理远程状态（登录/直播/弹幕监听），
+    提供 on/off/once/_emit 事件系统供用户层订阅。
     """
 
     def __init__(self, config: Optional[CONFIG] = None) -> None:
+        """
+        Args:
+            config: 可选，自定义 CONFIG 实例；默认创建空的 CONFIG
+        """
         self.config = config or CONFIG()
         self.app_state = AppState.UNAUTH
-
         self._login_verified = False
         self.bili_ticket = ""
         self.danmaku_room_id = 0
         self._danmaku_running = False
         self._danmaku_stop_event: Optional[Any] = None
-
         self._listeners: dict[str, list[Callable[..., None]]] = {}
 
     def on(self, event: str, callback: Callable[..., None]) -> None:
-        """订阅事件。
+        """注册事件监听。
 
         Args:
-            event: 事件名（如 AUTH_QRCODE_READY）
-            callback: 回调函数，由 emit 同步调用
+            event: 事件名，如 SessionEvent.AUTH_LOGIN_SUCCESS
+            callback: 回调函数（同步调用）
 
         Raises:
-            TypeError: 如果 callback 不可调用
+            TypeError: callback 不可调用
         """
         if not callable(callback):
             raise TypeError(f"callback 必须可调用，实际类型: {type(callback)}")
@@ -50,9 +50,11 @@ class Session:
         self._listeners[event].append(callback)
 
     def off(self, event: str, callback: Callable[..., None]) -> None:
-        """取消订阅。
+        """取消事件监听，未注册时静默忽略。
 
-        如果 callback 不存在于该事件的订阅列表中，静默忽略。
+        Args:
+            event: 事件名
+            callback: 之前注册的回调
         """
         listeners = self._listeners.get(event, [])
         try:
@@ -61,26 +63,26 @@ class Session:
             pass
 
     def once(self, event: str, callback: Callable[..., None]) -> None:
-        """订阅事件，触发一次后自动取消。
+        """注册一次性事件监听，触发后自动取消。
 
         Args:
             event: 事件名
-            callback: 一次性回调
+            callback: 回调函数，仅触发一次
         """
-
         def _wrapper(*args: Any) -> None:
             self.off(event, _wrapper)
             callback(*args)
-
         self.on(event, _wrapper)
 
     def _emit(self, event: str, *args: Any) -> None:
         """触发事件（内部使用）。
 
-        同步遍历回调列表并调用。任一回调抛异常，其余回调仍继续执行。
-        异常会被捕获并打印 stderr 用于调试，但不会中断其他监听者。
+        遍历回调列表并同步调用。单个回调抛异常时 catch 并写 stderr，
+        其余回调仍继续执行。
 
-        注意：逻辑层模块不处理回调异常，用户层应在回调中自行包裹 try/except。
+        Args:
+            event: 事件名
+            *args: 传递给回调的参数
         """
         for cb in self._listeners.get(event, ()):
             try:
@@ -94,26 +96,32 @@ class Session:
 
     @property
     def is_logged_in(self) -> bool:
+        """是否已登录（cookies 通过 API 验证）"""
         return self._login_verified
 
     @property
     def is_live(self) -> bool:
+        """是否正在直播"""
         return self.app_state == AppState.LIVE
 
     @property
     def room_id(self) -> int:
+        """直播间 ID"""
         return self.config.room_id
 
     @property
     def user_id(self) -> int:
+        """B站用户 UID"""
         return self.config.uid
 
     @property
     def cookies(self) -> dict:
+        """当前 cookies 字典"""
         return self.config.cookies
 
     @property
     def csrf(self) -> str:
+        """csrf token"""
         return self.config.csrf
 
     @property
