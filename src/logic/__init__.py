@@ -17,7 +17,7 @@ from .live import (
     live_update_title,
     live_update_area,
     live_refresh_room_info,
-    live_get_room_info,
+    live_get_room_info_cache,
     live_get_area_list,
 )
 from .danmaku import danmaku_start, danmaku_stop, _listen_loop

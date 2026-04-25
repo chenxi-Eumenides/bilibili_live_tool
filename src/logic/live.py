@@ -175,7 +175,7 @@ def live_refresh_room_info(session: Session) -> FuncResult:
     return result
 
 
-def live_get_room_info(session: Session) -> FuncResult:
+def live_get_room_info_cache(session: Session) -> FuncResult:
     """获取当前缓存的房间信息（不发起网络请求）。
 
     Returns:

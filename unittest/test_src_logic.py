@@ -17,7 +17,7 @@ from src.logic.auth import (
 from src.logic.danmaku import danmaku_start, danmaku_stop
 from src.logic.live import (
     live_get_area_list,
-    live_get_room_info,
+    live_get_room_info_cache,
     live_refresh_room_info,
     live_start,
     live_stop,
@@ -406,14 +406,14 @@ class TestLive(TestCase):
     def test_live_refresh_room_info_requires_login(self):
         self._assert_not_logged_in(live_refresh_room_info)
 
-    def test_live_get_room_info_with_cache(self):
+    def test_live_get_room_info_cache_with_cache(self):
         self.session.config.room_data = {"room_id": 999}
-        result = live_get_room_info(self.session)
+        result = live_get_room_info_cache(self.session)
         self.assertEqual(result.type, FuncType.SUCCESS)
         self.assertEqual(result.result["room_id"], 999)
 
-    def test_live_get_room_info_without_cache(self):
-        result = live_get_room_info(self.session)
+    def test_live_get_room_info_cache_without_cache(self):
+        result = live_get_room_info_cache(self.session)
         self.assertEqual(result.type, FuncType.FAIL)
         self.assertIn("尚无房间数据", str(result.result))
 
