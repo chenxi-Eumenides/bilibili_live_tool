@@ -8,7 +8,6 @@ from types import SimpleNamespace
 from typing import Any, Optional
 
 from requests import Response
-from textual.message import Message
 
 from .constant import DanmakuColors
 
@@ -95,7 +94,7 @@ class LiveArea(SimpleNamespace):
 
 @dataclass
 class LiveAreaList:
-    """ """
+    """直播分区列表对象"""
 
     _data: list[LiveArea]
 
@@ -178,7 +177,7 @@ class NoticeDanmakuType(Enum):
 
 
 @dataclass
-class WebSocketMessage(Message):
+class WebSocketMessage:
     message_type: MessageType
     """消息类型"""
     timestamp: int = 0

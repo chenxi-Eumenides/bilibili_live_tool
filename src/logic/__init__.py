@@ -11,11 +11,30 @@ from .auth import (
     auth_validate_login,
     auth_logout,
 )
+from .live import (
+    live_start,
+    live_stop,
+    live_update_title,
+    live_refresh_room_info,
+    live_get_room_info,
+)
+from .danmaku import danmaku_start, danmaku_stop, _listen_loop
+from ..utils.constant import BiliCode, SessionEvent
 
 __all__ = [
     "Session",
+    "SessionEvent",
+    "BiliCode",
     "auth_generate_qrcode",
     "auth_poll_login",
     "auth_validate_login",
     "auth_logout",
+    "live_start",
+    "live_stop",
+    "live_update_title",
+    "live_refresh_room_info",
+    "live_get_room_info",
+    "danmaku_start",
+    "danmaku_stop",
+    "_listen_loop",
 ]

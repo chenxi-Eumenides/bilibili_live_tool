@@ -1,18 +1,9 @@
-from textual.app import App
+"""入口重定向 — 请使用 python -m src 启动
 
-from ui.screens.MainScreen import MainScreen
-from utils.constant import CSS_APP
-
-
-class BiliLiveTool(App):
-    """A Textual app to manage stopwatches."""
-
-    CSS_PATH = CSS_APP
-    SCREENS = {"main": MainScreen}
-
-    def on_mount(self):
-        self.push_screen("main")
-
+TUI 入口已迁移至 src/tui/app.py
+CLI 入口已迁移至 src/cli/main.py
+"""
 
 if __name__ == "__main__":
-    BiliLiveTool().run()
+    from src.tui import run_tui
+    run_tui()

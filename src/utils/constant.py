@@ -75,6 +75,42 @@ class ApiUrl:
     SET_LIVE_TIMESHIFT: str = "https://api.live.bilibili.com/xlive/app-blink/v1/upStreamConfig/SetAnchorSelfStreamTimeShift"
 
 
+class SessionEvent:
+    """Session 事件名称常量
+
+    逻辑层通过 session._emit(SessionEvent.XXX) 触发，
+    用户层通过 session.on(SessionEvent.XXX, callback) 订阅。
+    """
+
+    AUTH_QRCODE_READY = "auth:qrcode_ready"
+    AUTH_LOGIN_POLLING = "auth:login_polling"
+    AUTH_LOGIN_SUCCESS = "auth:login_success"
+    AUTH_LOGIN_FAILED = "auth:login_failed"
+    AUTH_LOGOUT_DONE = "auth:logout_done"
+
+    LIVE_STATE_CHANGED = "live:state_changed"
+    LIVE_INFO_UPDATED = "live:info_updated"
+
+    DANMAKU_RECEIVED = "danmaku:received"
+    DANMAKU_STOPPED = "danmaku:stopped"
+
+    ERROR = "error"
+
+
+class BiliCode:
+    """B站 API 常用状态码常量
+
+    码值为 abs 后的正整数，与 error.FAIL_BILI_CODE 的 key 一一对应。
+    """
+
+    LOGIN_QR_WAITING = 86101
+    LOGIN_QR_SCANNED = 86090
+    LOGIN_QR_EXPIRED = 86038
+
+    FACE_AUTH_REQUIRED = 60024
+    FACE_AUTH_VERIFY = 60043
+
+
 class TUIColors:
     """UI样式常量 - 深色主题"""
 
@@ -141,21 +177,6 @@ class KeyBindings:
     COPY_STREAM = "c"  # 复制推流码
     COPY_ALL = "shift+c"  # 复制全部信息
     TOGGLE_LOG = "l"  # 展开/折叠日志
-
-
-EMPTY_DATA_LOGIN: dict = {
-    "user_id": 0,
-    "cookies_str": "",
-    "csrf": "",
-    "refresh_token": "",
-}
-EMPTY_DATA_LIVE: dict = {
-    "room_id": 0,
-    "title": "",
-    "area_id": 0,
-    "rtmp_addr": "",
-    "rtmp_code": "",
-}
 
 # 解码加密数据
 WBI_KEY_INDEX_TABLE = [
@@ -258,3 +279,4 @@ MIXIN_KEY_ENC_TABLE: list[int] = [
     44,
     52,
 ]
+

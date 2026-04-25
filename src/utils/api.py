@@ -4,7 +4,7 @@ from typing import AsyncGenerator, Optional
 from requests import HTTPError, Response, get, post
 from websockets import ClientConnection, ConnectionClosedError, State, connect
 
-from .constant import BILI_TICKET_KEY, ApiData, ApiUrl
+from .constant import BILI_TICKET_KEY, ApiData, ApiUrl, BiliCode
 from .data import (
     ApiResult,
     ApiType,
@@ -186,9 +186,9 @@ def api_start_live(
             data=sign_data(data),
         )
     except API_BILI_CODE_ERROR as e:
-        if e.code == 60024:
+        if e.code == BiliCode.FACE_AUTH_REQUIRED:
             qr_url = e.data.get("qr")
-        elif e.code == 60043:
+        elif e.code == BiliCode.FACE_AUTH_VERIFY:
             qr_url = f"https://www.bilibili.com/blackboard/live/face-auth-middle.html?source_event=400&mid={user_id}"
         else:
             raise e
@@ -455,7 +455,7 @@ def api_check_login(qr_key: str) -> FuncResult:
             params=params,
         )
     except API_BILI_CODE_ERROR as e:
-        if e.code not in [86090, 86101]:
+        if e.code not in [BiliCode.LOGIN_QR_SCANNED, BiliCode.LOGIN_QR_WAITING]:
             raise e
         return FuncResult(type=FuncType.FAIL, result=e.code)
     if not res.cookies or not res.data:

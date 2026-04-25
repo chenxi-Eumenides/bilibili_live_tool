@@ -3,30 +3,15 @@
 Session 持有全局唯一的 CONFIG 实例，管理当前会话状态（登录态、直播态、监听态），
 并通过回调列表向订阅方（CLI/TUI）推送事件。
 
-事件类型 11 种，定义为本模块常量，避免各模块各自硬编码字符串。
+事件常量定义在 utils.constant.SessionEvent 中。
 """
 
-from __future__ import annotations
-
 from typing import Callable, Any, Optional
+import sys
+import traceback
 
 from ..utils.config import CONFIG
 from ..utils.data import AppState
-
-
-AUTH_QRCODE_READY = "auth:qrcode_ready"
-AUTH_LOGIN_POLLING = "auth:login_polling"
-AUTH_LOGIN_SUCCESS = "auth:login_success"
-AUTH_LOGIN_FAILED = "auth:login_failed"
-AUTH_LOGOUT_DONE = "auth:logout_done"
-
-LIVE_STATE_CHANGED = "live:state_changed"
-LIVE_INFO_UPDATED = "live:info_updated"
-
-DANMAKU_RECEIVED = "danmaku:received"
-DANMAKU_STOPPED = "danmaku:stopped"
-
-ERROR = "error"
 
 
 class Session:
@@ -40,6 +25,7 @@ class Session:
         self.config = config or CONFIG()
         self.app_state = AppState.UNAUTH
 
+        self._login_verified = False
         self._danmaku_running = False
         self._danmaku_stop_event: Optional[Any] = None
 
@@ -98,9 +84,6 @@ class Session:
             try:
                 cb(*args)
             except Exception:
-                import sys
-                import traceback
-
                 print(
                     f"[session] 事件 {event} 的回调 {cb.__name__} 发生异常：",
                     file=sys.stderr,
@@ -109,7 +92,7 @@ class Session:
 
     @property
     def is_logged_in(self) -> bool:
-        return bool(self.config.cookies)
+        return self._login_verified
 
     @property
     def is_live(self) -> bool:

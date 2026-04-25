@@ -1,13 +1,8 @@
 import json
 from dataclasses import dataclass, field
+from pathlib import Path
 
-from .constant import (
-    LIVEHIME_BUILD,
-    LIVEHIME_VERSION,
-    PLATFORM,
-    DEFAULT_CONFIG_FILE,
-)
-
+from .constant import ApiData, CONFIG_FILE
 
 @dataclass
 class CONFIG:
@@ -31,9 +26,9 @@ class CONFIG:
 
     # other
     description: str = ""
-    platform: str = PLATFORM
-    version: str = LIVEHIME_VERSION
-    build: str = LIVEHIME_BUILD
+    platform: str = ApiData.PLATFORM
+    version: str = ApiData.LIVEHIME_VERSION
+    build: str = ApiData.LIVEHIME_BUILD
 
     @property
     def cookies_str(self) -> str:
@@ -52,7 +47,7 @@ class CONFIG:
         return 0
 
     @classmethod
-    def from_file(cls, file_path: str = DEFAULT_CONFIG_FILE) -> "CONFIG":
+    def from_file(cls, file_path: Path = CONFIG_FILE) -> "CONFIG":
         """
         从配置文件创建 CONFIG 实例
 
@@ -114,7 +109,7 @@ class CONFIG:
         return cls(cookies=cookies)
 
     @classmethod
-    def from_old_file(cls, file_path: str = DEFAULT_CONFIG_FILE) -> "CONFIG":
+    def from_old_file(cls, file_path: Path = CONFIG_FILE) -> "CONFIG":
         """
         从旧的配置文件格式创建 CONFIG 实例
 
@@ -160,11 +155,11 @@ class CONFIG:
             rtmp_code=config_data.get("rtmp_code", ""),
             room_data=config_data.get("room_data", {}),
             area_data=config_data.get("area", [{}]),
-            version=config_data.get("live_version", LIVEHIME_VERSION),
-            build=config_data.get("live_build", LIVEHIME_BUILD),
+            version=config_data.get("live_version", ApiData.LIVEHIME_VERSION),
+            build=config_data.get("live_build", ApiData.LIVEHIME_BUILD),
         )
 
-    def save_config(self, file_path: str = DEFAULT_CONFIG_FILE) -> bool:
+    def save_config(self, file_path: Path = CONFIG_FILE) -> bool:
         config_data = {
             "user": {
                 "uid": self.uid,
