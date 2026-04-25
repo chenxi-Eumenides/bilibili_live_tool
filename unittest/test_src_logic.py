@@ -215,7 +215,7 @@ class TestAuth(TestCase):
         self.assertEqual(result.type, FuncType.FAIL)
         self.assertIn("超时", result.result)
 
-    @patch("src.logic.auth.api")
+    @patch("src.logic.auth.api_get_user_nav")
     def test_auth_validate_login_success(self, mock_api):
         mock_res = MagicMock()
         mock_res.cookies = {"some": "cookie"}
@@ -228,13 +228,13 @@ class TestAuth(TestCase):
         self.assertEqual(result.type, FuncType.SUCCESS)
         self.assertTrue(self.session.is_logged_in)
 
-    @patch("src.logic.auth.api")
+    @patch("src.logic.auth.api_get_user_nav")
     def test_auth_validate_login_no_cookies(self, mock_api):
         result = auth_validate_login(self.session)
         self.assertEqual(result.type, FuncType.FAIL)
         self.assertFalse(self.session.is_logged_in)
 
-    @patch("src.logic.auth.api")
+    @patch("src.logic.auth.api_get_user_nav")
     def test_auth_validate_login_api_error(self, mock_api):
         mock_api.side_effect = API_BILI_CODE_ERROR(
             -101, "未登录",
@@ -248,7 +248,7 @@ class TestAuth(TestCase):
         self.assertIn("过期", result.result)
         self.assertFalse(self.session.is_logged_in)
 
-    @patch("src.logic.auth.api")
+    @patch("src.logic.auth.api_get_user_nav")
     def test_auth_validate_login_emits_success(self, mock_api):
         mock_res = MagicMock()
         mock_res.cookies = {"some": "cookie"}
@@ -263,7 +263,7 @@ class TestAuth(TestCase):
         self.assertEqual(result.type, FuncType.SUCCESS)
         self.assertEqual(len(emit_calls), 1)
 
-    @patch("src.logic.auth.api")
+    @patch("src.logic.auth.api_get_user_nav")
     def test_auth_validate_login_emits_fail(self, mock_api):
         mock_api.side_effect = API_BILI_CODE_ERROR(
             -101, "未登录",

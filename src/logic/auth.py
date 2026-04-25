@@ -9,11 +9,11 @@ from __future__ import annotations
 import time
 from typing import Optional
 
-from ..utils.api import api_get_login_qr, api_check_login, api, get_bili_ticket
-from ..utils.data import FuncResult, FuncType, ApiType
+from ..utils.api import api_get_login_qr, api_check_login, api_get_user_nav, get_bili_ticket
+from ..utils.data import FuncResult, FuncType
 from ..utils.lib import generate_qr_text
 from ..utils.error import API_BILI_CODE_ERROR
-from ..utils.constant import ApiUrl, BiliCode, SessionEvent, Tuning
+from ..utils.constant import BiliCode, SessionEvent, Tuning
 from .session import Session
 
 
@@ -108,11 +108,7 @@ def auth_validate_login(session: Session) -> FuncResult:
         return FuncResult(type=FuncType.FAIL, result="无 cookies, 未登录")
 
     try:
-        res = api(
-            type=ApiType.GET,
-            url=ApiUrl.GET_WBI_KEY,
-            cookies=session.cookies,
-        )
+        res = api_get_user_nav(session.cookies)
     except API_BILI_CODE_ERROR:
         session._login_verified = False
         session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录已过期")

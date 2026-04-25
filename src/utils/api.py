@@ -542,6 +542,19 @@ def get_bili_ticket(cookies: dict) -> FuncResult:
     )
 
 
+def api_get_user_nav(cookies: dict) -> FuncResult:
+    """获取用户导航信息，用于验证 cookies 是否有效。
+
+    Args:
+        cookies: cookies字典
+
+    Returns:
+        FuncResult: {uname, mid, ...}
+    """
+    res = api(type=ApiType.GET, url=ApiUrl.GET_WBI_KEY, cookies=cookies)
+    return FuncResult(type=FuncType.SUCCESS, result=res.data)
+
+
 def get_wbi_key(cookies: dict) -> FuncResult:
     """
     获取B站wbi签名密钥
