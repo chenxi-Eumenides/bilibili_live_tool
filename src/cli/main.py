@@ -125,7 +125,8 @@ def handle_live_status(session: Session) -> None:
     print(f"房间号: {data.get('room_id','?')}")
     print(f"标题:   {data.get('title','?')}")
     print(f"分区:   {data.get('area_name','?')} (id={data.get('area_id','?')})")
-    print(f"状态:   {'直播中' if is_live else '未开播'}")
+    status_map = {0: "未开播", 1: "直播中", 2: "轮播中"}
+    print(f"状态:   {status_map.get(is_live, f'未知({is_live})')}")
     if is_live:
         live_time = data.get("live_time", "00:00:00")
         if live_time and live_time != "0000-00-00 00:00:00":
