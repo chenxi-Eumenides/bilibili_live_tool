@@ -12,6 +12,12 @@ dependencies = [
     "websockets>=15.0.1",
 ]
 
+[tool.setuptools.packages.find]
+where = ["."]
+
+[project.scripts]
+bili = "src.BiliLiveTool:main"
+
 [dependency-groups]
 build = [
     "pyinstaller>=6.14.0",
@@ -19,3 +25,4 @@ build = [
 
 [tool.uv]
 default-groups = []
+package = true
