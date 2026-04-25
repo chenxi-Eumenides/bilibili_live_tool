@@ -232,12 +232,17 @@ def handle_cli(session: Session) -> None:
     if refresh.type != FuncType.SUCCESS:
         print(f"获取房间状态失败: {refresh.result}")
         return
-    is_live = session.config.room_data.get("live_status")
+    rd = session.config.room_data
+    if rd.get("area_id"):
+        session.config.area_id = rd["area_id"]
+    if rd.get("title"):
+        session.config.title = rd["title"]
+    is_live = rd.get("live_status")
     if is_live:
         print("当前正在直播")
     else:
         print("正在开播...")
-        handle_live_start(session, argparse.Namespace(area=["0"]))
+        handle_live_start(session, argparse.Namespace(area=None, title=None))
 
 
 def handle_logout(session: Session) -> None:
