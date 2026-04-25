@@ -109,7 +109,10 @@ async def _listen_loop(session: Session) -> None:
             if result.type == FuncType.SUCCESS:
                 messages = result.result
                 if isinstance(messages, list):
+                    room = session.danmaku_room_id or session.room_id
                     for msg in messages:
+                        if hasattr(msg, "live_room_id"):
+                            msg.live_room_id = room
                         session._emit(SessionEvent.DANMAKU_RECEIVED, msg)
             else:
                 session._emit(SessionEvent.ERROR, f"弹幕接收异常: {result.result}")
