@@ -35,7 +35,7 @@
 ### 2.1 导入原则
 
 1. **最小导入**：只用 `from xxx import a, b`，不用 `import xxx` 整包导入
-2. **函数内禁止导入**：所有 import 必须在文件顶部
+2. **函数内禁止导入**：所有 import 必须在文件顶部，只允许必要的函数内部导入
 3. **无未使用导入**：全部代码通过 `ruff F401` 检查
 4. **相对导入**：项目内使用相对导入（`from ..logic import Session`）
 
@@ -218,14 +218,14 @@ Raises:
 ```
 uv run bili                       # 按 default_mode 启动
 uv run bili --help                # 帮助
-uv run python -m src.BiliLiveTool # 直接调用
+uv run -m src.BiliLiveTool # 直接调用
 ```
 
 ## 八、当前进度
 
 | 模块 | 状态 |
 |------|------|
-| 基础层 | ✅ 完成，6 个 bug 已修复 |
+| 基础层 | ✅  |
 | logic/session | ✅ |
 | logic/auth | ✅ |
 | logic/live | ✅ |
