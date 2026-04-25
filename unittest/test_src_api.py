@@ -20,6 +20,7 @@ from src.utils.api import (
     api_get_login_qr,
     api_get_room_data,
     api_get_room_id,
+    api_get_user_nav,
     api_start_live,
     api_stop_live,
     api_update_room,
@@ -120,7 +121,19 @@ class Test_Api(IsolatedAsyncioTestCase):
         with self.assertRaises(API_DATA_ERROR):
             result = api_check_face_auth(self.cookies, 1243)
 
-    def test_get_wbi_key(self):
+    def test_api_get_user_nav(self):
+        result = api_get_user_nav(self.cookies)
+        self.assertEqual(result.type, FuncType.SUCCESS)
+        data = result.result
+        self.assertIsInstance(data, dict)
+        self.assertIn("mid", data)
+
+    def test_api_get_user_nav_no_cookies(self):
+        with self.assertRaises(API_BILI_CODE_ERROR) as e:
+            api_get_user_nav({})
+        self.assertEqual(e.exception.code, 101)
+
+    def test_api_get_wbi_key(self):
         # 需要登录
         result = get_wbi_key(self.cookies)
         self.assertEqual(result.type, FuncType.SUCCESS)
