@@ -1,6 +1,6 @@
 """总入口"""
 
-import sys
+from sys import argv
 
 _VALID_MODES = frozenset({"tui", "cli", "help"})
 
@@ -16,8 +16,8 @@ def _print_help():
 
 
 def _handle_set_default():
-    idx = sys.argv.index("--set-default")
-    mode = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else "help"
+    idx = argv.index("--set-default")
+    mode = argv[idx + 1] if idx + 1 < len(argv) else "help"
     if mode not in _VALID_MODES:
         print(f"无效模式: {mode}，可选: tui, cli, help")
         return
@@ -32,7 +32,7 @@ def _dispatch():
     from .cli import FLAGS as CLI_FLAGS, run as run_cli
     from .tui import FLAGS as TUI_FLAGS, run as run_tui
 
-    given = set(sys.argv[1:]) & (CLI_FLAGS | TUI_FLAGS)
+    given = set(argv[1:]) & (CLI_FLAGS | TUI_FLAGS)
 
     if given & CLI_FLAGS:
         run_cli()
@@ -48,11 +48,11 @@ def _default_mode():
     mode = config.default_mode or "help"
 
     if mode == "tui":
-        sys.argv.append("--tui")
+        argv.append("--tui")
         from .tui import run as run_tui
         run_tui()
     elif mode == "cli":
-        sys.argv.append("--cli")
+        argv.append("--cli")
         from .cli import run as run_cli
         run_cli()
     else:
@@ -60,9 +60,9 @@ def _default_mode():
 
 
 def main():
-    if "--help" in sys.argv:
+    if "--help" in argv:
         _print_help()
-    elif "--set-default" in sys.argv:
+    elif "--set-default" in argv:
         _handle_set_default()
     else:
         _dispatch()
