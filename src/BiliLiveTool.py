@@ -43,11 +43,19 @@ def main():
         config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
         mode = config.default_mode or "help"
         if mode == "tui":
+            sys.argv.append("--tui")
             run_tui()
         elif mode == "cli":
+            sys.argv.append("--cli")
             run_cli()
         else:
-            print("B站直播管理工具 — 无命令。使用 --help 查看帮助。")
+            print("B站直播管理工具\n")
+            print("    --help          帮助信息")
+            print("    --set-default MODE  设置默认启动模式 (tui|cli|help)")
+            print()
+            print("  CLI 模式:")
+            from .cli import cli_help
+            cli_help()
 
 
 if __name__ == "__main__":
