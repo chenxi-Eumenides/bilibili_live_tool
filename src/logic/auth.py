@@ -13,12 +13,8 @@ from ..utils.api import api_get_login_qr, api_check_login, api, get_bili_ticket
 from ..utils.data import FuncResult, FuncType, ApiType
 from ..utils.lib import generate_qr_text
 from ..utils.error import API_BILI_CODE_ERROR
-from ..utils.constant import ApiUrl, BiliCode, SessionEvent
+from ..utils.constant import ApiUrl, BiliCode, SessionEvent, Tuning
 from .session import Session
-
-
-POLL_INTERVAL = 2
-DEFAULT_TIMEOUT = 180
 
 
 def auth_generate_qrcode(session: Session) -> FuncResult:
@@ -45,7 +41,7 @@ def auth_generate_qrcode(session: Session) -> FuncResult:
 def auth_poll_login(
     session: Session,
     qr_key: str,
-    timeout_sec: int = DEFAULT_TIMEOUT,
+    timeout_sec: int = Tuning.LOGIN_POLL_TIMEOUT,
 ) -> FuncResult:
     """轮询二维码登录状态，直到成功/超时/过期。
 
@@ -93,7 +89,7 @@ def auth_poll_login(
             session._emit(SessionEvent.AUTH_LOGIN_FAILED, reason)
             return FuncResult(type=FuncType.FAIL, result=reason)
 
-        time.sleep(POLL_INTERVAL)
+        time.sleep(Tuning.POLL_INTERVAL)
 
     reason = "登录超时"
     session._emit(SessionEvent.AUTH_LOGIN_FAILED, reason)

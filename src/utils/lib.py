@@ -17,6 +17,7 @@ from .constant import (
     QR_DISPLAY_CHARS,
     WEBSOCKET_HEADER_STRUCT,
     ApiData,
+    Tuning,
 )
 from .data import (
     DanmakuMessage,
@@ -192,7 +193,7 @@ def random_cooldown():
         def wrapper(*args, **kwargs):
             nonlocal last_call_time
             with lock:
-                wait_time = round(random() + 0.3 + last_call_time - time(), 2) + 0.01
+                wait_time = round(random() + Tuning.COOLDOWN_MIN + last_call_time - time(), 2) + 0.01
                 if wait_time > 0:
                     print(f"正在延迟 {wait_time}s")
                     sleep(wait_time)

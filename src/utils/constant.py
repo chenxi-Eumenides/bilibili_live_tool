@@ -112,6 +112,16 @@ class BiliCode:
     FACE_AUTH_VERIFY = 60043
 
 
+class Tuning:
+    """运行时调优参数（延迟 / 超时 / 间隔）"""
+
+    API_TIMEOUT = 10
+    POLL_INTERVAL = 2
+    LOGIN_POLL_TIMEOUT = 180
+    DANMAKU_HEARTBEAT = 30
+    COOLDOWN_MIN = 0.3
+
+
 class TUIColors:
     """UI样式常量 - 深色主题"""
 

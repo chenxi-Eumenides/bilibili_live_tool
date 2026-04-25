@@ -4,7 +4,7 @@ from typing import AsyncGenerator, Optional
 from requests import HTTPError, Response, get, post
 from websockets import ClientConnection, ConnectionClosedError, State, connect
 
-from .constant import BILI_TICKET_KEY, ApiData, ApiUrl, BiliCode
+from .constant import BILI_TICKET_KEY, ApiData, ApiUrl, BiliCode, Tuning
 from .data import (
     ApiResult,
     ApiType,
@@ -66,7 +66,7 @@ def api(
                 cookies=cookies,
                 headers=headers,
                 data=data,
-                timeout=10,
+                timeout=Tuning.API_TIMEOUT,
             )
         elif type == ApiType.GET:
             res = get(
@@ -75,7 +75,7 @@ def api(
                 cookies=cookies,
                 headers=headers,
                 data=data,
-                timeout=10,
+                timeout=Tuning.API_TIMEOUT,
             )
         res.raise_for_status()
     except HTTPError as e:

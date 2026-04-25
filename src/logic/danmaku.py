@@ -21,10 +21,8 @@ from ..utils.api import (
     get_wbi_key,
 )
 from ..utils.data import FuncResult, FuncType
-from ..utils.constant import SessionEvent
+from ..utils.constant import SessionEvent, Tuning
 from .session import Session
-
-HEARTBEAT_INTERVAL = 30
 
 
 def danmaku_start(session: Session) -> FuncResult:
@@ -170,7 +168,7 @@ async def _heartbeat_loop(ws, session: Session) -> None:
 
     try:
         while not (stop_event and stop_event.is_set()):
-            await asyncio.sleep(HEARTBEAT_INTERVAL)
+            await asyncio.sleep(Tuning.DANMAKU_HEARTBEAT)
             if stop_event and stop_event.is_set():
                 break
             await ws_send_heart(ws)
