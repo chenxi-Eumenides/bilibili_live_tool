@@ -21,8 +21,7 @@ from src.logic.live import (
     live_refresh_room_info,
     live_start,
     live_stop,
-    live_update_area,
-    live_update_title,
+    live_update_room,
 )
 from src.logic.session import Session
 from src.utils.config import CONFIG
@@ -374,34 +373,25 @@ class TestLive(TestCase):
         self._assert_not_logged_in(live_stop)
 
     @patch("src.logic.live.api_update_room")
-    def test_live_update_title_success(self, mock_update):
+    def test_live_update_room_success(self, mock_update):
         mock_update.return_value = FuncResult(type=FuncType.SUCCESS, result={})
-
         emit_calls = []
         self.session.on(SessionEvent.LIVE_INFO_UPDATED, lambda *a: emit_calls.append(a))
 
-        result = live_update_title(self.session, "新标题")
-
+        result = live_update_room(self.session, title="新标题", area_id=200)
         self.assertEqual(result.type, FuncType.SUCCESS)
         self.assertEqual(self.session.config.title, "新标题")
-        self.assertEqual(len(emit_calls), 1)
-
-    def test_live_update_title_requires_login(self):
-        self._assert_not_logged_in(live_update_title, "tit")
-
-    @patch("src.logic.live.api_update_room")
-    def test_live_update_area_success(self, mock_update):
-        mock_update.return_value = FuncResult(type=FuncType.SUCCESS, result={})
-        emit_calls = []
-        self.session.on(SessionEvent.LIVE_INFO_UPDATED, lambda *a: emit_calls.append(a))
-
-        result = live_update_area(self.session, 200)
-        self.assertEqual(result.type, FuncType.SUCCESS)
         self.assertEqual(self.session.config.area_id, 200)
         self.assertEqual(len(emit_calls), 1)
 
-    def test_live_update_area_requires_login(self):
-        self._assert_not_logged_in(live_update_area, 200)
+    @patch("src.logic.live.api_update_room")
+    def test_live_update_room_both_none(self, mock_update):
+        result = live_update_room(self.session)
+        self.assertEqual(result.type, FuncType.FAIL)
+        self.assertIn("未提供", result.result)
+
+    def test_live_update_room_requires_login(self):
+        self._assert_not_logged_in(lambda s: live_update_room(s, title="x"))
 
     def test_live_refresh_room_info_requires_login(self):
         self._assert_not_logged_in(live_refresh_room_info)

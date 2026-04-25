@@ -296,7 +296,7 @@ def api_update_room(
     if title:
         data.update({"title": title})
     if area_id:
-        data.update({"room_id": room_id})
+        data.update({"area_v2": area_id})
     res = api(
         type=ApiType.POST,
         url=ApiUrl.UPDATE_ROOM,

@@ -14,8 +14,6 @@ from .auth import (
 from .live import (
     live_start,
     live_stop,
-    live_update_title,
-    live_update_area,
     live_update_room,
     live_refresh_room_info,
     live_get_room_info_cache,
@@ -34,8 +32,6 @@ __all__ = [
     "auth_logout",
     "live_start",
     "live_stop",
-    "live_update_title",
-    "live_update_area",
     "live_update_room",
     "live_refresh_room_info",
     "live_get_room_info",

@@ -98,42 +98,10 @@ def live_stop(session: Session) -> FuncResult:
     return result
 
 
-def live_update_title(session: Session, new_title: str) -> FuncResult:
-    """修改直播标题。
-
-    Args:
-        session: 会话
-        new_title: 新标题
-
-    Returns:
-        FuncResult(SUCCESS) 或 FAIL/ERROR
-
-    副作用：emit live:info_updated(room_info)
-    """
-    if not session.is_logged_in:
-        return FuncResult(type=FuncType.FAIL, result="未登录，无法修改标题")
-
-    result = api_update_room(
-        cookies=session.cookies,
-        room_id=session.room_id,
-        title=new_title,
-    )
-    if result.type != FuncType.SUCCESS:
-        return result
-
-    session.config.title = new_title
-    room_info = {"room_id": session.room_id, "title": new_title}
-    session._emit(SessionEvent.LIVE_INFO_UPDATED, room_info)
-    return result
-
-
 def live_update_room(
     session: Session, title: str | None = None, area_id: int | None = None
 ) -> FuncResult:
-    """修改直播间信息（标题和/或分区），一次 API 调用完成。
-
-    至少需要传 title 或 area_id 其中之一。
-    """
+    """修改直播间信息，一次 API 调用完成。"""
     if not session.is_logged_in:
         return FuncResult(type=FuncType.FAIL, result="未登录，无法修改")
     if not title and not area_id:
@@ -142,8 +110,8 @@ def live_update_room(
     result = api_update_room(
         cookies=session.cookies,
         room_id=session.room_id,
-        title=title or None,
-        area_id=area_id or None,
+        title=title,
+        area_id=area_id,
     )
     if result.type != FuncType.SUCCESS:
         return result
@@ -153,31 +121,6 @@ def live_update_room(
     if area_id:
         session.config.area_id = area_id
     session._emit(SessionEvent.LIVE_INFO_UPDATED, {"title": title, "area_id": area_id})
-    return result
-
-
-def live_update_area(session: Session, area_id: int) -> FuncResult:
-    """修改直播分区。
-
-    Returns:
-        FuncResult(SUCCESS) 或 FAIL/ERROR
-
-    副作用：emit live:info_updated(room_info)
-    """
-    if not session.is_logged_in:
-        return FuncResult(type=FuncType.FAIL, result="未登录，无法修改分区")
-
-    result = api_update_room(
-        cookies=session.cookies,
-        room_id=session.room_id,
-        area_id=area_id,
-    )
-    if result.type != FuncType.SUCCESS:
-        return result
-
-    session.config.area_id = area_id
-    room_info = {"room_id": session.room_id, "area_id": area_id}
-    session._emit(SessionEvent.LIVE_INFO_UPDATED, room_info)
     return result
 
 

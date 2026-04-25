@@ -29,9 +29,7 @@ from ..logic import (
     live_refresh_room_info,
     live_start,
     live_stop,
-    live_update_area,
     live_update_room,
-    live_update_title,
     danmaku_start,
     danmaku_stop,
 )
