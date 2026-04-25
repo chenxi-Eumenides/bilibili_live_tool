@@ -105,9 +105,9 @@ def handle_login(session: Session) -> bool:
 
 
 def handle_live_start(session: Session, args) -> None:
-    area = int(args.area[0]) if args.area else 0
+    area = int(args.area[0]) if args.area else session.config.area_id
     if area == 0:
-        print("请使用 --area 指定分区ID。")
+        print("请使用 --area 指定分区ID，或先用 --area 保存到配置。")
         print("可用 --area list 查看分区列表。")
         return
     result = live_start(session, area_id=area)
