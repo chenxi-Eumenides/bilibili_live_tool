@@ -8,7 +8,7 @@ _VALID_MODES = frozenset({"tui", "cli", "help"})
 def _print_help():
     print("B站直播管理工具")
     print("  --help          帮助信息")
-    print("  --set-default MODE  设置默认启动模式 (tui|cli|help)")
+    print("  --set-default MODE  设置无参数启动模式 (tui|cli|help)")
     from .cli import help_lines as cli_help_lines
     print("\n".join(cli_help_lines()))
     from .tui import help_lines as tui_help_lines
@@ -25,7 +25,7 @@ def _handle_set_default():
     config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
     config.default_mode = mode
     config.save_config()
-    print(f"默认启动模式已设为: {mode}")
+    print(f"无参数启动模式已设为: {mode}")
 
 
 def _dispatch():
