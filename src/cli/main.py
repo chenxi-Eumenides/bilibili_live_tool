@@ -14,7 +14,7 @@
   bili --help                           帮助
 """
 
-from rich import print as rprint
+from rich import print
 import argparse
 import asyncio
 import sys
@@ -201,7 +201,7 @@ def handle_danmaku(session: Session, room_id: str | None = None) -> None:
 
     def on_received(msg):
         if hasattr(msg, "format_rich"):
-            rprint(msg.format_rich())
+            print(msg.format_rich())
         else:
             print(msg)
 
