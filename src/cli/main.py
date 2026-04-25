@@ -1,18 +1,4 @@
-"""命令行入口
-
-用法:
-  bili --login                          扫码登录
-  bili --live start [-a 分区ID]         开播
-  bili --live stop                      下播
-  bili --live status                    查看直播状态
-  bili --title "新标题" [--area 分区ID]  改标题
-  bili --area 分区ID [--title "新标题"]  改分区
-  bili --danmaku                        弹幕监听
-  bili --cli                            login + 自动开/下播
-  bili --tui                            启动 TUI
-  bili --set-default tui|cli|help       设置默认模式（占位）
-  bili --help                           帮助
-"""
+"""命令行入口"""
 
 from argparse import ArgumentParser, Namespace
 from asyncio import run as asyncio_run
