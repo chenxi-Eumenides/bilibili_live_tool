@@ -10,11 +10,9 @@ import sys
 
 def main():
     if "--help" in sys.argv:
-        print("B站直播管理工具\n")
-        print("    --help          帮助信息")
-        print("    --set-default MODE  设置默认启动模式 (tui|cli|help)")
-        print()
-        print("  CLI 模式:")
+        print("B站直播管理工具")
+        print("  --help          帮助信息")
+        print("  --set-default MODE  设置默认启动模式 (tui|cli|help)")
         from .cli import cli_help
         cli_help()
         return
@@ -49,11 +47,9 @@ def main():
             sys.argv.append("--cli")
             run_cli()
         else:
-            print("B站直播管理工具\n")
-            print("    --help          帮助信息")
-            print("    --set-default MODE  设置默认启动模式 (tui|cli|help)")
-            print()
-            print("  CLI 模式:")
+            print("B站直播管理工具")
+            print("  --help          帮助信息")
+            print("  --set-default MODE  设置默认启动模式 (tui|cli|help)")
             from .cli import cli_help
             cli_help()
 

@@ -41,17 +41,17 @@ CLI_FLAGS = frozenset({"--login", "--live", "--title", "--area", "--danmaku", "-
 
 
 def cli_help():
-    print("  bili --login                        扫码登录")
-    print("  bili --live start [-a 分区ID]       开播")
-    print("  bili --live stop                    下播")
-    print("  bili --live status                  查看状态")
-    print("  bili --title \"标题\" [--area 分区ID] 改标题")
-    print("  bili --area 分区ID [--title \"标题\"] 改分区")
-    print("  bili --danmaku                      弹幕监听")
-    print("  bili --cli                          login + 自动开/下播")
-    print()
-    print("  TUI 模式:")
-    print("    bili --tui                        启动 TUI（尚未实现）")
+    print("CLI 模式:")
+    print("  --cli                          login + 自动开/下播")
+    print("  --login                        扫码登录")
+    print("  --live start [-a 分区ID]       开播")
+    print("  --live stop                    下播")
+    print("  --live status                  查看状态")
+    print('  --title "标题" [--area 分区ID] 改标题')
+    print("  --area 分区ID [--title \"标题\"] 改分区")
+    print("  --danmaku                      弹幕监听")
+    print("TUI 模式:")
+    print("  --tui                          启动 TUI")
 
 
 def _load_session() -> Session:
