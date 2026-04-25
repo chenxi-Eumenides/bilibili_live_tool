@@ -20,7 +20,6 @@ from ..logic import (
     danmaku_start,
     danmaku_stop,
 )
-from ..utils.api import api_get_room_id
 from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE
 from ..utils.data import FuncType
@@ -201,11 +200,7 @@ def handle_cli(session: Session) -> None:
     if not handle_login(session):
         return
     if session.room_id == 0:
-        print("正在获取房间号...")
-        result = api_get_room_id(session.cookies, session.user_id)
-        if result.type == FuncType.SUCCESS:
-            session.config.room_id = result.result
-            print(f"房间号: {session.room_id}")
+        print("房间号未知，开播时将自动获取")
 
     refresh = live_refresh_room_info(session)
     if refresh.type != FuncType.SUCCESS:
