@@ -5,5 +5,5 @@ CLI 入口已迁移至 src/cli/main.py
 """
 
 if __name__ == "__main__":
-    from src.tui import run_tui
+    from .tui import run_tui
     run_tui()

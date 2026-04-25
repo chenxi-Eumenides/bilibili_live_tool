@@ -2,7 +2,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalGroup
 from textual.widgets import Label, Static
 
-from src.logic import SessionEvent
+from ...logic import SessionEvent
 
 
 class InfoPage(VerticalGroup):

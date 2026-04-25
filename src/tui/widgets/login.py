@@ -5,13 +5,13 @@ from textual.app import ComposeResult
 from textual.containers import CenterMiddle, VerticalGroup
 from textual.widgets import Button, Label, Static
 
-from src.logic import (
+from ...logic import (
     BiliCode,
     SessionEvent,
     auth_generate_qrcode,
     auth_poll_login,
 )
-from src.utils.lib import generate_qr_text
+from ...utils.lib import generate_qr_text
 
 
 class LoginPage(VerticalGroup):

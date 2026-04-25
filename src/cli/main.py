@@ -18,7 +18,7 @@ import argparse
 import asyncio
 import sys
 
-from src.logic import (
+from ..logic import (
     Session,
     _listen_loop,
     auth_generate_qrcode,
@@ -32,10 +32,10 @@ from src.logic import (
     danmaku_start,
     danmaku_stop,
 )
-from src.utils.config import CONFIG
-from src.utils.constant import CONFIG_FILE
-from src.utils.data import FuncType
-from src.utils.lib import generate_qr_text
+from ..utils.config import CONFIG
+from ..utils.constant import CONFIG_FILE
+from ..utils.data import FuncType
+from ..utils.lib import generate_qr_text
 
 CLI_FLAGS = frozenset({"--login", "--live", "--title", "--area", "--danmaku", "--cli"})
 

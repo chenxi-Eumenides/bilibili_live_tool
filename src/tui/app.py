@@ -2,7 +2,7 @@ from pathlib import Path
 
 from textual.app import App
 
-from src.logic import Session
+from ..logic import Session
 from .screens.main import MainScreen
 
 

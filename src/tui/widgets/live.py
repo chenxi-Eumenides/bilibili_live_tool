@@ -3,7 +3,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalGroup
 from textual.widgets import Button, Static
 
-from src.logic import (
+from ...logic import (
     live_refresh_room_info,
     live_start,
     live_stop,

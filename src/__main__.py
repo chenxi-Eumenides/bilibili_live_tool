@@ -16,22 +16,22 @@ def main():
         print("    --set-default MODE  设置默认启动模式 (tui|cli|help)")
         print()
         print("  CLI 模式:")
-        from src.cli import cli_help
+        from .cli import cli_help
         cli_help()
         return
 
     if "--set-default" in sys.argv:
         idx = sys.argv.index("--set-default")
         mode = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else "help"
-        from src.utils.config import CONFIG, CONFIG_FILE
+        from .utils.config import CONFIG, CONFIG_FILE
         config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
         config.default_mode = mode
         config.save_config()
         print(f"默认启动模式已设为: {mode}")
         return
 
-    from src.cli import CLI_FLAGS, run_cli
-    from src.tui import TUI_FLAGS, run_tui
+    from .cli import CLI_FLAGS, run_cli
+    from .tui import TUI_FLAGS, run_tui
 
     given = set(sys.argv[1:]) & (CLI_FLAGS | TUI_FLAGS)
 
@@ -40,7 +40,7 @@ def main():
     elif given & TUI_FLAGS:
         run_tui()
     else:
-        from src.utils.config import CONFIG, CONFIG_FILE
+        from .utils.config import CONFIG, CONFIG_FILE
         config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
         mode = config.default_mode or "help"
         if mode == "tui":

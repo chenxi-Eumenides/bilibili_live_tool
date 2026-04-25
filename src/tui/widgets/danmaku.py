@@ -4,7 +4,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalGroup
 from textual.widgets import Button, Label, Static
 
-from src.logic import (
+from ...logic import (
     danmaku_start,
     danmaku_stop,
     _listen_loop,
