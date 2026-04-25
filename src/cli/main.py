@@ -191,6 +191,13 @@ def handle_cli(session: Session) -> None:
 
 
 def main():
+    try:
+        _run()
+    except KeyboardInterrupt:
+        print()
+
+
+def _run():
     p = argparse.ArgumentParser(prog="bili", add_help=False)
     p.add_argument("--login", action="store_true")
     p.add_argument("--live", choices=["start", "stop", "status"])
