@@ -29,7 +29,7 @@ class CONFIG:
     platform: str = ApiData.PLATFORM
     version: str = ApiData.LIVEHIME_VERSION
     build: str = ApiData.LIVEHIME_BUILD
-    default_mode: str = ""
+    default_mode: str = "help"
 
     @property
     def cookies_str(self) -> str:

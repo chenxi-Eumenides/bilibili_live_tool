@@ -1,8 +1,5 @@
-"""CLI 用户层
+"""CLI 用户层"""
 
-通过命令行参数调用 logic 层，返回结果到 stdout。
-"""
+from .main import CLI_FLAGS, cli_help, main as run_cli
 
-from .main import main as run_cli
-
-__all__ = ["run_cli"]
+__all__ = ["CLI_FLAGS", "cli_help", "run_cli"]

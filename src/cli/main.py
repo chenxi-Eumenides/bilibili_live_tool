@@ -37,6 +37,8 @@ from src.utils.constant import CONFIG_FILE
 from src.utils.data import FuncType
 from src.utils.lib import generate_qr_text
 
+CLI_FLAGS = frozenset({"--login", "--live", "--title", "--area", "--danmaku", "--cli"})
+
 
 def cli_help():
     print("  bili --login                        扫码登录")
