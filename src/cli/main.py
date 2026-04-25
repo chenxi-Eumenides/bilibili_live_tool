@@ -231,10 +231,14 @@ def handle_logout(session: Session) -> None:
 
 
 def main():
+    session = None
     try:
-        _run()
+        session = _run()
     except KeyboardInterrupt:
         print()
+    finally:
+        if session and session.is_logged_in:
+            session.config.save_config()
 
 
 def _run():
@@ -251,19 +255,19 @@ def _run():
 
     if len(sys.argv) == 1:
         p.print_help()
-        return
+        return None
 
     session = None
 
     if args.login:
         session = _load_session()
         handle_login(session)
-        return
+        return session
 
     if args.logout:
         session = _load_session()
         handle_logout(session)
-        return
+        return session
 
     if args.live:
         session = _load_session()
@@ -273,22 +277,22 @@ def _run():
             handle_live_stop(session)
         elif args.live == "status":
             handle_live_status(session)
-        return
+        return session
 
     if args.title or args.area:
         session = _load_session()
         handle_update(session, args)
-        return
+        return session
 
     if args.danmaku is not None:
         session = _load_session()
         handle_danmaku(session, args.danmaku)
-        return
+        return session
 
     if args.cli:
         session = _load_session()
         handle_cli(session)
-        return
+        return session
 
 
 if __name__ == "__main__":
