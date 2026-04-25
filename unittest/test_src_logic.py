@@ -18,6 +18,7 @@ from src.logic.auth import (
 )
 from src.logic.danmaku import danmaku_start, danmaku_stop
 from src.logic.live import (
+    live_get_area_list,
     live_get_room_info,
     live_refresh_room_info,
     live_start,
@@ -367,6 +368,15 @@ class TestLive(TestCase):
         result = live_get_room_info(self.session)
         self.assertEqual(result.type, FuncType.FAIL)
         self.assertIn("尚无房间数据", str(result.result))
+
+    @patch("src.logic.live.api_get_area_list")
+    def test_live_get_area_list_success(self, mock_area):
+        mock_area.return_value = FuncResult(type=FuncType.SUCCESS, result=["area1"])
+        result = live_get_area_list(self.session)
+        self.assertEqual(result.type, FuncType.SUCCESS)
+
+    def test_live_get_area_list_requires_login(self):
+        self._assert_not_logged_in(live_get_area_list)
 
 
 class TestDanmaku(TestCase):

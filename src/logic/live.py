@@ -11,6 +11,7 @@ from ..utils.api import (
     api_stop_live,
     api_update_room,
     api_get_room_data,
+    api_get_area_list,
 )
 from ..utils.data import FuncResult, FuncType, AppState
 from ..utils.constant import SessionEvent
@@ -137,3 +138,14 @@ def live_get_room_info(session: Session) -> FuncResult:
     if not session.config.room_data:
         return FuncResult(type=FuncType.FAIL, result="尚无房间数据，请先调用 live_refresh_room_info")
     return FuncResult(type=FuncType.SUCCESS, result=session.config.room_data)
+
+
+def live_get_area_list(session: Session) -> FuncResult:
+    """获取直播分区列表。
+
+    Returns:
+        FuncResult(SUCCESS, LiveAreaList) 或 FAIL
+    """
+    if not session.is_logged_in:
+        return FuncResult(type=FuncType.FAIL, result="未登录，无法获取分区列表")
+    return api_get_area_list(cookies=session.cookies)

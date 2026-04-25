@@ -17,6 +17,7 @@ from .live import (
     live_update_title,
     live_refresh_room_info,
     live_get_room_info,
+    live_get_area_list,
 )
 from .danmaku import danmaku_start, danmaku_stop, _listen_loop
 from ..utils.constant import BiliCode, SessionEvent
@@ -34,6 +35,7 @@ __all__ = [
     "live_update_title",
     "live_refresh_room_info",
     "live_get_room_info",
+    "live_get_area_list",
     "danmaku_start",
     "danmaku_stop",
     "_listen_loop",
