@@ -547,11 +547,23 @@ def api_get_user_nav(cookies: dict) -> FuncResult:
 
     Args:
         cookies: cookies字典
-
     Returns:
-        FuncResult: {uname, mid, ...}
+        FuncResult: {
+            following: 关注数
+            follower: 粉丝数
+            dynamic_count: 动态数
+        }
     """
-    res = api(type=ApiType.GET, url=ApiUrl.GET_USER_STATUS, cookies=cookies)
+    try:
+        res = api(
+            type=ApiType.GET,
+            url=ApiUrl.GET_USER_STATUS,
+            cookies=cookies,
+        )
+    except API_BILI_CODE_ERROR as e:
+        return FuncResult(type=FuncType.FAIL, result={})
+    if not res.data:
+        raise API_DATA_ERROR("无法获取登录状态")
     return FuncResult(type=FuncType.SUCCESS, result=res.data)
 
 

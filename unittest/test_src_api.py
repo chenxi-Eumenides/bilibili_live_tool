@@ -66,6 +66,16 @@ class Test_Api(IsolatedAsyncioTestCase):
         else:
             vars(self.config).update(data)
 
+    def test_api_get_user_nav(self):
+        result = api_get_user_nav(self.cookies)
+        self.assertEqual(result.type, FuncType.SUCCESS)
+        data = result.result
+        self.assertIsInstance(data.get("following"), int)
+        self.assertIsInstance(data.get("follower"), int)
+        self.assertIsInstance(data.get("dynamic_count"), int)
+        result = api_get_user_nav({})
+        self.assertEqual(result.type, FuncType.FAIL)
+
     def test_api_get_room_id(self):
         # 存在的uid
         result = api_get_room_id(cookies=self.cookies, user_id=730732)
@@ -121,13 +131,6 @@ class Test_Api(IsolatedAsyncioTestCase):
         with self.assertRaises(API_DATA_ERROR):
             result = api_check_face_auth(self.cookies, 1243)
 
-    def test_api_get_user_nav(self):
-        result = api_get_user_nav(self.cookies)
-        self.assertEqual(result.type, FuncType.SUCCESS)
-        data = result.result
-        self.assertIsInstance(data, dict)
-        self.assertIn("following", data)
-
     def test_api_get_user_nav_no_cookies(self):
         with self.assertRaises(API_BILI_CODE_ERROR) as e:
             api_get_user_nav({})
@@ -152,7 +155,6 @@ class Test_Api(IsolatedAsyncioTestCase):
 
     def test_api_start_live(self):
         result = api_start_live(self.cookies, self.config.room_id, self.config.area_id)
-        pp(result)
         if result.type == FuncType.SUCCESS:
             self.assertEqual(result.result["face_auth"], False)
             self.assertTrue(hasattr(result.result, "rtmp_addr"))
@@ -273,6 +275,7 @@ if __name__ == "__main__":
             # "Test_Api.test_get_wbi_key",
             # "Test_Api.test_get_danmaku_info",
             # "Test_Api.test_danmaku_websocket",
-            "Test_Api.test_login",
+            # "Test_Api.test_login",
+            "Test_Api.test_api_get_user_nav",
         ]
     )

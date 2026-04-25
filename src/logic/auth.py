@@ -12,7 +12,6 @@ from typing import Optional
 from ..utils.api import api_get_login_qr, api_check_login, api_get_user_nav, get_bili_ticket
 from ..utils.data import FuncResult, FuncType
 from ..utils.lib import generate_qr_text
-from ..utils.error import API_BILI_CODE_ERROR
 from ..utils.constant import BiliCode, SessionEvent, Tuning
 from .session import Session
 
@@ -107,16 +106,15 @@ def auth_validate_login(session: Session) -> FuncResult:
         session._login_verified = False
         return FuncResult(type=FuncType.FAIL, result="无 cookies, 未登录")
 
-    try:
-        res = api_get_user_nav(session.cookies)
-    except API_BILI_CODE_ERROR:
+    res = api_get_user_nav(session.cookies)
+    if res.type != FuncType.SUCCESS:
         session._login_verified = False
         session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录已过期")
         return FuncResult(type=FuncType.FAIL, result="登录已过期")
 
     session._login_verified = True
     session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
-    return FuncResult(type=FuncType.SUCCESS, result=res.data)
+    return FuncResult(type=FuncType.SUCCESS, result=res.result)
 
 
 def auth_logout(session: Session) -> FuncResult:

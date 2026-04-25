@@ -3,10 +3,8 @@
 import sys
 from asyncio import Event
 from pathlib import Path
-from unittest import IsolatedAsyncioTestCase, TestCase, main
-from unittest.mock import MagicMock, patch
-
-from requests import HTTPError, Response
+from unittest import TestCase, main
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path.cwd()))
 
@@ -30,7 +28,6 @@ from src.logic.session import Session
 from src.utils.config import CONFIG
 from src.utils.constant import BiliCode, SessionEvent
 from src.utils.data import AppState, FuncResult, FuncType
-from src.utils.error import API_BILI_CODE_ERROR
 
 
 class TestSession(TestCase):
@@ -217,10 +214,7 @@ class TestAuth(TestCase):
 
     @patch("src.logic.auth.api_get_user_nav")
     def test_auth_validate_login_success(self, mock_api):
-        mock_res = MagicMock()
-        mock_res.cookies = {"some": "cookie"}
-        mock_res.data = {"uname": "test_user"}
-        mock_api.return_value = mock_res
+        mock_api.return_value = FuncResult(type=FuncType.SUCCESS, result={"uname": "test_user"})
 
         self.session.config.cookies = {"token": "x"}
         result = auth_validate_login(self.session)
@@ -236,10 +230,7 @@ class TestAuth(TestCase):
 
     @patch("src.logic.auth.api_get_user_nav")
     def test_auth_validate_login_api_error(self, mock_api):
-        mock_api.side_effect = API_BILI_CODE_ERROR(
-            -101, "未登录",
-            HTTPError(response=MagicMock(spec=Response))
-        )
+        mock_api.return_value = FuncResult(type=FuncType.FAIL, result={})
 
         self.session.config.cookies = {"token": "expired"}
         result = auth_validate_login(self.session)
@@ -250,10 +241,7 @@ class TestAuth(TestCase):
 
     @patch("src.logic.auth.api_get_user_nav")
     def test_auth_validate_login_emits_success(self, mock_api):
-        mock_res = MagicMock()
-        mock_res.cookies = {"some": "cookie"}
-        mock_res.data = {"uname": "test_user"}
-        mock_api.return_value = mock_res
+        mock_api.return_value = FuncResult(type=FuncType.SUCCESS, result={"uname": "test_user"})
 
         self.session.config.cookies = {"token": "x"}
         emit_calls = []
@@ -265,10 +253,7 @@ class TestAuth(TestCase):
 
     @patch("src.logic.auth.api_get_user_nav")
     def test_auth_validate_login_emits_fail(self, mock_api):
-        mock_api.side_effect = API_BILI_CODE_ERROR(
-            -101, "未登录",
-            HTTPError(response=MagicMock(spec=Response))
-        )
+        mock_api.return_value = FuncResult(type=FuncType.FAIL, result={})
 
         self.session.config.cookies = {"token": "x"}
         emit_calls = []
