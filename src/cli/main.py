@@ -206,7 +206,7 @@ def handle_danmaku(session: Session, room_id: str | None = None) -> None:
             print(msg)
 
     session.on("danmaku:received", on_received)
-    print("弹幕监听中... 按两次 Ctrl+C 停止")
+    print("按两次 Ctrl+C 停止")
     try:
         asyncio.run(_listen_loop(session))
     except KeyboardInterrupt:
