@@ -9,7 +9,6 @@
   bili --area 分区ID [--title "新标题"]  改分区
   bili --danmaku                        弹幕监听
   bili --cli                            login + 自动开/下播
-  bili --all                            login + 自动开/下播 + 弹幕
   bili --tui                            启动 TUI
   bili --set-default tui|cli|help       设置默认模式（占位）
   bili --help                           帮助
@@ -167,44 +166,21 @@ def handle_cli(session: Session) -> None:
         handle_live_start(session, argparse.Namespace(area=0))
 
 
-def handle_all(session: Session) -> None:
-    if not handle_login(session):
-        return
-    refresh = live_refresh_room_info(session)
-    if refresh.type != FuncType.SUCCESS:
-        print(f"获取房间状态失败: {refresh.result}")
-        return
-    is_live = session.config.room_data.get("live_status")
-    if is_live:
-        print("当前正在直播")
-    else:
-        print("正在开播...")
-        handle_live_start(session, argparse.Namespace(area=0))
-    handle_danmaku(session)
-
-
 def main():
     p = argparse.ArgumentParser(prog="bili", description="B站直播管理工具", add_help=False)
     p.add_argument("--help", action="store_true")
-    p.add_argument("--tui", action="store_true")
     p.add_argument("--login", action="store_true")
     p.add_argument("--live", choices=["start", "stop", "status"])
     p.add_argument("-a", "--area", type=int, default=None)
     p.add_argument("--title", type=str, default=None)
     p.add_argument("--danmaku", action="store_true")
     p.add_argument("--cli", action="store_true")
-    p.add_argument("--all", action="store_true")
     p.add_argument("--set-default", choices=["tui", "cli", "help"])
 
     args = p.parse_args()
 
     if args.help or len(sys.argv) == 1:
         p.print_help()
-        return
-
-    if args.tui:
-        from src.tui import run_tui
-        run_tui()
         return
 
     session = None
@@ -237,11 +213,6 @@ def main():
     if args.cli:
         session = _load_session()
         handle_cli(session)
-        return
-
-    if args.all:
-        session = _load_session()
-        handle_all(session)
         return
 
     if args.set_default:
