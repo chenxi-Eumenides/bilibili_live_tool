@@ -170,7 +170,7 @@ def handle_update(session: Session, args) -> None:
             elif main.id == parent_id:
                 print(f"  [{main.id}] {main.name}")
                 for sub in main.list:
-                    print(f"    [{main.id}/{sub.id}] {sub.name}")
+                    print(f"    [{sub.id}] {sub.name}")
         return
 
     area_id = int(area[0]) if area else None
