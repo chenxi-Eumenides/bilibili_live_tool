@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 from typing import Optional
 
-from ..utils.api import api_get_login_qr, api_check_login, api
+from ..utils.api import api_get_login_qr, api_check_login, api, get_bili_ticket
 from ..utils.data import FuncResult, FuncType, ApiType
 from ..utils.lib import generate_qr_text
 from ..utils.error import API_BILI_CODE_ERROR
@@ -71,6 +71,14 @@ def auth_poll_login(
             session.config.refresh_token = refresh_token or ""
             session.config.csrf = cookies.get("bili_jct", "")
             session._login_verified = True
+
+            try:
+                ticket_result = get_bili_ticket(cookies)
+                if ticket_result.type == FuncType.SUCCESS:
+                    session.bili_ticket = ticket_result.result.get("bili_ticket", "")
+            except Exception:
+                pass
+
             session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
             return FuncResult(
                 type=FuncType.SUCCESS,

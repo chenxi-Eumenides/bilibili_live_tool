@@ -26,6 +26,7 @@ class Session:
         self.app_state = AppState.UNAUTH
 
         self._login_verified = False
+        self.bili_ticket = ""
         self._danmaku_running = False
         self._danmaku_stop_event: Optional[Any] = None
 

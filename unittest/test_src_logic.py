@@ -23,6 +23,7 @@ from src.logic.live import (
     live_refresh_room_info,
     live_start,
     live_stop,
+    live_update_area,
     live_update_title,
 )
 from src.logic.session import Session
@@ -373,21 +374,19 @@ class TestLive(TestCase):
     def test_live_update_title_requires_login(self):
         self._assert_not_logged_in(live_update_title, "tit")
 
-    @patch("src.logic.live.api_get_room_data")
-    def test_live_refresh_room_info_success(self, mock_room):
-        mock_room.return_value = FuncResult(
-            type=FuncType.SUCCESS,
-            result={"room_id": 12345, "title": "test"},
-        )
-
+    @patch("src.logic.live.api_update_room")
+    def test_live_update_area_success(self, mock_update):
+        mock_update.return_value = FuncResult(type=FuncType.SUCCESS, result={})
         emit_calls = []
         self.session.on(SessionEvent.LIVE_INFO_UPDATED, lambda *a: emit_calls.append(a))
 
-        result = live_refresh_room_info(self.session)
-
+        result = live_update_area(self.session, 200)
         self.assertEqual(result.type, FuncType.SUCCESS)
-        self.assertEqual(self.session.config.room_data, {"room_id": 12345, "title": "test"})
+        self.assertEqual(self.session.config.area_id, 200)
         self.assertEqual(len(emit_calls), 1)
+
+    def test_live_update_area_requires_login(self):
+        self._assert_not_logged_in(live_update_area, 200)
 
     def test_live_refresh_room_info_requires_login(self):
         self._assert_not_logged_in(live_refresh_room_info)

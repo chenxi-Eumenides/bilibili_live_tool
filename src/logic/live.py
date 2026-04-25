@@ -127,6 +127,31 @@ def live_update_title(session: Session, new_title: str) -> FuncResult:
     return result
 
 
+def live_update_area(session: Session, area_id: int) -> FuncResult:
+    """修改直播分区。
+
+    Returns:
+        FuncResult(SUCCESS) 或 FAIL/ERROR
+
+    副作用：emit live:info_updated(room_info)
+    """
+    if not session.is_logged_in:
+        return FuncResult(type=FuncType.FAIL, result="未登录，无法修改分区")
+
+    result = api_update_room(
+        cookies=session.cookies,
+        room_id=session.room_id,
+        area_id=area_id,
+    )
+    if result.type != FuncType.SUCCESS:
+        return result
+
+    session.config.area_id = area_id
+    room_info = {"room_id": session.room_id, "area_id": area_id}
+    session._emit(SessionEvent.LIVE_INFO_UPDATED, room_info)
+    return result
+
+
 def live_refresh_room_info(session: Session) -> FuncResult:
     """刷新房间信息。
 
