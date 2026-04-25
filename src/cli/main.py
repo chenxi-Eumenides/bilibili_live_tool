@@ -14,6 +14,7 @@
   bili --help                           帮助
 """
 
+from rich import print
 import argparse
 import asyncio
 import sys
