@@ -7,8 +7,6 @@ from ...logic import (
     live_refresh_room_info,
     live_start,
     live_stop,
-    live_update_title,
-    SessionEvent,
 )
 
 

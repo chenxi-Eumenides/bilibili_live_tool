@@ -7,7 +7,6 @@ from textual.widgets import Button, Label, Static
 
 from ...logic import (
     BiliCode,
-    SessionEvent,
     auth_generate_qrcode,
     auth_poll_login,
 )
