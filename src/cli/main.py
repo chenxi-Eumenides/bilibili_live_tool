@@ -118,7 +118,8 @@ def handle_live_start(session: Session, args) -> None:
     data = result.result
     print(f"开播成功 (房间:{session.room_id})")
     if data.get("rtmp_addr"):
-        print(f"推流地址: {data['rtmp_addr']}{data.get('rtmp_code','')}")
+        print(f"推流地址: {data['rtmp_addr']}")
+        print(f"推流码:   {data.get('rtmp_code','')}")
     if args.title:
         handle_update(session, args)
     elif args.area:
@@ -134,11 +135,10 @@ def handle_live_stop(session: Session) -> None:
 
 
 def handle_live_status(session: Session) -> None:
-    if not session.config.room_data:
-        refresh = live_refresh_room_info(session)
-        if refresh.type != FuncType.SUCCESS:
-            print(f"刷新失败: {refresh.result}")
-            return
+    refresh = live_refresh_room_info(session)
+    if refresh.type != FuncType.SUCCESS:
+        print(f"刷新失败: {refresh.result}")
+        return
     data = session.config.room_data
     is_live = data.get("live_status")
     print(f"房间号: {data.get('room_id','?')}")
