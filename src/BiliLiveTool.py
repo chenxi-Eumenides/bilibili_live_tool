@@ -2,6 +2,8 @@
 
 import sys
 
+_VALID_MODES = frozenset({"tui", "cli", "help"})
+
 
 def _print_help():
     print("B站直播管理工具")
@@ -16,6 +18,9 @@ def _print_help():
 def _handle_set_default():
     idx = sys.argv.index("--set-default")
     mode = sys.argv[idx + 1] if idx + 1 < len(sys.argv) else "help"
+    if mode not in _VALID_MODES:
+        print(f"无效模式: {mode}，可选: tui, cli, help")
+        return
     from .utils.config import CONFIG, CONFIG_FILE
     config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
     config.default_mode = mode
