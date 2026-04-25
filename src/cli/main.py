@@ -198,9 +198,10 @@ def handle_danmaku(session: Session, room_id: str | None = None) -> None:
         return
 
     def on_received(msg):
-        name = getattr(msg, "username", "?")
-        content = getattr(msg, "content", str(msg))
-        print(f"[{name}]: {content}")
+        if hasattr(msg, "username"):
+            print(f"[{msg.username}]: {msg.content}")
+        else:
+            print(f"  [{getattr(msg, 'cmd', '?')}] {msg}")
 
     session.on("danmaku:received", on_received)
     print("弹幕监听中... 按 Ctrl+C 停止")

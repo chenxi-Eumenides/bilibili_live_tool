@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import sys
 
 from ..utils.api import (
     get_danmaku_info,
@@ -94,7 +93,6 @@ async def _listen_loop(session: Session) -> None:
             session._emit(SessionEvent.ERROR, f"弹幕 WS 连接失败: {ws_result.result}")
             return
         ws = ws_result.result
-        print(f"[danmaku] WS 已连接", file=sys.stderr)
 
         auth_result = await ws_send_auth(
             ws, session.user_id, session.danmaku_room_id or session.room_id, danmaku_key
@@ -102,22 +100,16 @@ async def _listen_loop(session: Session) -> None:
         if auth_result.type != FuncType.SUCCESS:
             session._emit(SessionEvent.ERROR, f"弹幕 WS 认证失败: {auth_result.result}")
             return
-        print(f"[danmaku] WS 认证成功", file=sys.stderr)
 
         heartbeat_task = asyncio.create_task(_heartbeat_loop(ws, session))
 
-        print(f"[danmaku] 等待 WS 消息... (state={ws.state.name})", file=sys.stderr)
-        msg_count = 0
         async for result in ws_listen_danmaku(ws):
             if session._danmaku_stop_event and session._danmaku_stop_event.is_set():
                 break
             if result.type == FuncType.SUCCESS:
                 messages = result.result
                 if isinstance(messages, list):
-                    msg_count += len(messages)
                     for msg in messages:
-                        cls = type(msg).__name__
-                        print(f"[danmaku #{msg_count}] {cls}", file=sys.stderr)
                         session._emit(SessionEvent.DANMAKU_RECEIVED, msg)
             else:
                 session._emit(SessionEvent.ERROR, f"弹幕接收异常: {result.result}")

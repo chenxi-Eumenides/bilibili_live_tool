@@ -776,17 +776,13 @@ async def ws_listen_danmaku(
         return
     try:
         async for raw_message in ws:
-            import sys
-            print(f"[ws_raw] type={type(raw_message).__name__} len={len(raw_message)}", file=sys.stderr)
             try:
                 message_list: list[WebSocketMessage] = unpack_ws_message(raw_message)
                 yield FuncResult(
                     type=FuncType.SUCCESS,
                     result=message_list,
                 )
-            except FUNC_DATA_ERROR as e:
-                import sys
-                print(f"[ws_parse] 跳过: {e}", file=sys.stderr)
+            except FUNC_DATA_ERROR:
                 continue
     except ConnectionClosedError:
         yield FuncResult(

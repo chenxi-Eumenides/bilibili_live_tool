@@ -173,12 +173,10 @@ def parse_msg_body(body: bytes, operation: int, ver: int) -> list[WebSocketMessa
             raw_msg = zlib_decompress(body)
             message_list += unpack_ws_message(raw_msg)
         elif ver == WebSocketProtoVer.NORMAL:
-            # 未压缩
             try:
-                info = loads(body.decode("utf-8")).get("info")
-                if not info:
-                    raise FUNC_DATA_ERROR("弹幕数据info字段缺失")
-                message_list.append(DanmakuMessage.from_info(info=info))
+                data = loads(body.decode("utf-8"))
+                if data.get("cmd") == "DANMU_MSG":
+                    message_list.append(DanmakuMessage.from_info(info=data["info"]))
             except Exception as e:
                 raise FUNC_DATA_ERROR(f"弹幕消息解析失败: {e}") from e
     return message_list
