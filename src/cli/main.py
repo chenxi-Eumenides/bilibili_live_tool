@@ -22,8 +22,10 @@ from ..logic import (
     Session,
     _listen_loop,
     auth_generate_qrcode,
+    auth_logout,
     auth_poll_login,
     auth_validate_login,
+    live_get_area_list,
     live_refresh_room_info,
     live_start,
     live_stop,
@@ -37,7 +39,7 @@ from ..utils.constant import CONFIG_FILE
 from ..utils.data import FuncType
 from ..utils.lib import generate_qr_text
 
-CLI_FLAGS = frozenset({"--login", "--live", "--title", "--area", "--danmaku", "--cli"})
+CLI_FLAGS = frozenset({"--login", "--logout", "--live", "--title", "--area", "--danmaku", "--cli"})
 
 
 def help_lines():
@@ -45,11 +47,13 @@ def help_lines():
         "CLI 模式:",
         "  --cli                          login + 自动开/下播",
         "  --login                        扫码登录",
+        "  --logout                       清除登录态",
         "  --live start [-a AREA] [--title TITLE]  开播",
         "  --live stop                    下播",
         "  --live status                  查看状态",
         '  --title "标题" [--area AREA]   改标题',
         "  --area AREA [--title \"标题\"]  改分区",
+        "  --area list [父分区ID]          列出可用分区",
         "  --danmaku                      弹幕监听",
     ]
 
@@ -100,7 +104,8 @@ def handle_login(session: Session) -> bool:
 
 
 def handle_live_start(session: Session, args) -> None:
-    result = live_start(session, area_id=args.area or 0)
+    area = int(args.area[0]) if args.area else 0
+    result = live_start(session, area_id=area)
     if result.type != FuncType.SUCCESS:
         print(f"开播失败: {result.result}")
         return
@@ -137,7 +142,23 @@ def handle_live_status(session: Session) -> None:
 
 def handle_update(session: Session, args) -> None:
     title = args.title
-    area_id = args.area
+    area = args.area
+
+    if area and area[0] == "list":
+        result = live_get_area_list(session)
+        if result.type != FuncType.SUCCESS:
+            print(f"获取分区列表失败: {result.result}")
+            return
+        parent_id = int(area[1]) if len(area) > 1 else None
+        for main in result.result:
+            if parent_id is None or main.id == parent_id:
+                print(f"  [{main.id}] {main.name}")
+                for sub in main.list:
+                    print(f"    [{sub.parent_id}/{sub.id}] {sub.name}")
+        return
+
+    area_id = int(area[0]) if area else None
+
     if title:
         r = live_update_title(session, title)
         if r.type == FuncType.SUCCESS:
@@ -187,7 +208,12 @@ def handle_cli(session: Session) -> None:
         print("当前正在直播")
     else:
         print("正在开播...")
-        handle_live_start(session, argparse.Namespace(area=0))
+        handle_live_start(session, argparse.Namespace(area=["0"]))
+
+
+def handle_logout(session: Session) -> None:
+    result = auth_logout(session)
+    print(result.result if result.type == FuncType.SUCCESS else f"登出失败: {result.result}")
 
 
 def main():
@@ -200,8 +226,9 @@ def main():
 def _run():
     p = argparse.ArgumentParser(prog="bili", add_help=False)
     p.add_argument("--login", action="store_true")
+    p.add_argument("--logout", action="store_true")
     p.add_argument("--live", choices=["start", "stop", "status"])
-    p.add_argument("-a", "--area", type=int, default=None)
+    p.add_argument("-a", "--area", nargs="*", default=None)
     p.add_argument("--title", type=str, default=None)
     p.add_argument("--danmaku", action="store_true")
     p.add_argument("--cli", action="store_true")
@@ -217,6 +244,11 @@ def _run():
     if args.login:
         session = _load_session()
         handle_login(session)
+        return
+
+    if args.logout:
+        session = _load_session()
+        handle_logout(session)
         return
 
     if args.live:
