@@ -29,6 +29,7 @@ class CONFIG:
     platform: str = ApiData.PLATFORM
     version: str = ApiData.LIVEHIME_VERSION
     build: str = ApiData.LIVEHIME_BUILD
+    default_mode: str = ""
 
     @property
     def cookies_str(self) -> str:
@@ -119,6 +120,7 @@ class CONFIG:
             rtmp_code=live.get("rtmp_code", ""),
             room_data=extra.get("room", {}),
             area_data=extra.get("area", [{}]),
+            default_mode=extra.get("app", {}).get("default_mode", ""),
         )
 
     from_old_file = from_file
@@ -151,6 +153,9 @@ class CONFIG:
             "data": {
                 "room": self.room_data,
                 "area": self.area_data,
+            },
+            "app": {
+                "default_mode": self.default_mode,
             },
         }
         try:

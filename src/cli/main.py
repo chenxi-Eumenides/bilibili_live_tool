@@ -38,6 +38,20 @@ from src.utils.data import FuncType
 from src.utils.lib import generate_qr_text
 
 
+def cli_help():
+    print("  bili --login                        扫码登录")
+    print("  bili --live start [-a 分区ID]       开播")
+    print("  bili --live stop                    下播")
+    print("  bili --live status                  查看状态")
+    print("  bili --title \"标题\" [--area 分区ID] 改标题")
+    print("  bili --area 分区ID [--title \"标题\"] 改分区")
+    print("  bili --danmaku                      弹幕监听")
+    print("  bili --cli                          login + 自动开/下播")
+    print()
+    print("  TUI 模式:")
+    print("    bili --tui                        启动 TUI（尚未实现）")
+
+
 def _load_session() -> Session:
     config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
     session = Session(config)
@@ -167,19 +181,17 @@ def handle_cli(session: Session) -> None:
 
 
 def main():
-    p = argparse.ArgumentParser(prog="bili", description="B站直播管理工具", add_help=False)
-    p.add_argument("--help", action="store_true")
+    p = argparse.ArgumentParser(prog="bili", add_help=False)
     p.add_argument("--login", action="store_true")
     p.add_argument("--live", choices=["start", "stop", "status"])
     p.add_argument("-a", "--area", type=int, default=None)
     p.add_argument("--title", type=str, default=None)
     p.add_argument("--danmaku", action="store_true")
     p.add_argument("--cli", action="store_true")
-    p.add_argument("--set-default", choices=["tui", "cli", "help"])
 
     args = p.parse_args()
 
-    if args.help or len(sys.argv) == 1:
+    if len(sys.argv) == 1:
         p.print_help()
         return
 
@@ -213,10 +225,6 @@ def main():
     if args.cli:
         session = _load_session()
         handle_cli(session)
-        return
-
-    if args.set_default:
-        print(f"--set-default {args.set_default} (占位，后续实现)")
         return
 
 
