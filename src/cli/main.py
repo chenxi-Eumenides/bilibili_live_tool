@@ -14,10 +14,10 @@
   bili --help                           帮助
 """
 
+from argparse import ArgumentParser, Namespace
+from asyncio import run as asyncio_run
 from rich import print
-import argparse
-import asyncio
-import sys
+from sys import argv
 
 from ..logic import (
     Session,
@@ -207,7 +207,7 @@ def handle_danmaku(session: Session, room_id: str | None = None) -> None:
     session.on("danmaku:received", on_received)
     print("按两次 Ctrl+C 停止")
     try:
-        asyncio.run(_listen_loop(session))
+        asyncio_run(_listen_loop(session))
     except KeyboardInterrupt:
         pass
     finally:
@@ -239,7 +239,7 @@ def handle_cli(session: Session) -> None:
         print("当前正在直播")
     else:
         print("正在开播...")
-        handle_live_start(session, argparse.Namespace(area=None, title=None))
+        handle_live_start(session, Namespace(area=None, title=None))
 
 
 def handle_logout(session: Session) -> None:
@@ -259,7 +259,7 @@ def main():
 
 
 def _run():
-    p = argparse.ArgumentParser(prog="bili", add_help=False)
+    p = ArgumentParser(prog="bili", add_help=False)
     p.add_argument("--login", action="store_true")
     p.add_argument("--logout", action="store_true")
     p.add_argument("--live", choices=["start", "stop", "status"])
@@ -270,7 +270,7 @@ def _run():
 
     args = p.parse_args()
 
-    if len(sys.argv) == 1:
+    if len(argv) == 1:
         p.print_help()
         return None
 
