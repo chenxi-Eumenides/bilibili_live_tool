@@ -66,6 +66,7 @@ def auth_poll_login(
             session.config.cookies = cookies
             session.config.refresh_token = refresh_token or ""
             session.config.csrf = cookies.get("bili_jct", "")
+            session.config.uid = int(cookies.get("DedeUserID", 0))
             session._login_verified = True
 
             try:
