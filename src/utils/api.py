@@ -99,10 +99,12 @@ def raise_for_bili_code(response: Response):
     msg = result.get("msg")
     data = result.get("data")
     if code in FAIL_BILI_CODE.keys():
+        mapped = FAIL_BILI_CODE[code]
+        display = f"{mapped}" if not msg or mapped == msg else f"{msg} (code={code}: {mapped})"
         raise API_BILI_CODE_ERROR(
             code=code,
             api_msg=msg,
-            msg=f"api请求错误({code}): {FAIL_BILI_CODE[code]}{'；api信息: ' + msg if msg else ''}",
+            msg=f"api请求错误({code}): {display}",
             data=data,
         )
     elif code == 0 and isinstance(data, dict) and data.get("code"):
@@ -111,7 +113,7 @@ def raise_for_bili_code(response: Response):
         raise API_BILI_CODE_ERROR(
             code=code,
             api_msg=msg,
-            msg=f"api请求错误({code}): {FAIL_BILI_CODE.get(code)}{'；api信息: ' + msg if msg else ''}",
+            msg=f"api请求错误({code}): {msg}{' (' + FAIL_BILI_CODE.get(code, '') + ')' if FAIL_BILI_CODE.get(code) else ''}",
             data=data,
         )
     elif int(code) != 0:

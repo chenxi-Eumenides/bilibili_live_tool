@@ -106,6 +106,10 @@ def handle_login(session: Session) -> bool:
 
 def handle_live_start(session: Session, args) -> None:
     area = int(args.area[0]) if args.area else 0
+    if area == 0:
+        print("请使用 --area 指定分区ID。")
+        print("可用 --area list 查看分区列表。")
+        return
     result = live_start(session, area_id=area)
     if result.type != FuncType.SUCCESS:
         print(f"开播失败: {result.result}")
