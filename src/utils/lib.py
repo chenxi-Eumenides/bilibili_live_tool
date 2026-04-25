@@ -2,7 +2,7 @@ import hmac
 from functools import reduce, wraps
 from hashlib import md5, sha256
 from json import dumps, loads
-from random import random
+from random import uniform
 from threading import Lock
 from time import sleep, time
 from urllib.parse import urlencode
@@ -193,7 +193,7 @@ def random_cooldown():
         def wrapper(*args, **kwargs):
             nonlocal last_call_time
             with lock:
-                wait_time = round(random() + Tuning.COOLDOWN_MIN + last_call_time - time(), 2) + 0.01
+                wait_time = round(uniform(Tuning.COOLDOWN_MIN, Tuning.COOLDOWN_MAX) + last_call_time - time(), 2) + 0.01
                 if wait_time > 0:
                     print(f"正在延迟 {wait_time}s")
                     sleep(wait_time)

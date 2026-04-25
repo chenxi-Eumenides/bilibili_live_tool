@@ -120,6 +120,7 @@ class Tuning:
     LOGIN_POLL_TIMEOUT = 180
     DANMAKU_HEARTBEAT = 30
     COOLDOWN_MIN = 0.3
+    COOLDOWN_MAX = 1.0
 
 
 class TUIColors:
