@@ -118,10 +118,6 @@ def auth_validate_login(session: Session) -> FuncResult:
         session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录已过期")
         return FuncResult(type=FuncType.FAIL, result="登录已过期")
 
-    if not res.cookies:
-        session._login_verified = False
-        return FuncResult(type=FuncType.FAIL, result="登录状态无效")
-
     session._login_verified = True
     session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
     return FuncResult(type=FuncType.SUCCESS, result=res.data)
