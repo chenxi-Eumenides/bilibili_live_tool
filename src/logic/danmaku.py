@@ -148,5 +148,7 @@ async def _heartbeat_loop(ws, session: Session) -> None:
             await ws_send_heart(ws)
     except asyncio.CancelledError:
         pass
-    except Exception:
-        pass
+    except Exception as e:
+        if session._danmaku_stop_event:
+            session._danmaku_stop_event.set()
+        session._emit(SessionEvent.ERROR, f"弹幕心跳异常: {e}")
