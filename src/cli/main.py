@@ -30,6 +30,7 @@ from ..logic import (
     live_start,
     live_stop,
     live_update_area,
+    live_update_room,
     live_update_title,
     danmaku_start,
     danmaku_stop,
@@ -175,19 +176,15 @@ def handle_update(session: Session, args) -> None:
 
     area_id = int(area[0]) if area else None
 
-    if title:
-        r = live_update_title(session, title)
+    if title or area_id:
+        r = live_update_room(session, title=title, area_id=area_id)
         if r.type == FuncType.SUCCESS:
-            print(f"标题已更新: {title}")
+            if title:
+                print(f"标题已更新: {title}")
+            if area_id:
+                print(f"分区已更新: {area_id}")
         else:
-            print(f"标题修改失败: {r.result}")
-            return
-    if area_id:
-        r = live_update_area(session, area_id)
-        if r.type == FuncType.SUCCESS:
-            print(f"分区已更新: {area_id}")
-        else:
-            print(f"分区修改失败: {r.result}")
+            print(f"修改失败: {r.result}")
 
 
 def handle_danmaku(session: Session, room_id: str | None = None) -> None:

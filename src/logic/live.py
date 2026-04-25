@@ -127,6 +127,35 @@ def live_update_title(session: Session, new_title: str) -> FuncResult:
     return result
 
 
+def live_update_room(
+    session: Session, title: str | None = None, area_id: int | None = None
+) -> FuncResult:
+    """修改直播间信息（标题和/或分区），一次 API 调用完成。
+
+    至少需要传 title 或 area_id 其中之一。
+    """
+    if not session.is_logged_in:
+        return FuncResult(type=FuncType.FAIL, result="未登录，无法修改")
+    if not title and not area_id:
+        return FuncResult(type=FuncType.FAIL, result="未提供标题或分区ID")
+
+    result = api_update_room(
+        cookies=session.cookies,
+        room_id=session.room_id,
+        title=title or None,
+        area_id=area_id or None,
+    )
+    if result.type != FuncType.SUCCESS:
+        return result
+
+    if title:
+        session.config.title = title
+    if area_id:
+        session.config.area_id = area_id
+    session._emit(SessionEvent.LIVE_INFO_UPDATED, {"title": title, "area_id": area_id})
+    return result
+
+
 def live_update_area(session: Session, area_id: int) -> FuncResult:
     """修改直播分区。
 
