@@ -40,7 +40,7 @@ def danmaku_start(session: Session) -> FuncResult:
     if not session.is_logged_in:
         return FuncResult(type=FuncType.FAIL, result="未登录，无法监听弹幕")
 
-    if session.room_id == 0:
+    if session.danmaku_room_id or session.room_id == 0:
         return FuncResult(type=FuncType.FAIL, result="未设置房间号")
 
     session._danmaku_stop_event = asyncio.Event()
@@ -92,7 +92,7 @@ async def _listen_loop(session: Session) -> None:
         # 2. 获取弹幕 WebSocket 信息
         info_result = get_danmaku_info(
             cookies=session.cookies,
-            room_id=session.room_id,
+            room_id=session.danmaku_room_id or session.room_id,
             img_key=img_key,
             sub_key=sub_key,
         )
@@ -112,7 +112,7 @@ async def _listen_loop(session: Session) -> None:
 
         # 4. 发送认证
         auth_result = await ws_send_auth(
-            ws, session.user_id, session.room_id, danmaku_key
+            ws, session.user_id, session.danmaku_room_id or session.room_id, danmaku_key
         )
         if auth_result.type != FuncType.SUCCESS:
             session._emit(SessionEvent.ERROR, f"弹幕 WS 认证失败: {auth_result.result}")

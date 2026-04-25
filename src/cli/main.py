@@ -54,7 +54,7 @@ def help_lines():
         '  --title "标题" [--area 分区ID]   改标题',
         "  --area 分区ID [--title \"标题\"]  改分区",
         "  --area list [父分区ID]          列出可用分区",
-        "  --danmaku [直播间号]            弹幕监听",
+        "  --danmaku [直播间号]            弹幕监听 (默认: 自己的直播间)",
     ]
 
 
@@ -176,8 +176,10 @@ def handle_update(session: Session, args) -> None:
 
 def handle_danmaku(session: Session, room_id: str | None = None) -> None:
     if room_id:
-        session.config.room_id = int(room_id)
-        print(f"监听直播间: {session.room_id}")
+        session.danmaku_room_id = int(room_id)
+        print(f"监听直播间: {session.danmaku_room_id}")
+    else:
+        print(f"监听自己的直播间: {session.room_id}")
 
     result = danmaku_start(session)
     if result.type != FuncType.SUCCESS:

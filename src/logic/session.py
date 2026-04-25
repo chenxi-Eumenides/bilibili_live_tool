@@ -28,6 +28,7 @@ class Session:
 
         self._login_verified = False
         self.bili_ticket = ""
+        self.danmaku_room_id = 0
         self._danmaku_running = False
         self._danmaku_stop_event: Optional[Any] = None
 
