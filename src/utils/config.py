@@ -48,119 +48,92 @@ class CONFIG:
 
     @classmethod
     def from_file(cls, file_path: Path = CONFIG_FILE) -> "CONFIG":
+        """从配置文件创建 CONFIG，自动识别 v1 / v2 格式。
+
+        v1: {"user_id": ..., "cookies_str": ..., ...}
+        v2: {"version": 2, "user": {...}, "live": {...}, "data": {...}}
+        无 version 字段时，检查是否存在 "user_id" 来判断。
         """
-        从配置文件创建 CONFIG 实例
+        with open(file_path, "r", encoding="utf-8") as f:
+            data: dict = json.load(f)
 
-        Args:
-            file_path: JSON 配置文件路径
+        version = data.get("version")
+        if version == 1:
+            return cls._from_dict_v1(data)
+        elif version == 2:
+            return cls._from_dict_v2(data)
+        # 无版本号 → 启发式判断
+        if "user_id" in data:
+            return cls._from_dict_v1(data)
+        return cls._from_dict_v2(data)
 
-        Returns:
-            CONFIG: 配置实例
-
-        Raises:
-            FileNotFoundError: 文件不存在
-            json.JSONDecodeError: JSON 解析错误
-        """
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                config_data: dict = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"配置文件不存在: {file_path}")
-        except json.JSONDecodeError as e:
-            raise json.JSONDecodeError(f"JSON 解析错误: {e.msg}", e.doc, e.pos)
-
-        user_data: dict = config_data.get("user", {})
-        live_data: dict = config_data.get("live", {})
-        data: dict = config_data.get("data", {})
-
-        # 解析 cookies_str
+    @classmethod
+    def _from_dict_v1(cls, data: dict) -> "CONFIG":
         cookies = {}
-        cookies_str = user_data.get("cookies_str", "")
+        cookies_str = data.get("cookies_str", "")
         if cookies_str:
             try:
-                cookies: dict = json.loads(cookies_str)
-            except json.JSONDecodeError as e:
-                # 如果解析失败，保持空字典
-                raise json.JSONDecodeError(f"JSON 解析错误: {e.msg}", e.doc, e.pos)
-
-        # 创建 CONFIG 实例
+                cookies = json.loads(cookies_str)
+            except json.JSONDecodeError:
+                pass
         return cls(
-            uid=user_data.get("user_id", 0),
+            uid=data.get("user_id", 0),
             cookies=cookies,
-            csrf=user_data.get("csrf", ""),
-            refresh_token=user_data.get("refresh_token", ""),
-            refresh_time=user_data.get("refresh_time", 0),
-            room_id=live_data.get("room_id", 0),
-            title=live_data.get("title", ""),
-            area_id=live_data.get("area_id", 0),
-            rtmp_addr=live_data.get("rtmp_addr", ""),
-            rtmp_code=live_data.get("rtmp_code", ""),
-            room_data=data.get("room", {}),
+            csrf=data.get("csrf", ""),
+            refresh_token=data.get("refresh_token", ""),
+            refresh_time=data.get("refresh_time", 0),
+            room_id=data.get("room_id", 0),
+            title=data.get("title", ""),
+            area_id=data.get("area_id", 0),
+            rtmp_addr=data.get("rtmp_addr", ""),
+            rtmp_code=data.get("rtmp_code", ""),
+            room_data=data.get("room_data", {}),
             area_data=data.get("area", [{}]),
+            version=data.get("live_version", ApiData.LIVEHIME_VERSION),
+            build=data.get("live_build", ApiData.LIVEHIME_BUILD),
         )
+
+    @classmethod
+    def _from_dict_v2(cls, data: dict) -> "CONFIG":
+        user = data.get("user", {})
+        live = data.get("live", {})
+        extra = data.get("data", {})
+
+        cookies = {}
+        cookies_str = user.get("cookies_str", "")
+        if cookies_str:
+            try:
+                cookies = json.loads(cookies_str)
+            except json.JSONDecodeError:
+                pass
+        return cls(
+            uid=user.get("uid", user.get("user_id", 0)),
+            cookies=cookies,
+            csrf=user.get("csrf", ""),
+            refresh_token=user.get("refresh_token", ""),
+            refresh_time=user.get("refresh_time", 0),
+            room_id=live.get("room_id", 0),
+            title=live.get("title", ""),
+            area_id=live.get("area_id", 0),
+            rtmp_addr=live.get("rtmp_addr", ""),
+            rtmp_code=live.get("rtmp_code", ""),
+            room_data=extra.get("room", {}),
+            area_data=extra.get("area", [{}]),
+        )
+
+    from_old_file = from_file
 
     @classmethod
     def from_cookies(cls, cookies_str: str) -> "CONFIG":
         try:
             cookies: dict = json.loads(cookies_str)
         except json.JSONDecodeError:
-            # 如果解析失败，保持空字典
             return None
         return cls(cookies=cookies)
 
-    @classmethod
-    def from_old_file(cls, file_path: Path = CONFIG_FILE) -> "CONFIG":
-        """
-        从旧的配置文件格式创建 CONFIG 实例
-
-        Args:
-            file_path: JSON 配置文件路径
-
-        Returns:
-            CONFIG: 配置实例
-
-        Raises:
-            FileNotFoundError: 文件不存在
-            json.JSONDecodeError: JSON 解析错误
-        """
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                config_data: dict = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"配置文件不存在: {file_path}")
-        except json.JSONDecodeError as e:
-            raise json.JSONDecodeError(f"JSON 解析错误: {e.msg}", e.doc, e.pos)
-
-        # 解析 cookies_str
-        cookies = {}
-        cookies_str = config_data.get("cookies_str", "")
-        if cookies_str:
-            try:
-                cookies: dict = json.loads(cookies_str)
-            except json.JSONDecodeError as e:
-                # 如果解析失败，保持空字典
-                raise json.JSONDecodeError(f"JSON 解析错误: {e.msg}", e.doc, e.pos)
-
-        # 创建 CONFIG 实例
-        return cls(
-            uid=config_data.get("user_id", 0),
-            cookies=cookies,
-            csrf=config_data.get("csrf", ""),
-            refresh_token=config_data.get("refresh_token", ""),
-            refresh_time=config_data.get("refresh_time", 0),
-            room_id=config_data.get("room_id", 0),
-            title=config_data.get("title", ""),
-            area_id=config_data.get("area_id", 0),
-            rtmp_addr=config_data.get("rtmp_addr", ""),
-            rtmp_code=config_data.get("rtmp_code", ""),
-            room_data=config_data.get("room_data", {}),
-            area_data=config_data.get("area", [{}]),
-            version=config_data.get("live_version", ApiData.LIVEHIME_VERSION),
-            build=config_data.get("live_build", ApiData.LIVEHIME_BUILD),
-        )
-
     def save_config(self, file_path: Path = CONFIG_FILE) -> bool:
         config_data = {
+            "version": 2,
             "user": {
                 "uid": self.uid,
                 "cookies_str": self.cookies_str,
