@@ -60,10 +60,6 @@ def help_lines():
     ]
 
 
-def cli_help():
-    print("\n".join(help_lines()))
-
-
 def _load_session() -> Session:
     config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
     session = Session(config)
