@@ -1,5 +1,5 @@
 """CLI 用户层"""
 
-from .main import CLI_FLAGS, cli_help, main as run_cli
+from .main import CLI_FLAGS as FLAGS, help_lines, main as run
 
-__all__ = ["CLI_FLAGS", "cli_help", "run_cli"]
+__all__ = ["FLAGS", "run", "help_lines", "cli_help"]

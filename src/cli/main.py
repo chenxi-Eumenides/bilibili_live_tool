@@ -40,11 +40,7 @@ from ..utils.lib import generate_qr_text
 CLI_FLAGS = frozenset({"--login", "--live", "--title", "--area", "--danmaku", "--cli"})
 
 
-def cli_help():
-    print("\n".join(_cli_help_lines()))
-
-
-def _cli_help_lines():
+def help_lines():
     return [
         "CLI 模式:",
         "  --cli                          login + 自动开/下播",
@@ -58,6 +54,10 @@ def _cli_help_lines():
         "TUI 模式:",
         "  --tui                          启动 TUI",
     ]
+
+
+def cli_help():
+    print("\n".join(help_lines()))
 
 
 def _load_session() -> Session:

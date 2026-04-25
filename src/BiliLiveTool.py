@@ -4,11 +4,12 @@ import sys
 
 
 def _print_help():
-    from .cli import cli_help
+    from .cli import help_lines as cli_help_lines
     print("B站直播管理工具")
     print("  --help          帮助信息")
     print("  --set-default MODE  设置默认启动模式 (tui|cli|help)")
-    cli_help()
+    for line in cli_help_lines():
+        print(line)
 
 
 def _handle_set_default():
@@ -22,8 +23,8 @@ def _handle_set_default():
 
 
 def _dispatch():
-    from .cli import CLI_FLAGS, run_cli
-    from .tui import TUI_FLAGS, run_tui
+    from .cli import FLAGS as CLI_FLAGS, run as run_cli
+    from .tui import FLAGS as TUI_FLAGS, run as run_tui
 
     given = set(sys.argv[1:]) & (CLI_FLAGS | TUI_FLAGS)
 
@@ -42,11 +43,11 @@ def _default_mode():
 
     if mode == "tui":
         sys.argv.append("--tui")
-        from .tui import run_tui
+        from .tui import run as run_tui
         run_tui()
     elif mode == "cli":
         sys.argv.append("--cli")
-        from .cli import run_cli
+        from .cli import run as run_cli
         run_cli()
     else:
         _print_help()
