@@ -48,13 +48,13 @@ def help_lines():
         "  --cli                          login + 自动开/下播",
         "  --login                        扫码登录",
         "  --logout                       清除登录态",
-        "  --live start [-a AREA] [--title TITLE]  开播",
+        "  --live start [--area 分区ID] [--title 标题]  开播",
         "  --live stop                    下播",
         "  --live status                  查看状态",
-        '  --title "标题" [--area AREA]   改标题',
-        "  --area AREA [--title \"标题\"]  改分区",
+        '  --title "标题" [--area 分区ID]   改标题',
+        "  --area 分区ID [--title \"标题\"]  改分区",
         "  --area list [父分区ID]          列出可用分区",
-        "  --danmaku                      弹幕监听",
+        "  --danmaku [直播间号]            弹幕监听",
     ]
 
 
@@ -174,7 +174,11 @@ def handle_update(session: Session, args) -> None:
             print(f"分区修改失败: {r.result}")
 
 
-def handle_danmaku(session: Session) -> None:
+def handle_danmaku(session: Session, room_id: str | None = None) -> None:
+    if room_id:
+        session.config.room_id = int(room_id)
+        print(f"监听直播间: {session.room_id}")
+
     result = danmaku_start(session)
     if result.type != FuncType.SUCCESS:
         print(f"启动失败: {result.result}")
@@ -228,9 +232,9 @@ def _run():
     p.add_argument("--login", action="store_true")
     p.add_argument("--logout", action="store_true")
     p.add_argument("--live", choices=["start", "stop", "status"])
-    p.add_argument("-a", "--area", nargs="*", default=None)
+    p.add_argument("--area", nargs="*", default=None)
     p.add_argument("--title", type=str, default=None)
-    p.add_argument("--danmaku", action="store_true")
+    p.add_argument("--danmaku", nargs="?", const="", default=None)
     p.add_argument("--cli", action="store_true")
 
     args = p.parse_args()
@@ -266,9 +270,9 @@ def _run():
         handle_update(session, args)
         return
 
-    if args.danmaku:
+    if args.danmaku is not None:
         session = _load_session()
-        handle_danmaku(session)
+        handle_danmaku(session, args.danmaku)
         return
 
     if args.cli:
