@@ -670,6 +670,7 @@ async def get_danmaku_websocket(danmaku_ws_url: str) -> FuncResult:
     ws = await connect(
         uri=danmaku_ws_url,
         user_agent_header=";".join([f"{k}={v}" for k, v in ApiData.HEADERS.items()]),
+        ping_interval=None,
     )
     return FuncResult(
         type=FuncType.SUCCESS,
