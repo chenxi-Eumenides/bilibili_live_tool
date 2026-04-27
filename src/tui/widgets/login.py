@@ -10,6 +10,7 @@ from ...logic import (
     auth_generate_qrcode,
     auth_poll_login,
 )
+from ...utils.data import FuncType
 from ...utils.lib import generate_qr_text
 
 
@@ -40,23 +41,28 @@ class LoginPage(VerticalGroup):
 
         session = self.app.session
         result = auth_generate_qrcode(session)
-        if result.type.value != "SUCCESS":
+        if result.type != FuncType.SUCCESS:
             status.update(f"获取二维码失败: {result.result}")
             button.disabled = False
             return
 
-        qr_url, qr_key = result.result["qr_url"], result.result["qr_key"]
+        qr_url = result.result["qr_url"]
+        qr_key = result.result["qr_key"]
         qr_lines = generate_qr_text(qr_url)
         status.update("请使用B站App扫码登录:\n\n" + "\n".join(qr_lines))
 
         for _ in range(90):
             poll_result = auth_poll_login(session, qr_key, timeout=2)
-            code = poll_result.result.get("code", -1)
 
-            if poll_result.type.value == "SUCCESS":
+            if poll_result.type == FuncType.SUCCESS:
+                session.config.save_config()
                 status.update("登录成功！")
-                break
-            elif code == BiliCode.LOGIN_QR_EXPIRED:
+                self.notify("登录成功", severity="information")
+                return
+
+            code = poll_result.result.get("code", -1) if isinstance(poll_result.result, dict) else -1
+
+            if code == BiliCode.LOGIN_QR_EXPIRED:
                 status.update("二维码已过期，请重新获取")
                 break
             elif code == BiliCode.LOGIN_QR_WAITING:
@@ -67,4 +73,3 @@ class LoginPage(VerticalGroup):
             await asyncio.sleep(2)
 
         button.disabled = False
-        self.notify("登录流程结束")
