@@ -9,7 +9,7 @@ QuitScreen {
     padding: 0 1;
     width: 60;
     height: 11;
-    border: thick $background 80%;
+    border: thick $panel;
     background: $surface;
 }
 
@@ -20,6 +20,6 @@ QuitScreen {
     content-align: center middle;
 }
 
-Button {
+#quit-dialog Button {
     width: 100%;
 }

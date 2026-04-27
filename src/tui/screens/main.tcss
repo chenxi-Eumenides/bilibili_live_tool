@@ -1,15 +1,12 @@
-MainScreen {
-    align: center middle;
-    padding: 1;
+#left-panel {
+    width: 16;
+    border: solid $panel;
 }
 
-#buttons {
-    height: auto;
-    width: 20;
+#left-panel Button {
+    width: 100%;
 }
 
 ContentSwitcher {
-    border: round $primary;
-    width: 90%;
-    height: 1fr;
+    border: solid $panel;
 }
