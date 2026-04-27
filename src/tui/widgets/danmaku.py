@@ -3,7 +3,7 @@ import asyncio
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalGroup
-from textual.widgets import Button, Label, Static
+from textual.widgets import Button, Label, RichLog, Static
 
 from ...logic import (
     SessionEvent,
@@ -28,7 +28,7 @@ class DanmuPage(VerticalGroup):
             yield Button("停止监听", id="danmaku-stop", disabled=True)
             yield Label("", id="danmaku-status")
             yield Static("---", id="danmaku-separator")
-            yield Static("弹幕将在此显示", id="danmaku-list")
+            yield RichLog(id="danmaku-list", max_lines=500, markup=True)
 
     def on_mount(self):
         session = self.app.session
@@ -74,9 +74,11 @@ class DanmuPage(VerticalGroup):
         danmaku_stop(self.app.session)
 
     def _on_danmaku_received(self, msg):
-        container = self.query_one("#danmaku-list")
-        text = f"[{msg.uname or '?'}]: {msg.msg}"
-        container.mount(Label(text))
+        log = self.query_one("#danmaku-list", RichLog)
+        if hasattr(msg, "format_rich"):
+            log.write(msg.format_rich())
+        else:
+            log.write(str(msg))
 
     def _on_danmaku_stopped(self, reason=None):
         self.query_one("#danmaku-status", Label).update(f"已停止: {reason or '手动'}")
