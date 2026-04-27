@@ -8,8 +8,10 @@ from ...logic import (
     live_refresh_room_info,
     live_start,
     live_stop,
+    live_update_room,
 )
 from ...utils.data import FuncType
+from ..screens.input_modal import InputModal
 
 
 class ActionPage(VerticalGroup):
@@ -68,8 +70,18 @@ class ActionPage(VerticalGroup):
             self.notify(f"下播失败: {result.result}", severity="error")
 
     @on(Button.Pressed, "#update-title")
-    def handle_update_title(self):
-        self.notify("修改标题功能待实现")
+    async def handle_update_title(self):
+        session = self.app.session
+        current = session.config.title or ""
+        modal = InputModal("输入新的直播标题:", initial=current)
+        title = await self.app.push_screen_wait(modal)
+        if title is None:
+            return
+        result = live_update_room(session, title=title)
+        if result.type == FuncType.SUCCESS:
+            self.notify(f"标题已更新: {title}", severity="information")
+        else:
+            self.notify(f"修改失败: {result.result}", severity="error")
 
     @on(Button.Pressed, "#refresh-info")
     def handle_refresh_info(self):
