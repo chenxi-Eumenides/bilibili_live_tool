@@ -8,8 +8,8 @@ from textual.reactive import reactive
 
 from ..logic import Session, auth_validate_login
 from ..utils.config import CONFIG
-from ..utils.constant import CONFIG_FILE
-from ..utils.data import FuncType, AppState
+from ..utils.constant import CONFIG_FILE, SessionEvent
+from ..utils.data import AppState
 from .layout.header import Header
 from .layout.main_panel import MainPanel
 from .layout.sidebar import Sidebar
@@ -52,28 +52,46 @@ class BiliLiveToolApp(App):
     def on_mount(self):
         sidebar = self.query_one(Sidebar)
         sidebar.can_focus_children = False
+        self._subscribe_events()
         self._init_state()
 
+    def _subscribe_events(self):
+        self.session.on(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_login_success)
+        self.session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_login_failed)
+        self.session.on(SessionEvent.LIVE_STATE_CHANGED, self._on_live_state_changed)
+
     def _init_state(self):
-        if self.session.config.cookies:
+        if self.session.cookies:
             self.run_worker(self._validate_login, thread=True)
         else:
             self.app_state = AppState.UNAUTH
             self._refresh_ui()
 
     def _validate_login(self):
-        result = auth_validate_login(self.session)
-        if result.type == FuncType.SUCCESS:
-            ls = self.session.config.room_data.get("live_status", 0)
-            if ls == 1:
-                new_state = AppState.LIVE
-            elif ls == 2:
-                new_state = AppState.REPLAY
-            else:
-                new_state = AppState.IDLE
+        auth_validate_login(self.session)
+
+    def _on_login_success(self, data=None):
+        ls = self.session.config.room_data.get("live_status", 0)
+        if ls == 1:
+            state = AppState.LIVE
+        elif ls == 2:
+            state = AppState.REPLAY
         else:
-            new_state = AppState.UNAUTH
-        self.call_from_thread(self._apply_state, new_state)
+            state = AppState.IDLE
+        self.call_from_thread(self._apply_state, state)
+
+    def _on_login_failed(self, data=None):
+        self.call_from_thread(self._apply_state, AppState.UNAUTH)
+
+    def _on_live_state_changed(self, data=None):
+        ls = self.session.config.room_data.get("live_status", 0)
+        if ls == 1:
+            state = AppState.LIVE
+        elif ls == 2:
+            state = AppState.REPLAY
+        else:
+            state = AppState.IDLE
+        self.call_from_thread(self._apply_state, state)
 
     def _apply_state(self, state: AppState):
         self.app_state = state
