@@ -1,5 +1,5 @@
 """登录面板"""
-import time
+import threading
 
 from textual import on
 from textual.app import ComposeResult
@@ -11,6 +11,7 @@ from ...logic import auth_generate_qrcode, auth_poll_login, SessionEvent
 
 class AuthPanel(Vertical):
     _qr_key = None
+    _stop_event = None
 
     def compose(self) -> ComposeResult:
         with Vertical(id="login-container"):
@@ -29,6 +30,8 @@ class AuthPanel(Vertical):
         session.off(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
         session.off(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.off(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
+        if self._stop_event:
+            self._stop_event.set()
 
     @on(Button.Pressed, "#login-button")
     def _start_login(self):
@@ -37,7 +40,9 @@ class AuthPanel(Vertical):
         self.run_worker(self._login_worker, thread=True)
 
     def _login_worker(self):
+        self._stop_event = threading.Event()
         session = self.app.session
+
         auth_generate_qrcode(session)
 
         if not self._qr_key:
@@ -46,14 +51,17 @@ class AuthPanel(Vertical):
             return
 
         for _ in range(90):
+            if self._stop_event.is_set():
+                return
             try:
                 auth_poll_login(session, self._qr_key)
                 if session.is_logged_in:
-                    self.app.call_from_thread(self.app.session.config.save_config)
+                    self.app.call_from_thread(session.config.save_config)
                     break
             except Exception:
                 return
-            time.sleep(2)
+            if self._stop_event.wait(timeout=2):
+                return
 
         self._qr_key = None
         self._call_enable()
