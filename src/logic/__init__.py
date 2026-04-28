@@ -6,19 +6,18 @@
 
 from .session import Session
 from .auth import (
-    auth_generate_qrcode,
-    auth_poll_login,
-    auth_post_login,
+    auth_get_qr,
+    auth_poll_qr,
+    auth_update_safety,
     auth_validate_login,
     auth_logout,
 )
 from .live import (
+    live_init,
     live_start,
     live_stop,
     live_update_room,
-    live_refresh_room_info,
-    live_get_room_info_cache,
-    live_get_area_list,
+    live_refresh_room_data,
 )
 from .danmaku import danmaku_start, danmaku_stop, _listen_loop
 from ..utils.constant import BiliCode, SessionEvent
@@ -27,17 +26,16 @@ __all__ = [
     "Session",
     "SessionEvent",
     "BiliCode",
-    "auth_generate_qrcode",
-    "auth_poll_login",
-    "auth_post_login",
+    "auth_get_qr",
+    "auth_poll_qr",
+    "auth_update_safety",
     "auth_validate_login",
     "auth_logout",
+    "live_init",
     "live_start",
     "live_stop",
     "live_update_room",
-    "live_refresh_room_info",
-    "live_get_room_info",
-    "live_get_area_list",
+    "live_refresh_room_data",
     "danmaku_start",
     "danmaku_stop",
     "_listen_loop",

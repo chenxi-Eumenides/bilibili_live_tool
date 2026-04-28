@@ -2,36 +2,34 @@
 
 from threading import Event
 from time import monotonic, sleep
-from typing import Optional
 
-from ..utils.api import api_get_login_qr, api_check_login, api_get_room_id, api_get_user_nav, get_bili_ticket
+from .session import Session
+from ..utils.api import api_get_login_qr, api_check_login, api_get_user_nav, api_get_bili_ticket
 from ..utils.data import FuncResult, FuncType
 from ..utils.constant import BiliCode, SessionEvent, Tuning
-from .session import Session
 
 
-def auth_generate_qrcode(session: Session) -> FuncResult:
-    """生成登录二维码。
+def auth_get_qr(session: Session) -> FuncResult:
+    """生成登录二维码信息。
 
     Args:
         session: Session 实例
-
+    Events:
+        AUTH_QRCODE_READY: 已生成登录二维码信息
+        AUTH_QRCODE_FAIL
     Returns:
-        FuncResult(SUCCESS, {qr_url, qr_key}) 或 FAIL
+        FuncResult(SUCCESS) 或 FAIL
+    """
 
-    返回: FuncResult(SUCCESS, {qr_url, qr_key}) 或 FAIL
-    Events: AUTH_QRCODE_READY，携带 {'qr_url', 'qr_key'}"""
+    res = api_get_login_qr()
+    if res.type != FuncType.SUCCESS:
+        session._emit(SessionEvent.AUTH_QR_FAIL)
+        return res
+    session._qr_cache = res.result
+    session._emit(SessionEvent.AUTH_QR_READY)
+    return res
 
-    result = api_get_login_qr()
-    if result.type != FuncType.SUCCESS:
-        return result
-    qr_url = result.result["qr_url"]
-    qr_key = result.result["qr_key"]
-    session._emit(SessionEvent.AUTH_QRCODE_READY, {"qr_url": qr_url, "qr_key": qr_key})
-    return FuncResult(type=FuncType.SUCCESS, result={"qr_url": qr_url, "qr_key": qr_key})
-
-
-def auth_poll_login(
+def auth_poll_qr(
     session: Session,
     qr_key: str,
     timeout_sec: int = Tuning.LOGIN_POLL_TIMEOUT,
@@ -43,69 +41,93 @@ def auth_poll_login(
         session: Session 实例
         qr_key: 从 auth_generate_qrcode 得到的 key
         timeout_sec: 总超时秒数
-
+        stop_event: 停止事件
+    Events:
+        AUTH_LOGIN_SUCCESS: 登录成功
+        AUTH_QR_WAITING, int: 等待扫码
+        AUTH_QR_SCANNED, int: 已扫码，等待确认
+        AUTH_LOGIN_FAILED, str: 登录失败
     Returns:
         FuncResult(SUCCESS, {cookies, refresh_token}) 或 FAIL
-
-    返回: FuncResult(SUCCESS, {cookies, refresh_token}) 或 FAIL
-    Events: 等待扫码发 AUTH_QR_WAITING；已扫码发 AUTH_QR_SCANNED；成功时发 AUTH_LOGIN_SUCCESS 并写入 cookies/uid/bili_ticket；失败发 AUTH_LOGIN_FAILED"""
+    """
 
     deadline = monotonic() + timeout_sec
-    while monotonic() < deadline:
+    while True:
+        # 取消或超时
+        if monotonic() < deadline:
+            session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录超时")
+            return FuncResult(type=FuncType.FAIL, result="登录超时")
         if stop_event and stop_event.is_set():
+            session._emit(SessionEvent.AUTH_LOGIN_FAILED, "已取消")
             return FuncResult(type=FuncType.FAIL, result="已取消")
-        remaining = int(deadline - monotonic())
-        result = api_check_login(qr_key)
-        if result.type == FuncType.SUCCESS:
-            cookies = result.result["cookies"]
-            refresh_token = result.result["refresh_token"]
-            session.config.cookies = cookies
-            session.config.refresh_token = refresh_token or ""
-            session.config.csrf = cookies.get("bili_jct", "")
-            session.config.uid = int(cookies.get("DedeUserID", 0))
-            session._login_verified = True
-            try:
-                ticket_result = get_bili_ticket(cookies)
-                if ticket_result.type == FuncType.SUCCESS:
-                    session.bili_ticket = ticket_result.result.get("bili_ticket", "")
-            except Exception:
-                pass
-            auth_post_login(session)
-            session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
-            return FuncResult(type=FuncType.SUCCESS, result={"cookies": cookies, "refresh_token": refresh_token})
-        code = result.result if isinstance(result.result, int) else None
+        # 请求
+        res = api_check_login(qr_key)
+        if res.type == FuncType.SUCCESS:
+            break
+        code = res.result if isinstance(res.result, int) else None
         if code == BiliCode.LOGIN_QR_WAITING:
-            session._emit(SessionEvent.AUTH_QR_WAITING, remaining)
+            # 等待扫码
+            session._emit(SessionEvent.AUTH_QR_WAITING, int(deadline - monotonic()))
         elif code == BiliCode.LOGIN_QR_SCANNED:
-            session._emit(SessionEvent.AUTH_QR_SCANNED, remaining)
+            # 已扫码，等待确认
+            session._emit(SessionEvent.AUTH_QR_SCANNED, int(deadline - monotonic()))
+        elif code == BiliCode.LOGIN_QR_EXPIRED:
+            # 二维码过期
+            session._emit(SessionEvent.AUTH_LOGIN_FAILED, "二维码过期")
+            return FuncResult(type=FuncType.FAIL, result="二维码过期")
+        elif code == BiliCode.LOGIN_QR_INVALID:
+            # 二维码无效
+            session._emit(SessionEvent.AUTH_LOGIN_FAILED, "二维码无效")
+            return FuncResult(type=FuncType.FAIL, result="二维码无效")
         else:
-            reason = _poll_code_reason(code)
-            session._emit(SessionEvent.AUTH_LOGIN_FAILED, reason)
-            return FuncResult(type=FuncType.FAIL, result=reason)
+            session._emit(SessionEvent.AUTH_LOGIN_FAILED, f"登录失败（code={code}）")
+            return FuncResult(type=FuncType.FAIL, result=f"登录失败（code={code}）")
+        # 等待
         if stop_event:
             if stop_event.wait(timeout=Tuning.POLL_INTERVAL):
+                session._emit(SessionEvent.AUTH_LOGIN_FAILED, "已取消")
                 return FuncResult(type=FuncType.FAIL, result="已取消")
         else:
             sleep(Tuning.POLL_INTERVAL)
-    session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录超时")
-    return FuncResult(type=FuncType.FAIL, result="登录超时")
 
-
-def auth_post_login(session: Session) -> None:
-    """登录完成后的初始化：获取 room_id、分区列表、房间信息。
-
-    应在 auth_poll_login 成功后调用。
-    """
-    from .live import live_get_area_list, live_refresh_room_info
-
-    if session.config.room_id == 0 and session.config.uid:
-        id_result = api_get_room_id(cookies=session.cookies, user_id=session.config.uid)
-        if id_result.type == FuncType.SUCCESS:
-            session.config.room_id = id_result.result
-    live_refresh_room_info(session)
-    live_get_area_list(session)
+    # 登录成功
+    data = res.result
+    cookies = data["cookies"]
+    refresh_token = res.result["refresh_token"]
+    session.config.cookies = cookies
+    session.config.set_refresh_token(refresh_token)
+    session._login_verified = True
     session.config.save_config()
-    session._emit(SessionEvent.LIVE_INFO_UPDATED, session.config.room_data)
+    session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
+    return FuncResult(type=FuncType.SUCCESS)
+    
+
+def auth_update_safety(session: Session) -> FuncResult:
+    """更新鉴权信息
+
+    更新 bili_ticket 和 wbi_key
+
+    Args:
+        session: Session 实例
+    Events:
+        AUTH_UPDATE_SAFETY: 鉴权信息更新成功
+    Returns:
+        FuncResult(SUCCESS, {uname, mid, ...}) 或 FAIL
+    """
+
+    if not (session.config.need_update_refresh_token or session.config.need_update_wbi):
+        return FuncResult(type=FuncType.FAIL, result="无需更新")
+    res = api_get_bili_ticket(session.config.cookies)
+    if res.type != FuncType.SUCCESS:
+        return FuncResult(type=FuncType.FAIL, result="更新失败")
+    data = res.result
+    session.config.bili_ticket = data.get("bili_ticket", "")
+    session.config.bili_ticket_timestamp = data.get("created_at", 0)
+    session.config.bili_ticket_ttl = data.get("ttl", 0)
+    session.config.set_wbi(data.get("img_key", ""), data.get("sub_key", ""))
+    session.config.save_config()
+    session._emit(SessionEvent.AUTH_UPDATE_SAFETY)
+    return FuncResult(type=FuncType.SUCCESS, result="更新成功")
 
 
 def auth_validate_login(session: Session) -> FuncResult:
@@ -113,18 +135,18 @@ def auth_validate_login(session: Session) -> FuncResult:
 
     Args:
         session: Session 实例
-
+    Events:
+        AUTH_LOGIN_SUCCESS
+        AUTH_LOGIN_FAILED
     Returns:
         FuncResult(SUCCESS, {uname, mid, ...}) 或 FAIL
-
-    返回: FuncResult(SUCCESS, 用户数据) 或 FAIL
-    Events: 成功发 AUTH_LOGIN_SUCCESS，失败发 AUTH_LOGIN_FAILED"""
+    """
 
     if not session.config.cookies:
         session._login_verified = False
         session._emit(SessionEvent.AUTH_LOGIN_FAILED, "无 cookies, 未登录")
         return FuncResult(type=FuncType.FAIL, result="无 cookies, 未登录")
-    res = api_get_user_nav(session.cookies)
+    res = api_get_user_nav(session.config.cookies)
     if res.type != FuncType.SUCCESS:
         session._login_verified = False
         session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录已过期")
@@ -133,31 +155,26 @@ def auth_validate_login(session: Session) -> FuncResult:
     session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
     return FuncResult(type=FuncType.SUCCESS, result=res.result)
 
-
 def auth_logout(session: Session) -> FuncResult:
     """登出，清除所有登录态。
 
     Args:
         session: Session 实例
 
+    Events:
+        AUTH_LOGOUT: 清空 cookies/uid
+
     Returns:
         FuncResult(SUCCESS, "登出成功")
+    """
 
-    返回: FuncResult(SUCCESS, "登出成功")
-    Events: AUTH_LOGOUT_DONE；清空 cookies/csrf/refresh_token/uid"""
-
-    session.config.cookies = {}
-    session.config.csrf = ""
-    session.config.refresh_token = ""
-    session.config.uid = 0
+    session.config = None
+    session.app_state = None
     session._login_verified = False
-    session._emit(SessionEvent.AUTH_LOGOUT_DONE)
+    session.room_data = {}
+    session._qr_cache = {}
+    session._face_qr_cache = {}
+    session._emit(SessionEvent.AUTH_LOGOUT)
     return FuncResult(type=FuncType.SUCCESS, result="登出成功")
 
 
-def _poll_code_reason(code: Optional[int]) -> str:
-    code_map = {
-        BiliCode.LOGIN_QR_EXPIRED: "二维码已过期",
-        86039: "二维码无效",
-    }
-    return code_map.get(code or 0, f"登录失败（code={code}）")

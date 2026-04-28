@@ -6,10 +6,12 @@ Session 持有全局唯一的 CONFIG 实例，管理当前会话状态（登录�
 
 from sys import stderr
 from traceback import print_exc
-from typing import Any, Callable, Optional
+from asyncio import Event
+from typing import Any, Callable
 
 from ..utils.config import CONFIG
-from ..utils.data import AppState
+from ..utils.data import AppState, LiveAreaList
+from ..utils.constant import ApiData
 
 
 class Session:
@@ -19,18 +21,27 @@ class Session:
     提供 on/off/once/_emit 事件系统供用户层订阅。
     """
 
-    def __init__(self, config: Optional[CONFIG] = None) -> None:
+
+    def __init__(self, config: CONFIG | None = None) -> None:
         """
         Args:
-            config: 可选，自定义 CONFIG 实例；默认创建空的 CONFIG
+            config: CONFIG 实例
         """
-        self.config = config or CONFIG()
-        self.app_state = AppState.UNAUTH
-        self.bili_ticket = ""
-        self.danmaku_room_id = 0
+
+        # user
+        self.room_data: dict = {}
+        self._config = config or CONFIG()
+        self._app_state = AppState.UNAUTH
         self._login_verified = False
+        self._qr_cache: dict[str, str] = {"qr_url": "", "qr_key": ""}
+        self._face_qr_cache: dict[str, str] = {"qr_url": ""}
+        # app
+        self.livehime_build: str = ApiData.LIVEHIME_BUILD
+        self.livehime_version: str = ApiData.LIVEHIME_VERSION
+        self.area_list: LiveAreaList | None = None
+        self._danmaku_room_id = 0
         self._danmaku_running = False
-        self._danmaku_stop_event: Optional[Any] = None
+        self._danmaku_stop_event: Event | None = None
         self._listeners: dict[str, list[Callable[..., None]]] = {}
 
     def on(self, event: str, callback: Callable[..., None]) -> None:
@@ -84,63 +95,58 @@ class Session:
             event: 事件名
             *args: 传递给回调的参数
         """
-        for cb in self._listeners.get(event, ()):
+        for callback in self._listeners.get(event, ()):
             try:
-                cb(*args)
+                callback(*args)
             except Exception:
                 print(
-                    f"[session] 事件 {event} 的回调 {cb.__name__} 发生异常：",
+                    f"[session] 事件 {event} 的回调 {callback.__name__} 发生异常：",
                     file=stderr,
                 )
                 print_exc(file=stderr)
-    @property
-    def app_state(self):
-        if self._app_state not in AppState:
-            self._app_state = AppState.UNAUTH
-        return self._app_state
-
-    @app_state.setter
-    def app_state(self,value):
-        if not self.config.cookies:
-            self._app_state = AppState.UNAUTH
-        elif value in AppState:
-            self._app_state = value
-
-    @property
-    def is_logged_in(self) -> bool:
-        """是否已登录（cookies 通过 API 验证）"""
-        return self._login_verified
-
-    @property
-    def is_live(self) -> bool:
-        """是否正在直播"""
-        return self.app_state == AppState.LIVE
-
-    @property
-    def room_id(self) -> int:
-        """直播间 ID"""
-        return self.config.room_id
-
-    @property
-    def user_id(self) -> int:
-        """B站用户 UID"""
-        return self.config.uid
-
-    @property
-    def cookies(self) -> dict:
-        """当前 cookies 字典"""
-        return self.config.cookies
-
-    @property
-    def csrf(self) -> str:
-        """csrf token"""
-        return self.config.csrf
 
     @property
     def config(self):
         return self._config
-
+    
     @config.setter
-    def config(self, value):
-        self._config = value
+    def config(self, value: CONFIG | None):
+        if value:
+            self._config = value
+        elif value is None:
+            self._config = CONFIG()
 
+    @property
+    def is_login(self) -> bool:
+        return bool(self.config.has_cookies and self._login_verified and self._app_state != AppState.UNAUTH)
+
+    @property
+    def is_live(self) -> bool:
+        return self._app_state == AppState.LIVE
+
+    @property
+    def is_replay(self) -> bool:
+        return self._app_state == AppState.REPLAY
+    
+    @property
+    def can_live(self) -> bool:
+        return bool(
+            self.is_login
+            and self.config.room_id
+            and self.config.uid
+            and self.config.area_id
+            and self._app_state == AppState.IDLE
+        )
+
+    @property
+    def app_state(self):
+        return self._app_state
+
+    @app_state.setter
+    def app_state(self, value: AppState | None):
+        if not self.config.has_cookies:
+            self._app_state = AppState.UNAUTH
+        elif value in AppState:
+            self._app_state = value
+        elif value is None:
+            self._app_state = AppState.UNAUTH
