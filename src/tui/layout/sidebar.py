@@ -38,7 +38,11 @@ class Sidebar(Vertical):
                 self.query_one(f"#{target}", Button).variant = "primary"
 
             toggle_btn = self.query_one("#nav-toggle", Button)
-            if state == AppState.UNAUTH:
+            is_unauth = state == AppState.UNAUTH
+            for bid in ["nav-info", "nav-manage", "nav-danmu"]:
+                self.query_one(f"#{bid}", Button).disabled = is_unauth
+
+            if is_unauth:
                 toggle_btn.label = "开播"
                 toggle_btn.disabled = True
                 toggle_btn.variant = "default"

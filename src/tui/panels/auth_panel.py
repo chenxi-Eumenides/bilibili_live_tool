@@ -76,7 +76,7 @@ class AuthPanel(Vertical):
 
     def _call_update(self, text):
         self.app.call_from_thread(
-            self.query_one("#status-text", Static).update, text
+            lambda: self.query_one("#status-text", Static).update(text)
         )
 
     def _call_enable(self):
