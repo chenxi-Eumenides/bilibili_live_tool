@@ -15,10 +15,6 @@ AuthPanel #login-container {
     border: solid #00a1d6;
 }
 
-AuthPanel #login-container > * {
-    align-horizontal: center;
-}
-
 AuthPanel #status-text {
     text-align: center;
     margin-top: 1;
@@ -30,7 +26,6 @@ AuthPanel #qr-area {
 }
 
 AuthPanel #login-button {
-    align: center middle;
     margin-top: 2;
 }
 

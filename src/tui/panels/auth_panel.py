@@ -3,7 +3,7 @@ import threading
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Center, Vertical
 from textual.widgets import Button, Static
 
 from ...logic import auth_generate_qrcode, auth_poll_login, SessionEvent
@@ -15,9 +15,9 @@ class AuthPanel(Vertical):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="login-container"):
-            yield Static("点击按钮开始登录", id="status-text")
-            yield Static("", id="qr-area")
-            yield Button("开始登录", id="login-button", variant="primary")
+            yield Center(Static("点击按钮开始登录", id="status-text"))
+            yield Center(Static("", id="qr-area"))
+            yield Center(Button("开始登录", id="login-button", variant="primary"))
 
     def on_mount(self):
         session = self.app.session
