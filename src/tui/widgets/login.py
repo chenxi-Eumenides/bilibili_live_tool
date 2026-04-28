@@ -40,7 +40,7 @@ class LoginPage(VerticalGroup):
         status.update("正在获取二维码...")
 
         session = self.app.session
-        result = auth_generate_qrcode(session)
+        result = await asyncio.to_thread(auth_generate_qrcode, session)
         if result.type != FuncType.SUCCESS:
             status.update(f"获取二维码失败: {result.result}")
             button.disabled = False
@@ -52,7 +52,7 @@ class LoginPage(VerticalGroup):
         status.update("请使用B站App扫码登录:\n\n" + "\n".join(qr_lines))
 
         for _ in range(90):
-            poll_result = auth_poll_login(session, qr_key)
+            poll_result = await asyncio.to_thread(auth_poll_login, session, qr_key)
 
             if poll_result.type == FuncType.SUCCESS:
                 session.config.save_config()

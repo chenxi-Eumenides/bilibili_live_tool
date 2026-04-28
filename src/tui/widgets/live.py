@@ -1,3 +1,5 @@
+import asyncio
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical, VerticalGroup
@@ -51,13 +53,13 @@ class ActionPage(VerticalGroup):
         self.query_one("#refresh-info", Button).disabled = not logged_in
 
     @on(Button.Pressed, "#start-live")
-    def handle_start_live(self):
+    async def handle_start_live(self):
         session = self.app.session
         area_id = session.config.area_id
         if area_id == 0:
             self.notify("请先设置直播分区", severity="warning")
             return
-        result = live_start(session, area_id=area_id)
+        result = await asyncio.to_thread(live_start, session, area_id=area_id)
         if result.type == FuncType.SUCCESS:
             data = result.result
             room_id = data.get("room_id", session.room_id)
@@ -66,8 +68,8 @@ class ActionPage(VerticalGroup):
             self.notify(f"开播失败: {result.result}", severity="error")
 
     @on(Button.Pressed, "#stop-live")
-    def handle_stop_live(self):
-        result = live_stop(self.app.session)
+    async def handle_stop_live(self):
+        result = await asyncio.to_thread(live_stop, self.app.session)
         if result.type == FuncType.SUCCESS:
             self.notify("下播成功", severity="information")
         else:
@@ -81,7 +83,7 @@ class ActionPage(VerticalGroup):
         title = await self.app.push_screen_wait(modal)
         if title is None:
             return
-        result = live_update_room(session, title=title)
+        result = await asyncio.to_thread(live_update_room, session, title=title)
         if result.type == FuncType.SUCCESS:
             self.notify(f"标题已更新: {title}", severity="information")
         else:
@@ -90,7 +92,7 @@ class ActionPage(VerticalGroup):
     @on(Button.Pressed, "#update-area")
     async def handle_update_area(self):
         session = self.app.session
-        result = live_get_area_list(session)
+        result = await asyncio.to_thread(live_get_area_list, session)
         if result.type != FuncType.SUCCESS:
             self.notify(f"获取分区列表失败: {result.result}", severity="error")
             return
@@ -98,15 +100,15 @@ class ActionPage(VerticalGroup):
         area_id = await self.app.push_screen_wait(modal)
         if area_id is None:
             return
-        update = live_update_room(session, area_id=area_id)
+        update = await asyncio.to_thread(live_update_room, session, area_id=area_id)
         if update.type == FuncType.SUCCESS:
             self.notify(f"分区已更新 (id={area_id})", severity="information")
         else:
             self.notify(f"修改失败: {update.result}", severity="error")
 
     @on(Button.Pressed, "#refresh-info")
-    def handle_refresh_info(self):
-        result = live_refresh_room_info(self.app.session)
+    async def handle_refresh_info(self):
+        result = await asyncio.to_thread(live_refresh_room_info, self.app.session)
         if result.type == FuncType.SUCCESS:
             self.notify("直播间信息已刷新", severity="information")
         else:

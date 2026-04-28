@@ -52,7 +52,7 @@ class DanmuPage(VerticalGroup):
         self._update_buttons()
         status.update("正在连接弹幕...")
 
-        result = danmaku_start(session)
+        result = await asyncio.to_thread(danmaku_start, session)
         if result.type != FuncType.SUCCESS:
             status.update(f"启动失败: {result.result}")
             self._listening = False
