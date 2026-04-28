@@ -76,7 +76,7 @@ def auth_poll_login(
             return FuncResult(type=FuncType.SUCCESS, result={"cookies": cookies, "refresh_token": refresh_token})
         code = result.result if isinstance(result.result, int) else None
         if code in (BiliCode.LOGIN_QR_WAITING, BiliCode.LOGIN_QR_SCANNED):
-            session._emit(SessionEvent.AUTH_LOGIN_POLLING, remaining)
+            session._emit(SessionEvent.AUTH_LOGIN_POLLING, {"remaining": remaining, "code": code})
         else:
             reason = _poll_code_reason(code)
             session._emit(SessionEvent.AUTH_LOGIN_FAILED, reason)

@@ -66,8 +66,13 @@ class AuthPanel(Vertical):
         self._call_qr("\n".join(data["qr_text"]))
         self._call_update("请使用B站App扫码登录")
 
-    def _on_polling(self, remaining):
-        self._call_update(f"等待扫码... (剩余{remaining}秒)")
+    def _on_polling(self, data: dict):
+        remaining = data.get("remaining", 0)
+        code = data.get("code")
+        if code == 86090:
+            self._call_update("已扫描，请在手机上确认登录")
+        else:
+            self._call_update(f"等待扫码... (剩余{remaining}秒)")
 
     def _on_success(self, data=None):
         self._call_update("登录成功！")
