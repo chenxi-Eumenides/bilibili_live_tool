@@ -7,13 +7,16 @@ AuthPanel {
 
 AuthPanel #login-container {
     width: 60%;
-    min-width: 41;
-    max-width: 60;
+    min-width: 60;
+    max-width: 100;
     height: auto;
     padding: 2;
     background: #2a2a2a;
     border: solid #00a1d6;
-    align: center middle;
+}
+
+AuthPanel #login-container > * {
+    align-horizontal: center;
 }
 AuthPanel #status-text {
     text-align: center;

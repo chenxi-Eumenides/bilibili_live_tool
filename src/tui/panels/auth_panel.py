@@ -35,7 +35,7 @@ class AuthPanel(Vertical):
 
     @on(Button.Pressed, "#login-button")
     def _start_login(self):
-        self.query_one("#login-button", Button).disabled = True
+        self.query_one("#login-button", Button).display = False
         self.query_one("#status-text", Static).update("正在获取二维码...")
         self._stop_event = threading.Event()
         self.run_worker(self._login_worker, thread=True)
@@ -46,7 +46,7 @@ class AuthPanel(Vertical):
 
         if not self._qr_key:
             self._call_update("获取二维码失败")
-            self._call_enable()
+            self._call_show_button()
             return
 
         result = auth_poll_login(session, self._qr_key, stop_event=self._stop_event)
@@ -56,7 +56,7 @@ class AuthPanel(Vertical):
             return
 
         self._qr_key = None
-        self._call_enable()
+        self._call_show_button()
 
     def _on_qrcode_ready(self, data: dict):
         self._qr_key = data["qr_key"]
@@ -76,10 +76,10 @@ class AuthPanel(Vertical):
         except Exception:
             pass
 
-    def _call_enable(self):
+    def _call_show_button(self):
         try:
             self.app.call_from_thread(
-                lambda: setattr(self.query_one("#login-button", Button), "disabled", False)
+                lambda: setattr(self.query_one("#login-button", Button), "display", True)
             )
         except Exception:
             pass
