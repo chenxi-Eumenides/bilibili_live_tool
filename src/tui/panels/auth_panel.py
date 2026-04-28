@@ -56,7 +56,9 @@ class AuthPanel(Vertical):
             self.query_one("#login-button", Button).display = True
             return
 
+        qr_url = result.result["qr_url"]
         qr_key = result.result["qr_key"]
+        self.query_one("#qr-area", Static).update("\n".join(generate_qr_text(qr_url)))
         deadline = monotonic() + 180
         self.app.qr_cache = {"qr_url": result.result["qr_url"], "qr_key": qr_key, "deadline": deadline}
         self.app.start_login()
