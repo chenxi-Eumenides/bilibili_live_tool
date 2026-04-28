@@ -5,6 +5,7 @@ from textual.widgets import Static
 
 
 class DashboardPanel(Vertical):
+
     def compose(self) -> ComposeResult:
         with ScrollableContainer(classes="info-card"):
             yield Static("直播间信息", classes="section-title")

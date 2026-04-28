@@ -1,10 +1,11 @@
-"""弹幕面板 — 全屏显示区 + 底部发送框"""
+"""弹幕面板"""
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Input, RichLog
 
 
 class DanmakuPanel(Vertical):
+
     def compose(self) -> ComposeResult:
         yield RichLog(id="danmaku-list", max_lines=500, markup=True)
         with Horizontal(id="danmaku-send"):

@@ -1,7 +1,9 @@
-/* 布局组件样式 */
+/* ===== 布局组件样式 ===== */
+
 Header {
     height: 2;
     background: #2a2a2a;
+    color: #e5e5e5;
     border-bottom: solid #006f95;
     padding: 0 2;
 }
@@ -25,7 +27,7 @@ Header #app-version {
     color: #999999;
 }
 
-Header #header-spacer {
+Header #spacer {
     width: 1fr;
 }
 
@@ -52,11 +54,13 @@ Sidebar {
 Sidebar .nav-buttons-top {
     height: auto;
     width: 100%;
+    align: center middle;
 }
 
 Sidebar .nav-buttons-bottom {
     height: auto;
     width: 100%;
+    align: center middle;
     dock: bottom;
 }
 
@@ -82,40 +86,4 @@ StatusBar {
 
 StatusBar #shortcuts-text {
     content-align: center middle;
-}
-
-/* 管理面板 */
-SettingsPanel {
-    height: 100%;
-    padding: 1;
-}
-
-SettingsPanel Input {
-    margin-bottom: 2;
-}
-
-SettingsPanel Select {
-    margin-bottom: 1;
-}
-
-/* 弹幕面板 */
-DanmakuPanel {
-    height: 100%;
-}
-
-#danmaku-list {
-    height: 1fr;
-}
-
-#danmaku-send {
-    height: auto;
-    dock: bottom;
-}
-
-#danmaku-input {
-    width: 1fr;
-}
-
-#danmaku-send-btn {
-    width: 10;
 }

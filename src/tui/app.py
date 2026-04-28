@@ -1,7 +1,8 @@
-"""Textual 应用入口"""
+"""Textual App主类 — 界面壳"""
+
 from pathlib import Path
 
-from textual.app import App, ComposeResult
+from textual.app import App
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.reactive import reactive
@@ -11,39 +12,58 @@ from .layout.main_panel import MainPanel
 from .layout.sidebar import Sidebar
 from .layout.status_bar import StatusBar
 
+_STYLES = Path(__file__).parent / "styles"
+
 
 class BiliLiveToolApp(App):
 
     CSS_PATH = [
-        Path(__file__).parent / "styles/global.tcss",
-        Path(__file__).parent / "styles/layout.tcss",
-        Path(__file__).parent / "styles/dashboard.tcss",
-        Path(__file__).parent / "styles/help.tcss",
+        _STYLES / "global.tcss",
+        _STYLES / "layout.tcss",
+        _STYLES / "auth_panel.tcss",
+        _STYLES / "dashboard_panel.tcss",
+        _STYLES / "settings_panel.tcss",
+        _STYLES / "danmaku_panel.tcss",
+        _STYLES / "help_panel.tcss",
     ]
 
-    current_panel = reactive("dashboard")
+    current_panel = reactive("info")
 
     BINDINGS = [
         Binding("q,escape", "quit", "退出"),
     ]
 
-    def compose(self) -> ComposeResult:
+    def compose(self):
         yield Header()
         with Horizontal():
             yield Sidebar()
-            yield MainPanel(id="main-panel")
+            yield MainPanel()
         yield StatusBar()
 
     def on_mount(self):
-        self.query_one(Sidebar).can_focus_children = False
-        self._show_panel("dashboard")
+        sidebar = self.query_one(Sidebar)
+        sidebar.can_focus_children = False
 
     def watch_current_panel(self, panel: str):
-        self._show_panel(panel)
+        try:
+            main_panel = self.query_one(MainPanel)
+            main_panel.update_for_state(panel)
+            sidebar = self.query_one(Sidebar)
+            sidebar.highlight_button(panel)
+        except Exception:
+            pass
 
-    def _show_panel(self, panel: str):
-        main = self.query_one("#main-panel", MainPanel)
-        main.show_panel(panel)
+    def show_info_panel(self):
+        self.current_panel = "info"
+
+    def show_manage_panel(self):
+        self.current_panel = "manage"
+
+    def show_help_panel(self):
+        self.current_panel = "help"
+
+    def show_danmu_panel(self):
+        self.current_panel = "danmu"
 
     def action_quit(self):
         self.exit()

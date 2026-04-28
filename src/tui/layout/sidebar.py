@@ -5,6 +5,7 @@ from textual.widgets import Button
 
 
 class Sidebar(Vertical):
+
     def compose(self) -> ComposeResult:
         with Vertical(classes="nav-buttons-top"):
             yield Button("信息", id="nav-info", variant="primary", classes="nav-button")
@@ -17,12 +18,21 @@ class Sidebar(Vertical):
     def on_button_pressed(self, event: Button.Pressed):
         bid = event.button.id
         if bid == "nav-info":
-            self.app.current_panel = "dashboard"
+            self.app.show_info_panel()
         elif bid == "nav-manage":
-            self.app.current_panel = "settings"
+            self.app.show_manage_panel()
         elif bid == "nav-danmu":
-            self.app.current_panel = "danmaku"
-        elif bid == "nav-toggle":
-            pass
+            self.app.show_danmu_panel()
         elif bid == "nav-help":
-            self.app.current_panel = "help"
+            self.app.show_help_panel()
+
+    def highlight_button(self, panel: str):
+        try:
+            for bid in ["nav-info", "nav-manage", "nav-danmu", "nav-help"]:
+                self.query_one(f"#{bid}", Button).variant = "default"
+            btn_map = {"info": "nav-info", "manage": "nav-manage", "danmu": "nav-danmu", "help": "nav-help"}
+            target = btn_map.get(panel)
+            if target:
+                self.query_one(f"#{target}", Button).variant = "primary"
+        except Exception:
+            pass

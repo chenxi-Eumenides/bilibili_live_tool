@@ -1,58 +1,66 @@
-/* 信息面板样式 */
+/* ===== DashboardPanel - 信息面板样式 ===== */
+
 DashboardPanel {
     height: 100%;
     padding: 1;
 }
-
-.info-card {
+DashboardPanel .info-card {
     background: #2a2a2a;
     border: solid #006f95;
     padding: 1 2;
+    margin: 0;
     height: 100%;
     overflow-y: auto;
+    scrollbar-size: 1 1;
 }
 
-.section-title {
+DashboardPanel .section-title {
     color: #00a1d6;
     text-style: bold;
     margin-bottom: 1;
     height: 1;
 }
 
-.full-width {
-    height: auto;
-    width: 100%;
-    margin: 0;
-}
-
-.info-grid {
+DashboardPanel .info-grid {
     grid-size: 2;
     height: auto;
 }
 
-.column-left {
+DashboardPanel .full-width {
+    height: auto;
+    width: 100%;
+    padding: 0 0;
+    margin: 0;
+}
+
+DashboardPanel .full-width .info-value {
+    text-overflow: fold;
+    height: auto;
+}
+
+DashboardPanel .info-item {
+    height: auto;
+    width: 100%;
+}
+
+DashboardPanel .column-left {
     height: auto;
     width: 100%;
     margin-right: 1;
 }
 
-.column-right {
+DashboardPanel .column-right {
     height: auto;
     width: 100%;
     margin-left: 1;
 }
 
-.info-item {
-    height: auto;
-    width: 100%;
-}
-
-.info-label {
+DashboardPanel .info-label {
     color: #999999;
     height: 1;
 }
 
-.info-value {
+DashboardPanel .info-value {
     color: #e5e5e5;
     text-style: bold;
     height: 1;
