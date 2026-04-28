@@ -10,7 +10,7 @@ from textual.reactive import reactive
 from ..logic import Session, auth_poll_login, auth_validate_login, live_get_area_list, live_refresh_room_info
 from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE, SessionEvent
-from ..utils.data import AppState, FuncType
+from ..utils.data import AppState
 from .layout.header import Header
 from .layout.main_panel import MainPanel
 from .layout.sidebar import Sidebar
@@ -75,10 +75,14 @@ class BiliLiveToolApp(App):
     def _validate_login(self):
         auth_validate_login(self.session)
 
-    def start_login(self, qr_key: str, deadline: float):
+    def start_login(self):
+        self._stop_login_poll()
+        cache = self.qr_cache
+        if not cache:
+            return
         self._login_stop_event = threading.Event()
-        self._poll_qr_key = qr_key
-        self._poll_deadline = deadline
+        self._poll_qr_key = cache["qr_key"]
+        self._poll_deadline = cache["deadline"]
         self.run_worker(self._run_login_poll, thread=True)
 
     def _stop_login_poll(self):
@@ -86,25 +90,21 @@ class BiliLiveToolApp(App):
             self._login_stop_event.set()
 
     def _run_login_poll(self):
-        remaining = self._poll_deadline - __import__("time").monotonic()
+        qr_key = self._poll_qr_key
+        deadline = self._poll_deadline
+        remaining = deadline - __import__("time").monotonic()
         if remaining <= 0:
             self.session._emit(SessionEvent.AUTH_LOGIN_FAILED, "二维码已过期")
-            self.qr_cache = None
             return
-
-        result = auth_poll_login(self.session, self._poll_qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
-        if result.type == FuncType.SUCCESS:
+        result = auth_poll_login(self.session, qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
+        if result.type == __import__("src.utils.data", fromlist=["FuncType"]).FuncType.SUCCESS:
             live_refresh_room_info(self.session)
             live_get_area_list(self.session)
             self.session._emit(SessionEvent.LIVE_INFO_UPDATED, self.session.config.room_data)
-            self.qr_cache = None
             self.call_from_thread(self.show_info_panel)
-        elif result.result == "已取消":
-            return
-        else:
-            self.qr_cache = None
 
     def _on_login_success(self, data=None):
+        self.qr_cache = None
         ls = self.session.config.room_data.get("live_status", 0)
         if ls == 1:
             state = AppState.LIVE
