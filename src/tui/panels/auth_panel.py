@@ -37,12 +37,11 @@ class AuthPanel(Vertical):
     def _start_login(self):
         self.query_one("#login-button", Button).disabled = True
         self.query_one("#status-text", Static).update("正在获取二维码...")
+        self._stop_event = threading.Event()
         self.run_worker(self._login_worker, thread=True)
 
     def _login_worker(self):
-        self._stop_event = threading.Event()
         session = self.app.session
-
         auth_generate_qrcode(session)
 
         if not self._qr_key:
@@ -50,18 +49,20 @@ class AuthPanel(Vertical):
             self._call_enable()
             return
 
-        for _ in range(90):
-            if self._stop_event.is_set():
-                return
-            try:
-                auth_poll_login(session, self._qr_key)
-                if session.is_logged_in:
-                    self.app.call_from_thread(session.config.save_config)
-                    break
-            except Exception:
-                return
-            if self._stop_event.wait(timeout=2):
-                return
+        while not self._stop_event.is_set():
+            if session.is_logged_in:
+                self.app.call_from_thread(session.config.save_config)
+                break
+
+            result = auth_poll_login(session, self._qr_key, timeout_sec=1)
+
+            if result.type.value == "SUCCESS":
+                self.app.call_from_thread(session.config.save_config)
+                break
+
+            code = result.result.get("code", -1) if isinstance(result.result, dict) else -1
+            if code == 86038:
+                break
 
         self._qr_key = None
         self._call_enable()
