@@ -1,8 +1,6 @@
 """弹幕处理编排"""
 
-from __future__ import annotations
-
-import asyncio
+from asyncio import CancelledError, create_task, AsyncEvent as AsyncEvent, sleep as asyncio_sleep
 
 from ..utils.api import (
     get_danmaku_info,
@@ -34,7 +32,7 @@ def danmaku_start(session: Session) -> FuncResult:
         return FuncResult(type=FuncType.FAIL, result="未登录，无法监听弹幕")
     if not (session.danmaku_room_id or session.room_id):
         return FuncResult(type=FuncType.FAIL, result="未设置房间号")
-    session._danmaku_stop_event = asyncio.Event()
+    session._danmaku_stop_event = AsyncEvent()
     session._danmaku_running = True
     return FuncResult(type=FuncType.SUCCESS, result="弹幕监听已就绪")
 
@@ -101,7 +99,7 @@ async def _listen_loop(session: Session) -> None:
             session._emit(SessionEvent.ERROR, f"弹幕 WS 认证失败: {auth_result.result}")
             return
 
-        heartbeat_task = asyncio.create_task(_heartbeat_loop(ws, session))
+        heartbeat_task = create_task(_heartbeat_loop(ws, session))
 
         async for result in ws_listen_danmaku(ws):
             if session._danmaku_stop_event and session._danmaku_stop_event.is_set():
@@ -116,7 +114,7 @@ async def _listen_loop(session: Session) -> None:
                         session._emit(SessionEvent.DANMAKU_RECEIVED, msg)
             else:
                 session._emit(SessionEvent.ERROR, f"弹幕接收异常: {result.result}")
-    except asyncio.CancelledError:
+    except CancelledError:
         pass
     except Exception as e:
         session._emit(SessionEvent.ERROR, f"弹幕监听异常: {e}")
@@ -125,7 +123,7 @@ async def _listen_loop(session: Session) -> None:
             heartbeat_task.cancel()
             try:
                 await heartbeat_task
-            except asyncio.CancelledError:
+            except CancelledError:
                 pass
         if ws:
             try:
@@ -142,11 +140,11 @@ async def _heartbeat_loop(ws, session: Session) -> None:
     stop_event = session._danmaku_stop_event
     try:
         while not (stop_event and stop_event.is_set()):
-            await asyncio.sleep(Tuning.DANMAKU_HEARTBEAT)
+            await asyncio_sleep(Tuning.DANMAKU_HEARTBEAT)
             if stop_event and stop_event.is_set():
                 break
             await ws_send_heart(ws)
-    except asyncio.CancelledError:
+    except CancelledError:
         pass
     except Exception as e:
         if session._danmaku_stop_event:

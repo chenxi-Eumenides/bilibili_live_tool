@@ -1,7 +1,5 @@
 """直播管理编排"""
 
-from __future__ import annotations
-
 from ..utils.api import (
     api_get_area_list,
     api_get_room_data,

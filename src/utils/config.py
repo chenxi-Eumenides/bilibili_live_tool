@@ -1,8 +1,11 @@
-import json
+"""配置管理"""
+
 from dataclasses import dataclass, field
+from json import JSONDecodeError, dump, dumps, load, loads
 from pathlib import Path
 
 from .constant import ApiData, CONFIG_FILE
+
 
 @dataclass
 class CONFIG:
@@ -33,7 +36,7 @@ class CONFIG:
 
     @property
     def cookies_str(self) -> str:
-        return json.dumps(self.cookies, separators=(",", ":"), ensure_ascii=False)
+        return dumps(self.cookies, separators=(",", ":"), ensure_ascii=False)
 
     @property
     def csrf_token(self) -> str:
@@ -56,7 +59,7 @@ class CONFIG:
         无 version 字段时，检查是否存在 "user_id" 来判断。
         """
         with open(file_path, "r", encoding="utf-8") as f:
-            data: dict = json.load(f)
+            data: dict = load(f)
 
         version = data.get("version")
         if version == 1:
@@ -74,8 +77,8 @@ class CONFIG:
         cookies_str = data.get("cookies_str", "")
         if cookies_str:
             try:
-                cookies = json.loads(cookies_str)
-            except json.JSONDecodeError:
+                cookies = loads(cookies_str)
+            except JSONDecodeError:
                 pass
         return cls(
             uid=data.get("user_id", 0),
@@ -104,8 +107,8 @@ class CONFIG:
         cookies_str = user.get("cookies_str", "")
         if cookies_str:
             try:
-                cookies = json.loads(cookies_str)
-            except json.JSONDecodeError:
+                cookies = loads(cookies_str)
+            except JSONDecodeError:
                 pass
         return cls(
             uid=user.get("uid", user.get("user_id", 0)),
@@ -128,8 +131,8 @@ class CONFIG:
     @classmethod
     def from_cookies(cls, cookies_str: str) -> "CONFIG":
         try:
-            cookies: dict = json.loads(cookies_str)
-        except json.JSONDecodeError:
+            cookies: dict = loads(cookies_str)
+        except JSONDecodeError:
             return None
         return cls(cookies=cookies)
 
@@ -160,7 +163,7 @@ class CONFIG:
         }
         try:
             with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(config_data, f, ensure_ascii=False, indent=4)
+                dump(config_data, f, ensure_ascii=False, indent=4)
         except Exception:
             return False
         return True

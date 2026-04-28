@@ -1,4 +1,4 @@
-import hmac
+from hmac import new as hmac_new
 from functools import reduce, wraps
 from hashlib import md5, sha256
 from json import dumps, loads
@@ -214,7 +214,7 @@ def hmac_sha256(key, message) -> str:
     key = key.encode("utf-8")
     message = message.encode("utf-8")
     # 创建HMAC对象，使用SHA256哈希算法
-    hmac_obj = hmac.new(key, message, sha256)
+    hmac_obj = hmac_new(key, message, sha256)
     # 计算哈希值
     hash_value = hmac_obj.digest()
     # 将哈希值转换为十六进制字符串
