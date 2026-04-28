@@ -29,7 +29,7 @@ def auth_generate_qrcode(session: Session) -> FuncResult:
     qr_url = result.result["qr_url"]
     qr_key = result.result["qr_key"]
     qr_text = generate_qr_text(qr_url)
-    session._emit(SessionEvent.AUTH_QRCODE_READY, {"qr_text": qr_text, "qr_key": qr_key})
+    session._emit(SessionEvent.AUTH_QRCODE_READY, {"qr_url": qr_url, "qr_text": qr_text, "qr_key": qr_key})
     return FuncResult(type=FuncType.SUCCESS, result={"qr_url": qr_url, "qr_key": qr_key})
 
 

@@ -7,6 +7,7 @@ from textual.containers import Center, Vertical
 from textual.widgets import Button, Static
 
 from ...logic import auth_generate_qrcode, auth_poll_login, SessionEvent
+from ...utils.lib import generate_qr_text
 
 
 class AuthPanel(Vertical):
@@ -32,7 +33,7 @@ class AuthPanel(Vertical):
             self._qr_key = cache["qr_key"]
             self._stop_event = threading.Event()
             self.query_one("#login-button", Button).display = False
-            self.query_one("#qr-area", Static).update("\n".join(cache["qr_text"]))
+            self.query_one("#qr-area", Static).update("\n".join(generate_qr_text(cache["qr_url"])))
             self.query_one("#qr-area", Static).display = True
             self.query_one("#status-text", Static).update("请使用B站App扫码登录")
             self.run_worker(self._login_worker, thread=True)
@@ -49,6 +50,7 @@ class AuthPanel(Vertical):
 
     @on(Button.Pressed, "#login-button")
     def _start_login(self):
+        self.app.qr_cache = None
         self.query_one("#login-button", Button).display = False
         self.query_one("#qr-area", Static).display = True
         self.query_one("#status-text", Static).update("正在获取二维码...")
@@ -77,7 +79,7 @@ class AuthPanel(Vertical):
 
     def _on_qrcode_ready(self, data: dict):
         self._qr_key = data["qr_key"]
-        self.app.qr_cache = {"qr_key": data["qr_key"], "qr_text": data["qr_text"]}
+        self.app.qr_cache = {"qr_url": data["qr_url"], "qr_key": data["qr_key"]}
         self._call_qr("\n".join(data["qr_text"]))
         self._call_update("请使用B站App扫码登录")
 
@@ -92,6 +94,8 @@ class AuthPanel(Vertical):
 
     def _on_failed(self, reason=None):
         self._call_update(f"登录失败: {reason or '未知'}")
+        if reason and "过期" in reason:
+            self.app.qr_cache = None
 
     def _call_update(self, text):
         try:
