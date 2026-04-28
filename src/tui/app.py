@@ -1,4 +1,5 @@
 """Textual App主类"""
+import threading
 from pathlib import Path
 
 from textual.app import App
@@ -6,10 +7,10 @@ from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.reactive import reactive
 
-from ..logic import Session, auth_validate_login
+from ..logic import Session, auth_poll_login, auth_validate_login, live_get_area_list, live_refresh_room_info
 from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE, SessionEvent
-from ..utils.data import AppState
+from ..utils.data import AppState, FuncType
 from .layout.header import Header
 from .layout.main_panel import MainPanel
 from .layout.sidebar import Sidebar
@@ -33,6 +34,7 @@ class BiliLiveToolApp(App):
     app_state = reactive(AppState.UNAUTH)
     current_panel = reactive("info")
     qr_cache: dict | None = None
+    _login_stop_event: threading.Event | None = None
 
     BINDINGS = [
         Binding("q,escape", "quit", "退出"),
@@ -73,6 +75,33 @@ class BiliLiveToolApp(App):
     def _validate_login(self):
         auth_validate_login(self.session)
 
+    def start_login(self, qr_key: str, deadline: float):
+        self._login_stop_event = threading.Event()
+        self.run_worker(self._run_login_poll, thread=True, qr_key=qr_key, deadline=deadline)
+
+    def _stop_login_poll(self):
+        if self._login_stop_event:
+            self._login_stop_event.set()
+
+    def _run_login_poll(self, qr_key: str, deadline: float):
+        remaining = deadline - __import__("time").monotonic()
+        if remaining <= 0:
+            self.session._emit(SessionEvent.AUTH_LOGIN_FAILED, "二维码已过期")
+            self.qr_cache = None
+            return
+
+        result = auth_poll_login(self.session, qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
+        if result.type == FuncType.SUCCESS:
+            live_refresh_room_info(self.session)
+            live_get_area_list(self.session)
+            self.session._emit(SessionEvent.LIVE_INFO_UPDATED, self.session.config.room_data)
+            self.qr_cache = None
+            self.call_from_thread(self.show_info_panel)
+        elif result.result == "已取消":
+            return
+        else:
+            self.qr_cache = None
+
     def _on_login_success(self, data=None):
         ls = self.session.config.room_data.get("live_status", 0)
         if ls == 1:
@@ -82,6 +111,7 @@ class BiliLiveToolApp(App):
         else:
             state = AppState.IDLE
         self.call_from_thread(self._apply_state, state)
+        self.call_from_thread(lambda: setattr(self, "current_panel", "info"))
 
     def _on_login_failed(self, data=None):
         self.call_from_thread(self._apply_state, AppState.UNAUTH)
@@ -146,6 +176,7 @@ class BiliLiveToolApp(App):
         self.current_panel = "danmu"
 
     def action_quit(self):
+        self._stop_login_poll()
         self.exit()
 
 
