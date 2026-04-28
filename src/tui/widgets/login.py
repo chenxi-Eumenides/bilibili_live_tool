@@ -52,7 +52,7 @@ class LoginPage(VerticalGroup):
         status.update("请使用B站App扫码登录:\n\n" + "\n".join(qr_lines))
 
         for _ in range(90):
-            poll_result = auth_poll_login(session, qr_key, timeout=2)
+            poll_result = auth_poll_login(session, qr_key)
 
             if poll_result.type == FuncType.SUCCESS:
                 session.config.save_config()
