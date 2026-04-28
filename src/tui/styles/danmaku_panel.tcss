@@ -10,6 +10,22 @@ DanmakuPanel .danmaku-container {
     padding: 0;
 }
 
+DanmakuPanel .danmaku-header {
+    height: auto;
+    padding: 0 1;
+    background: #2a2a2a;
+    border-bottom: solid #006f95;
+}
+
+DanmakuPanel .danmaku-room-title {
+    width: 1fr;
+    content-align: left middle;
+}
+
+DanmakuPanel .room-id-input {
+    width: 14;
+}
+
 /* 弹幕列表包装器 */
 DanmakuPanel .danmaku-list-wrapper {
     height: 1fr;

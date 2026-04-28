@@ -42,6 +42,13 @@ Header #status-context {
     content-align: right middle;
 }
 
+Header #refresh-indicator {
+    width: auto;
+    content-align: right middle;
+    margin-right: 1;
+    color: #f59e0b;
+}
+
 Sidebar {
     width: 20%;
     min-width: 19;

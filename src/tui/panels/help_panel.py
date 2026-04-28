@@ -3,6 +3,8 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, ScrollableContainer
 from textual.widgets import Static
 
+from ...utils.constant import VERSION_STR
+
 
 class HelpPanel(ScrollableContainer):
 
@@ -22,4 +24,4 @@ class HelpPanel(ScrollableContainer):
             yield Static("4. 直播前请先在OBS配置推流信息", classes="help-text")
 
             yield Static("版本信息", classes="section-title")
-            yield Static("BiliLiveTool v0.5.0", classes="help-text")
+            yield Static(f"BiliLiveTool v{VERSION_STR}", classes="help-text")

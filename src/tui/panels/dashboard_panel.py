@@ -44,13 +44,20 @@ class DashboardPanel(Vertical):
 
     def on_mount(self):
         self.app.session.on(SessionEvent.LIVE_INFO_UPDATED, self._on_info_updated)
-        self._update_from_config()
+        self._refresh()
 
     def on_unmount(self):
         self.app.session.off(SessionEvent.LIVE_INFO_UPDATED, self._on_info_updated)
 
     def _on_info_updated(self, data=None):
+        self._refresh()
+
+    def _refresh(self):
+        from ..layout.header import Header
+        header = self.app.query_one(Header)
+        header.set_refreshing(True)
         self._update_from_config()
+        header.set_refreshing(False)
 
     def _update_from_config(self):
         config = self.app.session.config
