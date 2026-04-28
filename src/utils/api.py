@@ -55,7 +55,7 @@ def api(
     Raises:
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         ApiResult: api返回数据
     """
     try:
@@ -139,7 +139,7 @@ def api_start_live(
         API_ARG_ERROR: 参数不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult:
             SUCCESS: {
                 face_auth: bool,
@@ -241,7 +241,7 @@ def api_stop_live(cookies: dict, room_id: int) -> FuncResult:
         API_ARG_ERROR: 参数不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: api返回数据
     """
     if not (csrf := cookies.get("bili_jct")):
@@ -279,7 +279,7 @@ def api_update_room(
         API_ARG_ERROR: 参数不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: api返回数据
     """
     if not (csrf := cookies.get("bili_jct")):
@@ -317,7 +317,7 @@ def api_get_room_data(cookies: dict, room_id: int) -> FuncResult:
         API_DATA_ERROR: api结果不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: api返回数据
     """
     data = {"room_id": room_id}
@@ -360,7 +360,7 @@ def api_get_area_list(cookies: dict) -> FuncResult:
         API_DATA_ERROR: api结果不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: LiveAreaList
     """
     res = api(
@@ -371,7 +371,7 @@ def api_get_area_list(cookies: dict) -> FuncResult:
     if not res.data:
         raise API_DATA_ERROR("未获取到直播分区数据")
 
-    return FuncResult(type=FuncType.SUCCESS, result=LiveAreaList.from_api(res.data))
+    return FuncResult(type=FuncType.SUCCESS, result=LiveAreaList.from_api_data(res.data))
 
 
 def api_get_room_id(cookies: dict, user_id: int) -> FuncResult:
@@ -385,7 +385,7 @@ def api_get_room_id(cookies: dict, user_id: int) -> FuncResult:
         API_DATA_ERROR: api结果不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: room_id
     """
     data = {"uid": user_id}
@@ -408,7 +408,7 @@ def api_get_login_qr() -> FuncResult:
         API_DATA_ERROR: api结果不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: {
             qr_url: str
             qr_key: str
@@ -443,7 +443,7 @@ def api_check_login(qr_key: str) -> FuncResult:
         API_DATA_ERROR: api结果不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: {
             cookies: dict
             refresh_token: str
@@ -483,7 +483,7 @@ def api_check_face_auth(cookies: dict, room_id: int) -> FuncResult:
         API_DATA_ERROR: api结果不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: api返回数据
     """
     if not (csrf := cookies.get("bili_jct")):
@@ -509,7 +509,20 @@ def api_check_face_auth(cookies: dict, room_id: int) -> FuncResult:
     )
 
 
-def get_bili_ticket(cookies: dict) -> FuncResult:
+def api_get_bili_ticket(cookies: dict) -> FuncResult:
+    """获取bili_ticket。
+
+    Args:
+        cookies: cookies字典
+    Returns:
+        FuncResult: {
+            bili_ticket: str
+            created_at: float
+            ttl: float
+            img_key: str
+            sub_key: str
+        }
+    """
     if not (csrf := cookies.get("bili_jct")):
         raise API_ARG_ERROR("cookies错误，不存在 bili_jct 项")
     now_time = int(time())
@@ -569,17 +582,16 @@ def api_get_user_nav(cookies: dict) -> FuncResult:
 
 def get_wbi_key(cookies: dict) -> FuncResult:
     """
-    获取B站wbi签名密钥
+    获取B站wbi签名密钥，请优先使用api_get_bili_ticket
 
     Args:
         cookies: cookies字典
-        real_room_id: 真实房间号
     Raises:
         API_ARG_ERROR: 参数不正确
         API_DATA_ERROR: api结果不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: {
             img_key: str
             sub_key: str
@@ -618,7 +630,7 @@ def get_danmaku_info(
         API_DATA_ERROR: api结果不正确
         API_BILI_CODE_ERROR: B站请求错误
         API_STATUS_CODE_ERROR: 请求状态码错误
-    Return:
+    Returns:
         FuncResult: {
             danmaku_key: str
             danmaku_ws_url_list: list[str]
@@ -664,7 +676,7 @@ async def get_danmaku_websocket(danmaku_ws_url: str) -> FuncResult:
         OSError: 连接失败
         InvalidHandshake: 握手失败
         TimeoutError: 握手超时
-    Return:
+    Returns:
         FuncResult: danmaku_websocket
     """
     ws = await connect(
@@ -692,7 +704,7 @@ async def ws_send_auth(
     Raises:
         ConnectionClosed: 连接关闭
         TypeError: 消息不支持
-    Return:
+    Returns:
         FuncResult:
             FAIL: ws.state
             SUCCESS: None
@@ -737,7 +749,7 @@ async def ws_send_heart(ws: ClientConnection) -> FuncResult:
     Raises:
         ConnectionClosed: 连接关闭
         TypeError: 消息不支持
-    Return:
+    Returns:
         FuncResult:
             FAIL: ws.state
             SUCCESS: None
@@ -764,7 +776,7 @@ async def ws_listen_danmaku(
     Raises:
         ConnectionClosed: 连接关闭
         TypeError: 消息不支持
-    Return:
+    Returns:
         FuncResult:
             FAIL: ws.state
             SUCCESS: list[WebSocketMessage]

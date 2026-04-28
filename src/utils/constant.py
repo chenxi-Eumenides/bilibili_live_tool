@@ -82,22 +82,29 @@ class SessionEvent:
     用户层通过 session.on(SessionEvent.XXX, callback) 订阅。
     """
 
-    AUTH_QRCODE_READY = "auth:qrcode_ready"
-    AUTH_LOGIN_POLLING = "auth:login_polling"
+    AUTH_QR_READY = "auth:qr_ready"
+    AUTH_QR_FAIL = "auth:qr_fail"
     AUTH_QR_WAITING = "auth:qr_waiting"
     AUTH_QR_SCANNED = "auth:qr_scanned"
     AUTH_LOGIN_SUCCESS = "auth:login_success"
     AUTH_LOGIN_FAILED = "auth:login_failed"
-    AUTH_LOGOUT_DONE = "auth:logout_done"
+    AUTH_LOGOUT = "auth:logout"
+    AUTH_UPDATE_SAFETY = "auth:update_safety"
 
     LIVE_STATE_CHANGED = "live:state_changed"
     LIVE_INFO_UPDATED = "live:info_updated"
+    LIVE_INFO_UPDATED_FAIL = "live:info_updated_fail"
+    LIVE_AREA_UPDATED = "live:area_updated"
+    LIVE_AREA_UPDATED_FAIL = "live:area_updated_fail"
     LIVE_FACE_AUTH_REQUIRED = "live:face_auth_required"
+    LIVE_START_FAIL = "live:start_fail"
+    LIVE_STOP_FAIL = "live:stop_fail"
 
     DANMAKU_RECEIVED = "danmaku:received"
     DANMAKU_STOPPED = "danmaku:stopped"
 
     ERROR = "error"
+    EXCEPTION = "exception"
 
 
 class BiliCode:
@@ -109,6 +116,7 @@ class BiliCode:
     LOGIN_QR_WAITING = 86101
     LOGIN_QR_SCANNED = 86090
     LOGIN_QR_EXPIRED = 86038
+    LOGIN_QR_INVALID = 86039
 
     FACE_AUTH_REQUIRED = 60024
     FACE_AUTH_VERIFY = 60043

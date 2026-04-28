@@ -105,7 +105,7 @@ class LiveAreaList:
         return len(self._data)
 
     @classmethod
-    def from_api(cls, data):
+    def from_api_data(cls, data):
 
         results: list[LiveArea] = []
         for root in data:
