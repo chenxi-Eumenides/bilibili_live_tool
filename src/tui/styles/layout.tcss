@@ -31,13 +31,13 @@ Header #spacer {
     width: 1fr;
 }
 
-Header #update-status {
+Header #status-point {
     width: auto;
     content-align: right middle;
     margin-right: 1;
 }
 
-Header #status-indicator {
+Header #status-context {
     width: auto;
     content-align: right middle;
 }

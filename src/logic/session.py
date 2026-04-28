@@ -93,6 +93,18 @@ class Session:
                     file=sys.stderr,
                 )
                 traceback.print_exc(file=sys.stderr)
+    @property
+    def app_state(self):
+        if self._app_state not in AppState:
+            self._app_state = AppState.UNAUTH
+        return self._app_state
+
+    @app_state.setter
+    def app_state(self,value):
+        if not self.config.cookies:
+            self._app_state = AppState.UNAUTH
+        elif value in AppState:
+            self._app_state = value
 
     @property
     def is_logged_in(self) -> bool:

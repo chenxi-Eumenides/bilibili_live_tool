@@ -99,6 +99,7 @@ def auth_validate_login(session: Session) -> FuncResult:
 
     if not session.config.cookies:
         session._login_verified = False
+        session._emit(SessionEvent.AUTH_LOGIN_FAILED, "无 cookies, 未登录")
         return FuncResult(type=FuncType.FAIL, result="无 cookies, 未登录")
     res = api_get_user_nav(session.cookies)
     if res.type != FuncType.SUCCESS:
