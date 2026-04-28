@@ -77,20 +77,22 @@ class BiliLiveToolApp(App):
 
     def start_login(self, qr_key: str, deadline: float):
         self._login_stop_event = threading.Event()
-        self.run_worker(self._run_login_poll, thread=True, qr_key=qr_key, deadline=deadline)
+        self._poll_qr_key = qr_key
+        self._poll_deadline = deadline
+        self.run_worker(self._run_login_poll, thread=True)
 
     def _stop_login_poll(self):
         if self._login_stop_event:
             self._login_stop_event.set()
 
-    def _run_login_poll(self, qr_key: str, deadline: float):
-        remaining = deadline - __import__("time").monotonic()
+    def _run_login_poll(self):
+        remaining = self._poll_deadline - __import__("time").monotonic()
         if remaining <= 0:
             self.session._emit(SessionEvent.AUTH_LOGIN_FAILED, "二维码已过期")
             self.qr_cache = None
             return
 
-        result = auth_poll_login(self.session, qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
+        result = auth_poll_login(self.session, self._poll_qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
         if result.type == FuncType.SUCCESS:
             live_refresh_room_info(self.session)
             live_get_area_list(self.session)
