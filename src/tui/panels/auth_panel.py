@@ -1,5 +1,6 @@
 """登录面板"""
 import threading
+from time import monotonic
 
 from textual import on
 from textual.app import ComposeResult
@@ -59,7 +60,16 @@ class AuthPanel(Vertical):
 
     def _login_worker(self):
         session = self.app.session
-        if not self._qr_key:
+        cache = self.app.qr_cache
+
+        if cache and cache.get("deadline"):
+            remaining = cache["deadline"] - monotonic()
+            if remaining <= 0:
+                self._call_update("二维码已过期")
+                self.app.qr_cache = None
+                self._call_button_display(True)
+                return
+        elif not self._qr_key:
             auth_generate_qrcode(session)
 
         if not self._qr_key:
@@ -67,7 +77,11 @@ class AuthPanel(Vertical):
             self._call_button_display(True)
             return
 
-        result = auth_poll_login(session, self._qr_key, stop_event=self._stop_event)
+        result = auth_poll_login(
+            session, self._qr_key,
+            stop_event=self._stop_event,
+            timeout_sec=max(1, int(remaining)) if cache and cache.get("deadline") else 180,
+        )
         if result.type.value == "SUCCESS":
             self.app.qr_cache = None
             self.app.call_from_thread(session.config.save_config)
@@ -79,7 +93,11 @@ class AuthPanel(Vertical):
 
     def _on_qrcode_ready(self, data: dict):
         self._qr_key = data["qr_key"]
-        self.app.qr_cache = {"qr_url": data["qr_url"], "qr_key": data["qr_key"]}
+        self.app.qr_cache = {
+            "qr_url": data["qr_url"],
+            "qr_key": data["qr_key"],
+            "deadline": monotonic() + 180,
+        }
         self._call_qr("\n".join(generate_qr_text(data["qr_url"])))
         self._call_update("请使用B站App扫码登录")
 
