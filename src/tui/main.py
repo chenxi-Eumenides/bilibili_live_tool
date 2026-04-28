@@ -1,7 +1,7 @@
 """TUI 用户层 — 入口"""
+from .app import run_tui
 
 FLAGS = frozenset({"--tui"})
-
 
 def help_lines():
     return [
@@ -11,5 +11,4 @@ def help_lines():
 
 
 def run():
-    from .app import run_tui
     run_tui()

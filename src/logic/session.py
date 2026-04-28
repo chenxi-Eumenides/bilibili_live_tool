@@ -26,9 +26,9 @@ class Session:
         """
         self.config = config or CONFIG()
         self.app_state = AppState.UNAUTH
-        self._login_verified = False
         self.bili_ticket = ""
         self.danmaku_room_id = 0
+        self._login_verified = False
         self._danmaku_running = False
         self._danmaku_stop_event: Optional[Any] = None
         self._listeners: dict[str, list[Callable[..., None]]] = {}
@@ -131,3 +131,4 @@ class Session:
     @config.setter
     def config(self, value):
         self._config = value
+

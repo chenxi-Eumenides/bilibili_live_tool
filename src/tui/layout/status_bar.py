@@ -1,6 +1,6 @@
-"""底部状态栏
+"""底部栏
 
-显示快捷键提示、日志和状态消息。
+显示快捷键提示
 """
 
 from textual.widgets import Static
