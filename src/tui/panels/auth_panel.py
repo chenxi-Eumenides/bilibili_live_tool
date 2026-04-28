@@ -27,6 +27,16 @@ class AuthPanel(Vertical):
         session.on(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
 
+        cache = self.app.qr_cache
+        if cache:
+            self._qr_key = cache["qr_key"]
+            self._stop_event = threading.Event()
+            self.query_one("#login-button", Button).display = False
+            self.query_one("#qr-area", Static).update("\n".join(cache["qr_text"]))
+            self.query_one("#qr-area", Static).display = True
+            self.query_one("#status-text", Static).update("请使用B站App扫码登录")
+            self.run_worker(self._login_worker, thread=True)
+
     def on_unmount(self):
         session = self.app.session
         session.off(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
@@ -56,6 +66,7 @@ class AuthPanel(Vertical):
 
         result = auth_poll_login(session, self._qr_key, stop_event=self._stop_event)
         if result.type.value == "SUCCESS":
+            self.app.qr_cache = None
             self.app.call_from_thread(session.config.save_config)
         elif result.result == "已取消":
             return
@@ -65,6 +76,7 @@ class AuthPanel(Vertical):
 
     def _on_qrcode_ready(self, data: dict):
         self._qr_key = data["qr_key"]
+        self.app.qr_cache = {"qr_key": data["qr_key"], "qr_text": data["qr_text"]}
         self._call_qr("\n".join(data["qr_text"]))
         self._call_update("请使用B站App扫码登录")
 

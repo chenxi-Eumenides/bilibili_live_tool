@@ -32,6 +32,7 @@ class BiliLiveToolApp(App):
 
     app_state = reactive(AppState.UNAUTH)
     current_panel = reactive("info")
+    qr_cache: dict | None = None
 
     BINDINGS = [
         Binding("q,escape", "quit", "退出"),
