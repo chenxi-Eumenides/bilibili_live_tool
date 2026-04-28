@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 import time
 from typing import Optional
 
@@ -38,6 +39,7 @@ def auth_poll_login(
     session: Session,
     qr_key: str,
     timeout_sec: int = Tuning.LOGIN_POLL_TIMEOUT,
+    stop_event: threading.Event | None = None,
 ) -> FuncResult:
     """轮询二维码登录状态，直到登录成功、过期或超时。
 
@@ -54,6 +56,8 @@ def auth_poll_login(
 
     deadline = time.monotonic() + timeout_sec
     while time.monotonic() < deadline:
+        if stop_event and stop_event.is_set():
+            return FuncResult(type=FuncType.FAIL, result="已取消")
         remaining = int(deadline - time.monotonic())
         result = api_check_login(qr_key)
         if result.type == FuncType.SUCCESS:
@@ -79,7 +83,11 @@ def auth_poll_login(
             reason = _poll_code_reason(code)
             session._emit(SessionEvent.AUTH_LOGIN_FAILED, reason)
             return FuncResult(type=FuncType.FAIL, result=reason)
-        time.sleep(Tuning.POLL_INTERVAL)
+        if stop_event:
+            if stop_event.wait(timeout=Tuning.POLL_INTERVAL):
+                return FuncResult(type=FuncType.FAIL, result="已取消")
+        else:
+            time.sleep(Tuning.POLL_INTERVAL)
     reason = "登录超时"
     session._emit(SessionEvent.AUTH_LOGIN_FAILED, reason)
     return FuncResult(type=FuncType.FAIL, result=reason)

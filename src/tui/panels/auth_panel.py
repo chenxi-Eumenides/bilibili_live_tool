@@ -49,20 +49,11 @@ class AuthPanel(Vertical):
             self._call_enable()
             return
 
-        while not self._stop_event.is_set():
-            if session.is_logged_in:
-                self.app.call_from_thread(session.config.save_config)
-                break
-
-            result = auth_poll_login(session, self._qr_key, timeout_sec=1)
-
-            if result.type.value == "SUCCESS":
-                self.app.call_from_thread(session.config.save_config)
-                break
-
-            code = result.result.get("code", -1) if isinstance(result.result, dict) else -1
-            if code == 86038:
-                break
+        result = auth_poll_login(session, self._qr_key, stop_event=self._stop_event)
+        if result.type.value == "SUCCESS":
+            self.app.call_from_thread(session.config.save_config)
+        elif result.result == "已取消":
+            return
 
         self._qr_key = None
         self._call_enable()
