@@ -53,6 +53,7 @@ class BiliLiveToolApp(App):
         sidebar = self.query_one(Sidebar)
         sidebar.can_focus_children = False
         self._init_state()
+        self._refresh_ui()
 
     def _init_state(self):
         if self.session.config.cookies:
@@ -65,7 +66,9 @@ class BiliLiveToolApp(App):
                 return
         self.app_state = AppStateEnum.UNAUTH
 
-    def watch_app_state(self, state: AppStateEnum):
+    def _refresh_ui(self):
+        state = self.app_state
+        panel = self.current_panel
         try:
             header = self.query_one(Header)
             if state == AppStateEnum.UNAUTH:
@@ -76,21 +79,18 @@ class BiliLiveToolApp(App):
                 header.update_status("已登录", "green")
 
             main_panel = self.query_one(MainPanel)
-            main_panel.update_for_state(state, self.current_panel)
+            main_panel.update_for_state(state, panel)
 
             sidebar = self.query_one(Sidebar)
-            sidebar.update_button_states(state, self.current_panel)
+            sidebar.update_button_states(state, panel)
         except Exception:
             pass
+
+    def watch_app_state(self, state: AppStateEnum):
+        self._refresh_ui()
 
     def watch_current_panel(self, panel: str):
-        try:
-            main_panel = self.query_one(MainPanel)
-            main_panel.update_for_state(self.app_state, panel)
-            sidebar = self.query_one(Sidebar)
-            sidebar.update_button_states(self.app_state, panel)
-        except Exception:
-            pass
+        self._refresh_ui()
 
     def show_info_panel(self):
         self.current_panel = "info"
