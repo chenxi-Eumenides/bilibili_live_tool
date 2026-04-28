@@ -10,3 +10,80 @@
 ContentSwitcher {
     border: solid #27272a;
 }
+
+/* 各页面容器 */
+#info-page-container {
+    width: 42;
+}
+
+#info-title,
+#info-subtitle,
+#status-title {
+    color: #06b6d4;
+    text-style: bold;
+}
+
+#info-page-container Label {
+    padding-left: 1;
+}
+
+.spacer {
+    height: 1;
+}
+
+#action-page-container {
+    width: 32;
+}
+
+#action-page-container Button {
+    width: 100%;
+}
+
+#action-title {
+    color: #06b6d4;
+    text-style: bold;
+    content-align: center middle;
+}
+
+#login-page-container {
+    width: 50;
+}
+
+#login-title {
+    color: #06b6d4;
+    text-style: bold;
+    content-align: center middle;
+}
+
+#login-help {
+    content-align: center middle;
+}
+
+#login-button {
+    width: 24;
+}
+
+#danmu-page-container {
+    width: 100%;
+}
+
+#danmu-controls {
+    height: auto;
+}
+
+#danmu-title {
+    color: #06b6d4;
+    text-style: bold;
+}
+
+#danmu-controls Button {
+    width: 24;
+}
+
+#danmaku-status {
+    content-align: center middle;
+}
+
+#danmaku-list {
+    height: 1fr;
+}

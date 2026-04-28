@@ -2,7 +2,7 @@ import asyncio
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Vertical, VerticalGroup
+from textual.containers import CenterMiddle, Vertical
 from textual.widgets import Button, Label, RichLog, Static
 
 from ...logic import (
@@ -14,20 +14,17 @@ from ...logic import (
 from ...utils.data import FuncType
 
 
-class DanmuPage(VerticalGroup):
+class DanmuPage(Static):
     can_focus_children = False
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._listening = False
+    _listening = False
 
     def compose(self) -> ComposeResult:
         with Vertical(id="danmu-page-container"):
-            yield Static("弹幕列表", id="danmu-title")
-            yield Button("开始监听", id="danmaku-start", disabled=True)
-            yield Button("停止监听", id="danmaku-stop", disabled=True)
-            yield Label("", id="danmaku-status")
-            yield Static("---", id="danmaku-separator")
+            with CenterMiddle(id="danmu-controls"):
+                yield Static("弹幕列表", id="danmu-title")
+                yield Button("开始监听", id="danmaku-start", disabled=True)
+                yield Button("停止监听", id="danmaku-stop", disabled=True)
+                yield Label("", id="danmaku-status")
             yield RichLog(id="danmaku-list", max_lines=500, markup=True)
 
     def on_mount(self):

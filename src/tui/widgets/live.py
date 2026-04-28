@@ -2,7 +2,7 @@ import asyncio
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Vertical, VerticalGroup
+from textual.containers import CenterMiddle, Vertical
 from textual.widgets import Button, Static
 
 from ...logic import (
@@ -18,20 +18,21 @@ from ..screens.area_picker import AreaPicker
 from ..screens.input_modal import InputModal
 
 
-class ActionPage(VerticalGroup):
+class ActionPage(Static):
     can_focus_children = False
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="action-page-container"):
-            yield Static("直播操作", id="action-title")
-            yield Static("", id="action-spacer-1")
-            yield Button("开始直播", id="start-live", disabled=True)
-            yield Button("结束直播", id="stop-live", disabled=True)
-            yield Static("", id="action-spacer-2")
-            yield Button("修改直播标题", id="update-title", disabled=True)
-            yield Button("修改直播分区", id="update-area", disabled=True)
-            yield Static("", id="action-spacer-3")
-            yield Button("刷新直播信息", id="refresh-info", disabled=True)
+        with CenterMiddle():
+            with Vertical(id="action-page-container"):
+                yield Static("直播操作", id="action-title")
+                yield Static("", classes="spacer")
+                yield Button("开始直播", id="start-live", disabled=True)
+                yield Button("结束直播", id="stop-live", disabled=True)
+                yield Static("", classes="spacer")
+                yield Button("修改直播标题", id="update-title", disabled=True)
+                yield Button("修改直播分区", id="update-area", disabled=True)
+                yield Static("", classes="spacer")
+                yield Button("刷新直播信息", id="refresh-info", disabled=True)
 
     def on_mount(self):
         session = self.app.session

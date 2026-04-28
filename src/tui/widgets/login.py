@@ -2,7 +2,7 @@ import asyncio
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import CenterMiddle, VerticalGroup
+from textual.containers import CenterMiddle
 from textual.widgets import Button, Label, Static
 
 from ...logic import (
@@ -14,7 +14,7 @@ from ...utils.data import FuncType
 from ...utils.lib import generate_qr_text
 
 
-class LoginPage(VerticalGroup):
+class LoginPage(Static):
     can_focus_children = False
 
     def compose(self) -> ComposeResult:
