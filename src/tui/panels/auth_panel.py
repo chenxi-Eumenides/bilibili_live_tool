@@ -46,8 +46,6 @@ class AuthPanel(Vertical):
             return
 
         for _ in range(90):
-            if not self.app.running:
-                return
             try:
                 auth_poll_login(session, self._qr_key)
                 if session.is_logged_in:
