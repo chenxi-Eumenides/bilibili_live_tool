@@ -12,7 +12,7 @@ class Header(Static):
             yield Static("v0.5.0", id="app-version")
             yield Static("", id="header-spacer")
             yield Static("", id="update-status")
-            yield Static("● 未登录", id="status-indicator")
+            yield Static("[未登录]", id="status-indicator")
 
     def update_status(self, state_text: str, color: str = "red"):
         status_widget = self.query_one("#status-indicator", Static)
@@ -21,4 +21,4 @@ class Header(Static):
             "yellow": "#f59e0b", "blue": "#00a1d6",
         }
         c = color_map.get(color, "white")
-        status_widget.update(f"[bold {c}]●[/] {state_text}")
+        status_widget.update(f"[bold {c}]{state_text}[/]")
