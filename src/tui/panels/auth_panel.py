@@ -60,7 +60,7 @@ class AuthPanel(Vertical):
 
     def _on_qrcode_ready(self, data: dict):
         self._qr_key = data["qr_key"]
-        self._call_update("请使用B站App扫码登录:\n\n" + data["qr_text"])
+        self._call_update("请使用B站App扫码登录:\n\n" + "\n".join(data["qr_text"]))
 
     def _on_success(self, data=None):
         self._call_update("登录成功！")
