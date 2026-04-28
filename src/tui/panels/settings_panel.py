@@ -45,3 +45,8 @@ class SettingsPanel(Vertical):
     def _load_title(self):
         config = self.app.session.config
         self.query_one("#title-input", Input).value = config.title or ""
+
+    def _load_sub_areas(self, parent):
+        child_select = self.query_one("#child-area-select", Select)
+        child_select.set_options([(s.name, s.id) for s in parent.list])
+        child_select.disabled = False
