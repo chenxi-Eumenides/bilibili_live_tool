@@ -35,7 +35,7 @@ class AuthPanel(Vertical):
     @on(Button.Pressed, "#login-button")
     def _start_login(self):
         self.query_one("#login-button", Button).disabled = True
-        self._call_update("正在获取二维码...")
+        self.query_one("#status-text", Static).update("正在获取二维码...")
         self.run_worker(self._login_worker, thread=True)
 
     def _login_worker(self):
