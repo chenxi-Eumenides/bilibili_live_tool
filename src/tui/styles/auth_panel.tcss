@@ -6,39 +6,22 @@ AuthPanel {
 }
 
 AuthPanel #login-container {
-    width: 60%;
-    min-width: 60;
-    max-width: 100;
+    width: 80%;
+    min-width: 51;
+    max-width: 61;
     height: auto;
     padding: 2;
     background: #2a2a2a;
     border: solid #00a1d6;
 }
 
-AuthPanel #login-container > * {
-    align-horizontal: center;
-}
 AuthPanel #status-text {
     text-align: center;
     margin-top: 1;
 }
+
 AuthPanel #login-button {
+    align: center middle;
     margin-top: 2;
 }
 
-AuthPanel #qr-container {
-    width: auto;
-    height: auto;
-    padding: 2;
-    background: #2a2a2a;
-    border: solid #00a1d6;
-}
-
-AuthPanel #qr-title {
-    text-align: center;
-    margin-bottom: 1;
-}
-
-AuthPanel #qr-placeholder {
-    text-align: center;
-}

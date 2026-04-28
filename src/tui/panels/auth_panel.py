@@ -22,14 +22,16 @@ class AuthPanel(Vertical):
     def on_mount(self):
         session = self.app.session
         session.on(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
-        session.on(SessionEvent.AUTH_LOGIN_POLLING, self._on_polling)
+        session.on(SessionEvent.AUTH_QR_WAITING, self._on_qr_waiting)
+        session.on(SessionEvent.AUTH_QR_SCANNED, self._on_scanned)
         session.on(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
 
     def on_unmount(self):
         session = self.app.session
         session.off(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
-        session.off(SessionEvent.AUTH_LOGIN_POLLING, self._on_polling)
+        session.off(SessionEvent.AUTH_QR_WAITING, self._on_qr_waiting)
+        session.off(SessionEvent.AUTH_QR_SCANNED, self._on_scanned)
         session.off(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.off(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
         if self._stop_event:
@@ -66,13 +68,11 @@ class AuthPanel(Vertical):
         self._call_qr("\n".join(data["qr_text"]))
         self._call_update("请使用B站App扫码登录")
 
-    def _on_polling(self, data: dict):
-        remaining = data.get("remaining", 0)
-        code = data.get("code")
-        if code == 86090:
-            self._call_update("已扫描，请在手机上确认登录")
-        else:
-            self._call_update(f"等待扫码... (剩余{remaining}秒)")
+    def _on_qr_waiting(self, remaining):
+        self._call_update(f"等待扫码... (剩余{remaining}秒)")
+
+    def _on_scanned(self, remaining):
+        self._call_update("已扫描，请在手机上确认登录")
 
     def _on_success(self, data=None):
         self._call_update("登录成功！")

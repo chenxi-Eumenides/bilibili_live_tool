@@ -84,6 +84,8 @@ class SessionEvent:
 
     AUTH_QRCODE_READY = "auth:qrcode_ready"
     AUTH_LOGIN_POLLING = "auth:login_polling"
+    AUTH_QR_WAITING = "auth:qr_waiting"
+    AUTH_QR_SCANNED = "auth:qr_scanned"
     AUTH_LOGIN_SUCCESS = "auth:login_success"
     AUTH_LOGIN_FAILED = "auth:login_failed"
     AUTH_LOGOUT_DONE = "auth:logout_done"

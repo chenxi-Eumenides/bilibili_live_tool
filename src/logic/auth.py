@@ -50,7 +50,7 @@ def auth_poll_login(
         FuncResult(SUCCESS, {cookies, refresh_token}) 或 FAIL
 
     返回: FuncResult(SUCCESS, {cookies, refresh_token}) 或 FAIL
-    Events: 每轮询一次发 AUTH_LOGIN_POLLING（剩余秒数）；成功时发 AUTH_LOGIN_SUCCESS 并写入 cookies/uid/bili_ticket；失败发 AUTH_LOGIN_FAILED"""
+    Events: 等待扫码发 AUTH_QR_WAITING；已扫码发 AUTH_QR_SCANNED；成功时发 AUTH_LOGIN_SUCCESS 并写入 cookies/uid/bili_ticket；失败发 AUTH_LOGIN_FAILED"""
 
     deadline = monotonic() + timeout_sec
     while monotonic() < deadline:
@@ -75,8 +75,10 @@ def auth_poll_login(
             session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
             return FuncResult(type=FuncType.SUCCESS, result={"cookies": cookies, "refresh_token": refresh_token})
         code = result.result if isinstance(result.result, int) else None
-        if code in (BiliCode.LOGIN_QR_WAITING, BiliCode.LOGIN_QR_SCANNED):
-            session._emit(SessionEvent.AUTH_LOGIN_POLLING, {"remaining": remaining, "code": code})
+        if code == BiliCode.LOGIN_QR_WAITING:
+            session._emit(SessionEvent.AUTH_QR_WAITING, remaining)
+        elif code == BiliCode.LOGIN_QR_SCANNED:
+            session._emit(SessionEvent.AUTH_QR_SCANNED, remaining)
         else:
             reason = _poll_code_reason(code)
             session._emit(SessionEvent.AUTH_LOGIN_FAILED, reason)
