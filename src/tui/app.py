@@ -66,13 +66,18 @@ class BiliLiveToolApp(App):
         if result.type == FuncType.SUCCESS:
             ls = self.session.config.room_data.get("live_status", 0)
             if ls == 1:
-                self.app_state = AppState.LIVE
+                new_state = AppState.LIVE
             elif ls == 2:
-                self.app_state = AppState.REPLAY
+                new_state = AppState.REPLAY
             else:
-                self.app_state = AppState.IDLE
+                new_state = AppState.IDLE
         else:
-            self.app_state = AppState.UNAUTH
+            new_state = AppState.UNAUTH
+        self.call_from_thread(self._apply_state, new_state)
+
+    def _apply_state(self, state: AppState):
+        self.app_state = state
+        self._refresh_ui()
 
     def _refresh_ui(self):
         state = self.app_state
