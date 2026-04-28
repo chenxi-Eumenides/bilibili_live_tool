@@ -1,9 +1,7 @@
 """登录认证编排"""
 
-from __future__ import annotations
-
-import threading
-import time
+from threading import Event
+from time import monotonic, sleep
 from typing import Optional
 
 from ..utils.api import api_get_login_qr, api_check_login, api_get_user_nav, get_bili_ticket
@@ -39,7 +37,7 @@ def auth_poll_login(
     session: Session,
     qr_key: str,
     timeout_sec: int = Tuning.LOGIN_POLL_TIMEOUT,
-    stop_event: threading.Event | None = None,
+    stop_event: Event | None = None,
 ) -> FuncResult:
     """轮询二维码登录状态，直到登录成功、过期或超时。
 
@@ -54,11 +52,11 @@ def auth_poll_login(
     返回: FuncResult(SUCCESS, {cookies, refresh_token}) 或 FAIL
     Events: 每轮询一次发 AUTH_LOGIN_POLLING（剩余秒数）；成功时发 AUTH_LOGIN_SUCCESS 并写入 cookies/uid/bili_ticket；失败发 AUTH_LOGIN_FAILED"""
 
-    deadline = time.monotonic() + timeout_sec
-    while time.monotonic() < deadline:
+    deadline = monotonic() + timeout_sec
+    while monotonic() < deadline:
         if stop_event and stop_event.is_set():
             return FuncResult(type=FuncType.FAIL, result="已取消")
-        remaining = int(deadline - time.monotonic())
+        remaining = int(deadline - monotonic())
         result = api_check_login(qr_key)
         if result.type == FuncType.SUCCESS:
             cookies = result.result["cookies"]
@@ -87,10 +85,9 @@ def auth_poll_login(
             if stop_event.wait(timeout=Tuning.POLL_INTERVAL):
                 return FuncResult(type=FuncType.FAIL, result="已取消")
         else:
-            time.sleep(Tuning.POLL_INTERVAL)
-    reason = "登录超时"
-    session._emit(SessionEvent.AUTH_LOGIN_FAILED, reason)
-    return FuncResult(type=FuncType.FAIL, result=reason)
+            sleep(Tuning.POLL_INTERVAL)
+    session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录超时")
+    return FuncResult(type=FuncType.FAIL, result="登录超时")
 
 
 def auth_validate_login(session: Session) -> FuncResult:
