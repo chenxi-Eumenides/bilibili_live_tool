@@ -16,17 +16,20 @@ class AuthPanel(Vertical):
     def compose(self) -> ComposeResult:
         with Vertical(id="login-container"):
             yield Static("点击按钮开始登录", id="status-text")
+            yield Static("", id="qr-area")
             yield Button("开始登录", id="login-button", variant="primary")
 
     def on_mount(self):
         session = self.app.session
         session.on(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
+        session.on(SessionEvent.AUTH_LOGIN_POLLING, self._on_polling)
         session.on(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
 
     def on_unmount(self):
         session = self.app.session
         session.off(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
+        session.off(SessionEvent.AUTH_LOGIN_POLLING, self._on_polling)
         session.off(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.off(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
         if self._stop_event:
@@ -35,6 +38,7 @@ class AuthPanel(Vertical):
     @on(Button.Pressed, "#login-button")
     def _start_login(self):
         self.query_one("#login-button", Button).display = False
+        self.query_one("#qr-area", Static).display = True
         self.query_one("#status-text", Static).update("正在获取二维码...")
         self._stop_event = threading.Event()
         self.run_worker(self._login_worker, thread=True)
@@ -45,7 +49,7 @@ class AuthPanel(Vertical):
 
         if not self._qr_key:
             self._call_update("获取二维码失败")
-            self._call_show_button()
+            self._call_button_display(True)
             return
 
         result = auth_poll_login(session, self._qr_key, stop_event=self._stop_event)
@@ -55,11 +59,15 @@ class AuthPanel(Vertical):
             return
 
         self._qr_key = None
-        self._call_show_button()
+        self._call_button_display(True)
 
     def _on_qrcode_ready(self, data: dict):
         self._qr_key = data["qr_key"]
-        self._call_update("请使用B站App扫码登录:\n\n" + "\n".join(data["qr_text"]))
+        self._call_qr("\n".join(data["qr_text"]))
+        self._call_update("请使用B站App扫码登录")
+
+    def _on_polling(self, remaining):
+        self._call_update(f"等待扫码... (剩余{remaining}秒)")
 
     def _on_success(self, data=None):
         self._call_update("登录成功！")
@@ -75,10 +83,18 @@ class AuthPanel(Vertical):
         except Exception:
             pass
 
-    def _call_show_button(self):
+    def _call_qr(self, text):
         try:
             self.app.call_from_thread(
-                lambda: setattr(self.query_one("#login-button", Button), "display", True)
+                lambda: self.query_one("#qr-area", Static).update(text)
+            )
+        except Exception:
+            pass
+
+    def _call_button_display(self, show: bool):
+        try:
+            self.app.call_from_thread(
+                lambda: setattr(self.query_one("#login-button", Button), "display", show)
             )
         except Exception:
             pass
