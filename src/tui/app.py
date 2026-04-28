@@ -7,9 +7,9 @@ from textual.containers import Horizontal
 from textual.reactive import reactive
 
 from ..logic import Session, auth_validate_login
-from ..utils.config import CONFIG as ConfigClass
+from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE
-from ..utils.data import FuncType, AppState as AppStateEnum
+from ..utils.data import FuncType, AppState
 from .layout.header import Header
 from .layout.main_panel import MainPanel
 from .layout.sidebar import Sidebar
@@ -30,16 +30,16 @@ class BiliLiveToolApp(App):
         _STYLES / "help_panel.tcss",
     ]
 
-    app_state = reactive(AppStateEnum.UNAUTH)
+    app_state = reactive(AppState.UNAUTH)
     current_panel = reactive("info")
 
     BINDINGS = [
         Binding("q,escape", "quit", "退出"),
     ]
 
-    def __init__(self):
+    def __init__(self, config_file: Path | None = None):
         super().__init__()
-        config = ConfigClass.from_file() if CONFIG_FILE.exists() else ConfigClass()
+        config = CONFIG().from_file(config_file if config_file and config_file.exists() else CONFIG_FILE)
         self.session = Session(config)
 
     def compose(self):
@@ -53,28 +53,40 @@ class BiliLiveToolApp(App):
         sidebar = self.query_one(Sidebar)
         sidebar.can_focus_children = False
         self._init_state()
-        self._refresh_ui()
 
     def _init_state(self):
         if self.session.config.cookies:
-            result = auth_validate_login(self.session)
-            if result.type == FuncType.SUCCESS:
-                if self.session.config.room_data.get("live_status") == 1:
-                    self.app_state = AppStateEnum.LIVE
-                else:
-                    self.app_state = AppStateEnum.IDLE
-                return
-        self.app_state = AppStateEnum.UNAUTH
+            self.run_worker(self._validate_login, thread=True)
+        else:
+            self.app_state = AppState.UNAUTH
+            self._refresh_ui()
+
+    def _validate_login(self):
+        result = auth_validate_login(self.session)
+        if result.type == FuncType.SUCCESS:
+            ls = self.session.config.room_data.get("live_status", 0)
+            if ls == 1:
+                self.app_state = AppState.LIVE
+            elif ls == 2:
+                self.app_state = AppState.REPLAY
+            else:
+                self.app_state = AppState.IDLE
+        else:
+            self.app_state = AppState.UNAUTH
 
     def _refresh_ui(self):
         state = self.app_state
         panel = self.current_panel
         try:
             header = self.query_one(Header)
-            if state == AppStateEnum.UNAUTH:
+            if state == AppState.UNAUTH:
                 header.update_status("未登录", "red")
-            elif state == AppStateEnum.LIVE:
+            elif state == AppState.LIVE:
                 header.update_status("直播中", "blue")
+            elif state == AppState.REPLAY:
+                header.update_status("轮播中", "yellow")
+            elif state == AppState.IDLE:
+                header.update_status("已登录", "green")
             else:
                 header.update_status("已登录", "green")
 
@@ -86,7 +98,7 @@ class BiliLiveToolApp(App):
         except Exception:
             pass
 
-    def watch_app_state(self, state: AppStateEnum):
+    def watch_app_state(self, state: AppState):
         self._refresh_ui()
 
     def watch_current_panel(self, panel: str):
