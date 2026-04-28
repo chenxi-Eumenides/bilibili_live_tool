@@ -8,6 +8,7 @@ from .session import Session
 from .auth import (
     auth_generate_qrcode,
     auth_poll_login,
+    auth_post_login,
     auth_validate_login,
     auth_logout,
 )
@@ -28,6 +29,7 @@ __all__ = [
     "BiliCode",
     "auth_generate_qrcode",
     "auth_poll_login",
+    "auth_post_login",
     "auth_validate_login",
     "auth_logout",
     "live_start",

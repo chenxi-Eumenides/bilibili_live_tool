@@ -8,7 +8,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.reactive import reactive
 
-from ..logic import Session, auth_poll_login, auth_validate_login, live_get_area_list, live_refresh_room_info
+from ..logic import Session, auth_poll_login, auth_post_login, auth_validate_login
 from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE, SessionEvent
 from ..utils.data import AppState, FuncType
@@ -100,10 +100,7 @@ class BiliLiveToolApp(App):
             return
         result = auth_poll_login(self.session, qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
         if result.type == FuncType.SUCCESS:
-            live_refresh_room_info(self.session)
-            live_get_area_list(self.session)
-            self.session.config.save_config()
-            self.session._emit(SessionEvent.LIVE_INFO_UPDATED, self.session.config.room_data)
+            auth_post_login(self.session)
             self.call_from_thread(self.show_info_panel)
 
     def _on_login_success(self, data=None):

@@ -70,10 +70,7 @@ def auth_poll_login(
                     session.bili_ticket = ticket_result.result.get("bili_ticket", "")
             except Exception:
                 pass
-            if session.config.room_id == 0 and session.config.uid:
-                id_result = api_get_room_id(cookies=cookies, user_id=session.config.uid)
-                if id_result.type == FuncType.SUCCESS:
-                    session.config.room_id = id_result.result
+            auth_post_login(session)
             session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
             return FuncResult(type=FuncType.SUCCESS, result={"cookies": cookies, "refresh_token": refresh_token})
         code = result.result if isinstance(result.result, int) else None
@@ -92,6 +89,23 @@ def auth_poll_login(
             sleep(Tuning.POLL_INTERVAL)
     session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录超时")
     return FuncResult(type=FuncType.FAIL, result="登录超时")
+
+
+def auth_post_login(session: Session) -> None:
+    """登录完成后的初始化：获取 room_id、分区列表、房间信息。
+
+    应在 auth_poll_login 成功后调用。
+    """
+    from .live import live_get_area_list, live_refresh_room_info
+
+    if session.config.room_id == 0 and session.config.uid:
+        id_result = api_get_room_id(cookies=session.cookies, user_id=session.config.uid)
+        if id_result.type == FuncType.SUCCESS:
+            session.config.room_id = id_result.result
+    live_refresh_room_info(session)
+    live_get_area_list(session)
+    session.config.save_config()
+    session._emit(SessionEvent.LIVE_INFO_UPDATED, session.config.room_data)
 
 
 def auth_validate_login(session: Session) -> FuncResult:
