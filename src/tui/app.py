@@ -81,8 +81,6 @@ class BiliLiveToolApp(App):
         if not cache:
             return
         self._login_stop_event = threading.Event()
-        self._poll_qr_key = cache["qr_key"]
-        self._poll_deadline = cache["deadline"]
         self.run_worker(self._run_login_poll, thread=True)
 
     def _stop_login_poll(self):
@@ -90,8 +88,11 @@ class BiliLiveToolApp(App):
             self._login_stop_event.set()
 
     def _run_login_poll(self):
-        qr_key = self._poll_qr_key
-        deadline = self._poll_deadline
+        cache = self.qr_cache
+        if not cache:
+            return
+        qr_key = cache["qr_key"]
+        deadline = cache["deadline"]
         remaining = deadline - __import__("time").monotonic()
         if remaining <= 0:
             self.session._emit(SessionEvent.AUTH_LOGIN_FAILED, "二维码已过期")
