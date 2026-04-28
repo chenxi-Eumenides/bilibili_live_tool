@@ -102,6 +102,7 @@ class BiliLiveToolApp(App):
         if result.type == FuncType.SUCCESS:
             live_refresh_room_info(self.session)
             live_get_area_list(self.session)
+            self.session.config.save_config()
             self.session._emit(SessionEvent.LIVE_INFO_UPDATED, self.session.config.room_data)
             self.call_from_thread(self.show_info_panel)
 
