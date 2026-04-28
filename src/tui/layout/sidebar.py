@@ -39,8 +39,6 @@ class Sidebar(Vertical):
 
             toggle_btn = self.query_one("#nav-toggle", Button)
             is_unauth = state == AppState.UNAUTH
-            for bid in ["nav-info", "nav-manage", "nav-danmu"]:
-                self.query_one(f"#{bid}", Button).disabled = is_unauth
 
             if is_unauth:
                 toggle_btn.label = "开播"
