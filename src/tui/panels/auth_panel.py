@@ -57,7 +57,8 @@ class AuthPanel(Vertical):
 
     def _login_worker(self):
         session = self.app.session
-        auth_generate_qrcode(session)
+        if not self._qr_key:
+            auth_generate_qrcode(session)
 
         if not self._qr_key:
             self._call_update("获取二维码失败")
