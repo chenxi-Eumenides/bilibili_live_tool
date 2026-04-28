@@ -1,6 +1,6 @@
 """弹幕处理编排"""
 
-from asyncio import CancelledError, create_task, AsyncEvent as AsyncEvent, sleep as asyncio_sleep
+from asyncio import CancelledError, create_task, Event, sleep as asyncio_sleep
 
 from ..utils.api import (
     get_danmaku_info,
@@ -32,7 +32,7 @@ def danmaku_start(session: Session) -> FuncResult:
         return FuncResult(type=FuncType.FAIL, result="未登录，无法监听弹幕")
     if not (session.danmaku_room_id or session.room_id):
         return FuncResult(type=FuncType.FAIL, result="未设置房间号")
-    session._danmaku_stop_event = AsyncEvent()
+    session._danmaku_stop_event = Event()
     session._danmaku_running = True
     return FuncResult(type=FuncType.SUCCESS, result="弹幕监听已就绪")
 
