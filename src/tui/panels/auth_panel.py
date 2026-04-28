@@ -57,7 +57,7 @@ class AuthPanel(Vertical):
         qr_key = result.result["qr_key"]
         deadline = __import__("time").monotonic() + 180
         self.app.qr_cache = {"qr_url": result.result["qr_url"], "qr_key": qr_key, "deadline": deadline}
-        self.app.start_login(qr_key, deadline)
+        self.app.start_login()
 
     def _on_qrcode_ready(self, data: dict):
         self._call_update("请使用B站App扫码登录")
