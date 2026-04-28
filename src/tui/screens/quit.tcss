@@ -9,8 +9,8 @@ QuitScreen {
     padding: 0 1;
     width: 60;
     height: 11;
-    border: thick $panel;
-    background: $surface;
+    border: solid #27272a;
+    background: #18181b;
 }
 
 #quit-question {

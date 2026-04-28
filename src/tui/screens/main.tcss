@@ -1,6 +1,6 @@
 #left-panel {
     width: 16;
-    border: solid $panel;
+    border: solid #27272a;
 }
 
 #left-panel Button {
@@ -8,5 +8,5 @@
 }
 
 ContentSwitcher {
-    border: solid $panel;
+    border: solid #27272a;
 }

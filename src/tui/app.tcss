@@ -1,4 +1,4 @@
-/* 深色主题 — 覆盖 Textual 内置变量 */
+/* 深色主题 */
 $surface: #18181b;
 $panel: #27272a;
 $boost: #3f3f46;
