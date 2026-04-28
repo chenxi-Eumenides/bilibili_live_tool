@@ -9,7 +9,6 @@ from textual.containers import Horizontal
 from textual.reactive import reactive
 
 from ..logic import Session, auth_poll_login, auth_validate_login, live_get_area_list, live_refresh_room_info
-from ..utils.api import api_get_room_id
 from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE, SessionEvent
 from ..utils.data import AppState, FuncType
@@ -101,10 +100,6 @@ class BiliLiveToolApp(App):
             return
         result = auth_poll_login(self.session, qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
         if result.type == FuncType.SUCCESS:
-            if self.session.room_id == 0 and self.session.user_id:
-                id_result = api_get_room_id(self.session.cookies, self.session.user_id)
-                if id_result.type == FuncType.SUCCESS:
-                    self.session.config.room_id = id_result.result
             live_refresh_room_info(self.session)
             live_get_area_list(self.session)
             self.session._emit(SessionEvent.LIVE_INFO_UPDATED, self.session.config.room_data)

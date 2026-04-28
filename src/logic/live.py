@@ -106,6 +106,12 @@ def live_refresh_room_info(session: Session) -> FuncResult:
     """
     if not session.is_logged_in:
         return FuncResult(type=FuncType.FAIL, result="未登录，无法获取房间信息")
+    if session.room_id == 0 and session.user_id:
+        id_result = api_get_room_id(cookies=session.cookies, user_id=session.user_id)
+        if id_result.type == FuncType.SUCCESS:
+            session.config.room_id = id_result.result
+    if session.room_id == 0:
+        return FuncResult(type=FuncType.FAIL, result="房间号未知，无法获取房间信息")
     result = api_get_room_data(cookies=session.cookies, room_id=session.room_id)
     if result.type != FuncType.SUCCESS:
         return result
