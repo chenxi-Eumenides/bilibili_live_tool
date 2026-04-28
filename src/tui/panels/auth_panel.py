@@ -21,14 +21,12 @@ class AuthPanel(Vertical):
     def on_mount(self):
         session = self.app.session
         session.on(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
-        session.on(SessionEvent.AUTH_LOGIN_POLLING, self._on_polling)
         session.on(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
 
     def on_unmount(self):
         session = self.app.session
         session.off(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
-        session.off(SessionEvent.AUTH_LOGIN_POLLING, self._on_polling)
         session.off(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.off(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
 
@@ -39,21 +37,20 @@ class AuthPanel(Vertical):
         self.run_worker(self._login_worker, thread=True)
 
     def _login_worker(self):
-        auth_generate_qrcode(self.app.session)
+        session = self.app.session
+        auth_generate_qrcode(session)
 
         if not self._qr_key:
             self._call_update("获取二维码失败")
             self._call_enable()
             return
 
-        time.sleep(0.5)
-
         for _ in range(90):
-            if not self.app._running:
+            if not self.app.running:
                 return
             try:
-                auth_poll_login(self.app.session, self._qr_key)
-                if self.app.session.is_logged_in:
+                auth_poll_login(session, self._qr_key)
+                if session.is_logged_in:
                     self.app.call_from_thread(self.app.session.config.save_config)
                     break
             except Exception:
@@ -66,9 +63,6 @@ class AuthPanel(Vertical):
     def _on_qrcode_ready(self, data: dict):
         self._qr_key = data["qr_key"]
         self._call_update("请使用B站App扫码登录:\n\n" + data["qr_text"])
-
-    def _on_polling(self, remaining):
-        self._call_update(f"等待扫码... (剩余{remaining}秒)")
 
     def _on_success(self, data=None):
         self._call_update("登录成功！")
