@@ -7,6 +7,7 @@ AuthPanel {
 
 AuthPanel #login-container {
     width: auto;
+    min-width: 41;
     height: auto;
     padding: 2;
     background: #2a2a2a;
