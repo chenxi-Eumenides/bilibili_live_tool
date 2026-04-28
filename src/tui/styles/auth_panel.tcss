@@ -12,6 +12,7 @@ AuthPanel #login-container {
     padding: 2;
     background: #2a2a2a;
     border: solid #00a1d6;
+    align: center middle;
 }
 AuthPanel #status-text {
     text-align: center;
