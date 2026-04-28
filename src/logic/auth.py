@@ -6,7 +6,6 @@ from typing import Optional
 
 from ..utils.api import api_get_login_qr, api_check_login, api_get_user_nav, get_bili_ticket
 from ..utils.data import FuncResult, FuncType
-from ..utils.lib import generate_qr_text
 from ..utils.constant import BiliCode, SessionEvent, Tuning
 from .session import Session
 
@@ -21,15 +20,14 @@ def auth_generate_qrcode(session: Session) -> FuncResult:
         FuncResult(SUCCESS, {qr_url, qr_key}) 或 FAIL
 
     返回: FuncResult(SUCCESS, {qr_url, qr_key}) 或 FAIL
-    Events: AUTH_QRCODE_READY，携带二维码文本"""
+    Events: AUTH_QRCODE_READY，携带 {'qr_url', 'qr_key'}"""
 
     result = api_get_login_qr()
     if result.type != FuncType.SUCCESS:
         return result
     qr_url = result.result["qr_url"]
     qr_key = result.result["qr_key"]
-    qr_text = generate_qr_text(qr_url)
-    session._emit(SessionEvent.AUTH_QRCODE_READY, {"qr_url": qr_url, "qr_text": qr_text, "qr_key": qr_key})
+    session._emit(SessionEvent.AUTH_QRCODE_READY, {"qr_url": qr_url, "qr_key": qr_key})
     return FuncResult(type=FuncType.SUCCESS, result={"qr_url": qr_url, "qr_key": qr_key})
 
 

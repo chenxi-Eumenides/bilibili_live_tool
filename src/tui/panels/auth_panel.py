@@ -80,7 +80,7 @@ class AuthPanel(Vertical):
     def _on_qrcode_ready(self, data: dict):
         self._qr_key = data["qr_key"]
         self.app.qr_cache = {"qr_url": data["qr_url"], "qr_key": data["qr_key"]}
-        self._call_qr("\n".join(data["qr_text"]))
+        self._call_qr("\n".join(generate_qr_text(data["qr_url"])))
         self._call_update("请使用B站App扫码登录")
 
     def _on_qr_waiting(self, remaining):
