@@ -27,5 +27,6 @@ AuthPanel #qr-area {
 
 AuthPanel #login-button {
     margin-top: 2;
+    height: 3;
 }
 
