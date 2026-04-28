@@ -83,3 +83,39 @@ StatusBar {
 StatusBar #shortcuts-text {
     content-align: center middle;
 }
+
+/* 管理面板 */
+SettingsPanel {
+    height: 100%;
+    padding: 1;
+}
+
+SettingsPanel Input {
+    margin-bottom: 2;
+}
+
+SettingsPanel Select {
+    margin-bottom: 1;
+}
+
+/* 弹幕面板 */
+DanmakuPanel {
+    height: 100%;
+}
+
+#danmaku-list {
+    height: 1fr;
+}
+
+#danmaku-send {
+    height: auto;
+    dock: bottom;
+}
+
+#danmaku-input {
+    width: 1fr;
+}
+
+#danmaku-send-btn {
+    width: 10;
+}

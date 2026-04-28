@@ -1,4 +1,19 @@
 /* 帮助面板样式 */
+.help-card {
+    background: #2a2a2a;
+    border: solid #006f95;
+    padding: 1 2;
+    width: 50;
+}
+
+.help-title {
+    color: #00a1d6;
+    text-style: bold;
+    content-align: center middle;
+    margin-bottom: 1;
+    height: 1;
+}
+
 .help-text {
     color: #999999;
     text-style: italic;

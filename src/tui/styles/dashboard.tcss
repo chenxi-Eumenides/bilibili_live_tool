@@ -4,6 +4,14 @@ DashboardPanel {
     padding: 1;
 }
 
+.info-card {
+    background: #2a2a2a;
+    border: solid #006f95;
+    padding: 1 2;
+    height: 100%;
+    overflow-y: auto;
+}
+
 .section-title {
     color: #00a1d6;
     text-style: bold;

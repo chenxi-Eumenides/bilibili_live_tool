@@ -1,13 +1,12 @@
-"""弹幕面板"""
+"""弹幕面板 — 全屏显示区 + 底部发送框"""
 from textual.app import ComposeResult
-from textual.containers import Vertical
-from textual.widgets import Button, Label, Static
+from textual.containers import Horizontal, Vertical
+from textual.widgets import Button, Input, RichLog
 
 
 class DanmakuPanel(Vertical):
     def compose(self) -> ComposeResult:
-        yield Static("弹幕监听", classes="section-title")
-        yield Button("开始监听", id="danmaku-start")
-        yield Button("停止监听", id="danmaku-stop")
-        yield Label("未开始监听", id="danmaku-status")
-        yield Static("弹幕将在此显示...", id="danmaku-placeholder")
+        yield RichLog(id="danmaku-list", max_lines=500, markup=True)
+        with Horizontal(id="danmaku-send"):
+            yield Input(placeholder="发送弹幕...", id="danmaku-input")
+            yield Button("发送", id="danmaku-send-btn", variant="primary")

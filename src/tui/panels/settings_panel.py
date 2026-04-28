@@ -1,14 +1,14 @@
-"""管理面板"""
+"""管理面板 — 标题输入 + 分区选择"""
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.widgets import Button, Static
+from textual.widgets import Input, Select, Static
 
 
 class SettingsPanel(Vertical):
     def compose(self) -> ComposeResult:
-        yield Static("直播管理", classes="section-title")
-        yield Button("开始直播", id="start-live", variant="success")
-        yield Button("结束直播", id="stop-live", variant="error")
-        yield Button("修改标题", id="edit-title")
-        yield Button("修改分区", id="edit-area")
-        yield Button("刷新状态", id="refresh-status")
+        yield Static("直播标题", classes="section-title")
+        yield Input(value="未设置", id="edit-title", placeholder="输入直播标题")
+
+        yield Static("选择分区", classes="section-title")
+        yield Select([], prompt="主分区", id="parent-area")
+        yield Select([], prompt="子分区", id="sub-area")
