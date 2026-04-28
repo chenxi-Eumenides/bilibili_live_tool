@@ -39,7 +39,8 @@ class BiliLiveToolApp(App):
 
     def __init__(self, config_file: Path | None = None):
         super().__init__()
-        config = CONFIG().from_file(config_file if config_file and config_file.exists() else CONFIG_FILE)
+        path = config_file if (config_file and config_file.exists()) else CONFIG_FILE
+        config = CONFIG.from_file(path) if path.exists() else CONFIG()
         self.session = Session(config)
 
     def compose(self):
