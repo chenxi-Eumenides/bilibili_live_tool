@@ -1,17 +1,4 @@
-/* 深色主题 */
-$surface: #18181b;
-$panel: #27272a;
-$boost: #3f3f46;
-$text: #e4e4e7;
-$text-muted: #71717a;
-$primary: #06b6d4;
-$secondary: #0891b2;
-$accent: #06b6d4;
-$success: #22c55e;
-$warning: #f59e0b;
-$error: #ef4444;
-
 Screen {
     background: #09090b;
-    color: $text;
+    color: #e4e4e7;
 }
