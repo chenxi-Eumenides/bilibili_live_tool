@@ -39,18 +39,26 @@ class Sidebar(Vertical):
 
             toggle_btn = self.query_one("#nav-toggle", Button)
             is_unauth = state == AppState.UNAUTH
+            info_btn = self.query_one("#nav-info", Button)
 
             if is_unauth:
+                info_btn.label = "登录"
+                self.query_one("#nav-manage", Button).disabled = True
+                self.query_one("#nav-danmu", Button).disabled = True
                 toggle_btn.label = "开播"
                 toggle_btn.disabled = True
                 toggle_btn.variant = "default"
-            elif state == AppState.IDLE:
-                toggle_btn.label = "开播"
-                toggle_btn.disabled = False
-                toggle_btn.variant = "success"
-            elif state == AppState.LIVE:
-                toggle_btn.label = "下播"
-                toggle_btn.disabled = False
-                toggle_btn.variant = "error"
+            else:
+                info_btn.label = "信息"
+                self.query_one("#nav-manage", Button).disabled = False
+                self.query_one("#nav-danmu", Button).disabled = False
+                if state == AppState.IDLE:
+                    toggle_btn.label = "开播"
+                    toggle_btn.disabled = False
+                    toggle_btn.variant = "success"
+                elif state == AppState.LIVE:
+                    toggle_btn.label = "下播"
+                    toggle_btn.disabled = False
+                    toggle_btn.variant = "error"
         except Exception:
             pass
