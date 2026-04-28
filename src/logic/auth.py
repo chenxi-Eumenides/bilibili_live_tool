@@ -4,7 +4,7 @@ from threading import Event
 from time import monotonic, sleep
 from typing import Optional
 
-from ..utils.api import api_get_login_qr, api_check_login, api_get_user_nav, get_bili_ticket
+from ..utils.api import api_get_login_qr, api_check_login, api_get_room_id, api_get_user_nav, get_bili_ticket
 from ..utils.data import FuncResult, FuncType
 from ..utils.constant import BiliCode, SessionEvent, Tuning
 from .session import Session
@@ -70,6 +70,10 @@ def auth_poll_login(
                     session.bili_ticket = ticket_result.result.get("bili_ticket", "")
             except Exception:
                 pass
+            if session.config.room_id == 0 and session.config.uid:
+                id_result = api_get_room_id(cookies=cookies, user_id=session.config.uid)
+                if id_result.type == FuncType.SUCCESS:
+                    session.config.room_id = id_result.result
             session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
             return FuncResult(type=FuncType.SUCCESS, result={"cookies": cookies, "refresh_token": refresh_token})
         code = result.result if isinstance(result.result, int) else None

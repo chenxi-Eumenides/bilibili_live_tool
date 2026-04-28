@@ -3,7 +3,6 @@
 from ..utils.api import (
     api_get_area_list,
     api_get_room_data,
-    api_get_room_id,
     api_start_live,
     api_stop_live,
     api_update_room,
@@ -16,7 +15,6 @@ from .session import Session
 def live_start(session: Session, area_id: int) -> FuncResult:
     """开播。
 
-    session.room_id 为 0 时会自动通过 uid 获取房间号。
     遇到人脸认证时发送 LIVE_FACE_AUTH_REQUIRED 事件并返回 FAIL。
 
     Args:
@@ -28,10 +26,6 @@ def live_start(session: Session, area_id: int) -> FuncResult:
     """
     if not session.is_logged_in:
         return FuncResult(type=FuncType.FAIL, result="未登录，无法开播")
-    if session.room_id == 0 and session.user_id:
-        id_result = api_get_room_id(cookies=session.cookies, user_id=session.user_id)
-        if id_result.type == FuncType.SUCCESS:
-            session.config.room_id = id_result.result
     if session.room_id == 0:
         return FuncResult(type=FuncType.FAIL, result="未设置房间号，且无法自动获取")
     result = api_start_live(cookies=session.cookies, user_id=session.user_id, room_id=session.room_id, area_id=area_id)
@@ -106,12 +100,6 @@ def live_refresh_room_info(session: Session) -> FuncResult:
     """
     if not session.is_logged_in:
         return FuncResult(type=FuncType.FAIL, result="未登录，无法获取房间信息")
-    if session.room_id == 0 and session.user_id:
-        id_result = api_get_room_id(cookies=session.cookies, user_id=session.user_id)
-        if id_result.type == FuncType.SUCCESS:
-            session.config.room_id = id_result.result
-    if session.room_id == 0:
-        return FuncResult(type=FuncType.FAIL, result="房间号未知，无法获取房间信息")
     result = api_get_room_data(cookies=session.cookies, room_id=session.room_id)
     if result.type != FuncType.SUCCESS:
         return result
