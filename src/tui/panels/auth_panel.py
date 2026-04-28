@@ -46,13 +46,18 @@ class AuthPanel(Vertical):
             self._call_enable()
             return
 
+        time.sleep(0.5)
+
         for _ in range(90):
-            auth_poll_login(self.app.session, self._qr_key)
-
-            if self.app.session.is_logged_in:
-                self.app.call_from_thread(self.app.session.config.save_config)
-                break
-
+            if not self.app._running:
+                return
+            try:
+                auth_poll_login(self.app.session, self._qr_key)
+                if self.app.session.is_logged_in:
+                    self.app.call_from_thread(self.app.session.config.save_config)
+                    break
+            except Exception:
+                return
             time.sleep(2)
 
         self._qr_key = None
@@ -72,11 +77,17 @@ class AuthPanel(Vertical):
         self._call_update(f"登录失败: {reason or '未知'}")
 
     def _call_update(self, text):
-        self.app.call_from_thread(
-            lambda: self.query_one("#status-text", Static).update(text)
-        )
+        try:
+            self.app.call_from_thread(
+                lambda: self.query_one("#status-text", Static).update(text)
+            )
+        except Exception:
+            pass
 
     def _call_enable(self):
-        self.app.call_from_thread(
-            lambda: setattr(self.query_one("#login-button", Button), "disabled", False)
-        )
+        try:
+            self.app.call_from_thread(
+                lambda: setattr(self.query_one("#login-button", Button), "disabled", False)
+            )
+        except Exception:
+            pass
