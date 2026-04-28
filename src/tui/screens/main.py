@@ -5,21 +5,19 @@ from textual.containers import Horizontal
 from textual.screen import Screen
 from textual.widgets import Button, ContentSwitcher, Footer, Header
 
-from ..widgets.left_panel import LeftPanel
-from ..widgets.login import LoginPage
-from ..widgets.live import ActionPage
-from ..widgets.info import InfoPage
 from ..widgets.danmaku import DanmuPage
+from ..widgets.info import InfoPage
+from ..widgets.left_panel import LeftPanel
+from ..widgets.live import ActionPage
+from ..widgets.login import LoginPage
 from .quit import QuitScreen
 
 
 class MainScreen(Screen):
-    current_page: list[str] = []
 
     CSS_PATH = Path(__file__).parent / "main.tcss"
     BINDINGS = [
-        ("q,escape", "escape_page", "离开内容页面"),
-        ("space", "choose_current", "选中当前选项"),
+        ("q,escape", "quit", "退出程序"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -36,42 +34,19 @@ class MainScreen(Screen):
     def on_mount(self):
         left_panel = self.query_one("#left-panel")
         left_panel.can_focus_children = True
-        self.current_page.append("left-panel")
+        left_panel.focus()
 
     def on_button_pressed(self, event: Button.Pressed):
         if event.button.has_class("can-enter"):
-            self.enter_page(event.button.id)
+            self._switch_page(event.button.id)
 
-    def action_escape_page(self):
-        self.escape_page()
+    def action_quit(self):
+        self.app.push_screen(QuitScreen())
 
-    def action_choose_current(self):
-        focused_widget = self.app.focused
-        if isinstance(focused_widget, Button):
-            focused_widget.action_press()
-
-    def enter_page(self, page_id: str):
-        last_page = self.query_one(f"#{self.current_page[-1]}")
-        last_page.can_focus_children = False
-        self.current_page.append(page_id)
-        current_page = self.query_one(f"#{page_id}")
-        current_page.can_focus_children = True
-        if isinstance(current_page.parent, ContentSwitcher):
-            if page_id in [child.id for child in current_page.parent.children]:
-                current_page.parent.current = page_id
-            else:
-                current_page.parent.current = current_page.parent.children[0].id
-        self.focus_next()
-
-    def escape_page(self):
-        if len(self.current_page) <= 1:
-            self.app.push_screen(QuitScreen())
-            return
-        pop_page_id = self.current_page.pop()
-        pop_page = self.query_one(f"#{pop_page_id}")
-        pop_page.can_focus_children = False
-        current_page = self.query_one(f"#{self.current_page[-1]}")
-        current_page.can_focus_children = True
-        if pop_page_id in ["action-page", "login-page", "info-page", "danmu-page"]:
-            self.query_one(f"#left-panel #{pop_page_id}", Button).focus()
-        self.focus_next()
+    def _switch_page(self, page_id: str):
+        switcher = self.query_one("#contents", ContentSwitcher)
+        target = self.query_one(f"#{page_id}")
+        if target in switcher.children:
+            switcher.current = page_id
+            target.can_focus_children = True
+            self.focus_next()
