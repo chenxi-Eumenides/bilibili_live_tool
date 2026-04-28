@@ -1,0 +1,52 @@
+/* 信息面板样式 */
+DashboardPanel {
+    height: 100%;
+    padding: 1;
+}
+
+.section-title {
+    color: #00a1d6;
+    text-style: bold;
+    margin-bottom: 1;
+    height: 1;
+}
+
+.full-width {
+    height: auto;
+    width: 100%;
+    margin: 0;
+}
+
+.info-grid {
+    grid-size: 2;
+    height: auto;
+}
+
+.column-left {
+    height: auto;
+    width: 100%;
+    margin-right: 1;
+}
+
+.column-right {
+    height: auto;
+    width: 100%;
+    margin-left: 1;
+}
+
+.info-item {
+    height: auto;
+    width: 100%;
+}
+
+.info-label {
+    color: #999999;
+    height: 1;
+}
+
+.info-value {
+    color: #e5e5e5;
+    text-style: bold;
+    height: 1;
+    margin-bottom: 1;
+}

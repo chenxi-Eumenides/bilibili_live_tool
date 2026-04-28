@@ -1,0 +1,21 @@
+"""帮助面板"""
+from textual.app import ComposeResult
+from textual.containers import Horizontal, Vertical
+from textual.widgets import Static
+
+
+class HelpPanel(Vertical):
+    def compose(self) -> ComposeResult:
+        yield Static("快捷键", classes="section-title")
+        with Horizontal(classes="key-row"):
+            yield Static("Q / Esc", classes="key-name")
+            yield Static("退出程序", classes="key-desc")
+
+        yield Static("使用说明", classes="section-title")
+        yield Static("1. 首次使用需扫描二维码登录", classes="help-text")
+        yield Static("2. 登录后可设置直播标题和分区", classes="help-text")
+        yield Static("3. 点击开播按钮开始直播", classes="help-text")
+        yield Static("4. 直播前请先在OBS配置推流信息", classes="help-text")
+
+        yield Static("版本信息", classes="section-title")
+        yield Static("BiliLiveTool v0.5.0", classes="help-text")

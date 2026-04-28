@@ -1,0 +1,36 @@
+/* 全局样式 */
+App {
+    background: #1a1a1a;
+    color: #e5e5e5;
+}
+
+Button {
+    background: #00a1d6;
+    color: white;
+    border: none;
+    padding: 0 2;
+}
+
+Button:hover {
+    background: #0089b6;
+}
+
+Button:focus {
+    background: #006f95;
+}
+
+Button.primary {
+    background: #00a1d6;
+}
+
+Button.success {
+    background: #52c41a;
+}
+
+Button.error {
+    background: #f5222d;
+}
+
+Static {
+    color: #e5e5e5;
+}

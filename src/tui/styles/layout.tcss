@@ -1,0 +1,85 @@
+/* 布局组件样式 */
+Header {
+    height: 2;
+    background: #2a2a2a;
+    border-bottom: solid #006f95;
+    padding: 0 2;
+}
+
+Header #header-container {
+    height: auto;
+    width: 100%;
+    layout: horizontal;
+}
+
+Header #app-title {
+    width: auto;
+    content-align: center middle;
+    text-style: bold;
+    margin-right: 1;
+}
+
+Header #app-version {
+    width: auto;
+    content-align: center middle;
+    color: #999999;
+}
+
+Header #header-spacer {
+    width: 1fr;
+}
+
+Header #update-status {
+    width: auto;
+    content-align: right middle;
+    margin-right: 1;
+}
+
+Header #status-indicator {
+    width: auto;
+    content-align: right middle;
+}
+
+Sidebar {
+    width: 20%;
+    min-width: 19;
+    max-width: 23;
+    background: #3a3a3a;
+    border-right: solid #006f95;
+    padding: 1;
+}
+
+Sidebar .nav-buttons-top {
+    height: auto;
+    width: 100%;
+}
+
+Sidebar .nav-buttons-bottom {
+    height: auto;
+    width: 100%;
+    dock: bottom;
+}
+
+Sidebar .nav-button {
+    height: 3;
+    width: 100%;
+    margin: 1 0;
+    text-align: center;
+}
+
+MainPanel {
+    background: #1a1a1a;
+    padding: 1 2;
+}
+
+StatusBar {
+    height: 2;
+    background: #2a2a2a;
+    border-top: solid #006f95;
+    dock: bottom;
+    content-align: center middle;
+}
+
+StatusBar #shortcuts-text {
+    content-align: center middle;
+}
