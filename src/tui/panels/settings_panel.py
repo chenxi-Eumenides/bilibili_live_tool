@@ -3,7 +3,6 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, ScrollableContainer
 from textual.widgets import Button, Input, Select, Static
-from textual.widgets._select import SelectChanged
 
 from ...logic import live_get_area_list
 from ...utils.data import FuncType
@@ -59,8 +58,8 @@ class SettingsPanel(Vertical):
                     return area
         return None
 
-    @on(SelectChanged)
-    def _on_parent_changed(self, event: SelectChanged):
+    @on(Select.Changed)
+    def _on_parent_changed(self, event: Select.Changed):
         if event.select.id != "parent-area-select":
             return
         pid = event.value
