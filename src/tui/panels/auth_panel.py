@@ -32,12 +32,10 @@ class AuthPanel(Vertical):
         cache = self.app.qr_cache
         if cache:
             self._qr_key = cache["qr_key"]
-            self._stop_event = threading.Event()
             self.query_one("#login-button", Button).display = False
             self.query_one("#qr-area", Static).update("\n".join(generate_qr_text(cache["qr_url"])))
             self.query_one("#qr-area", Static).display = True
             self.query_one("#status-text", Static).update("请使用B站App扫码登录")
-            self.run_worker(self._login_worker, thread=True)
 
     def on_unmount(self):
         session = self.app.session
@@ -46,8 +44,6 @@ class AuthPanel(Vertical):
         session.off(SessionEvent.AUTH_QR_SCANNED, self._on_scanned)
         session.off(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.off(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
-        if self._stop_event:
-            self._stop_event.set()
 
     @on(Button.Pressed, "#login-button")
     def _start_login(self):
