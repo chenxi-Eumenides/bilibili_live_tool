@@ -1,6 +1,7 @@
 """Textual App主类"""
-import threading
 from pathlib import Path
+from threading import Event
+from time import monotonic
 
 from textual.app import App
 from textual.binding import Binding
@@ -10,7 +11,7 @@ from textual.reactive import reactive
 from ..logic import Session, auth_poll_login, auth_validate_login, live_get_area_list, live_refresh_room_info
 from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE, SessionEvent
-from ..utils.data import AppState
+from ..utils.data import AppState, FuncType
 from .layout.header import Header
 from .layout.main_panel import MainPanel
 from .layout.sidebar import Sidebar
@@ -34,7 +35,7 @@ class BiliLiveToolApp(App):
     app_state = reactive(AppState.UNAUTH)
     current_panel = reactive("info")
     qr_cache: dict | None = None
-    _login_stop_event: threading.Event | None = None
+    _login_stop_event: Event | None = None
 
     BINDINGS = [
         Binding("q,escape", "quit", "退出"),
@@ -80,7 +81,7 @@ class BiliLiveToolApp(App):
         cache = self.qr_cache
         if not cache:
             return
-        self._login_stop_event = threading.Event()
+        self._login_stop_event = Event()
         self.run_worker(self._run_login_poll, thread=True)
 
     def _stop_login_poll(self):
@@ -93,12 +94,12 @@ class BiliLiveToolApp(App):
             return
         qr_key = cache["qr_key"]
         deadline = cache["deadline"]
-        remaining = deadline - __import__("time").monotonic()
+        remaining = deadline - monotonic()
         if remaining <= 0:
             self.session._emit(SessionEvent.AUTH_LOGIN_FAILED, "二维码已过期")
             return
         result = auth_poll_login(self.session, qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
-        if result.type == __import__("src.utils.data", fromlist=["FuncType"]).FuncType.SUCCESS:
+        if result.type == FuncType.SUCCESS:
             live_refresh_room_info(self.session)
             live_get_area_list(self.session)
             self.session._emit(SessionEvent.LIVE_INFO_UPDATED, self.session.config.room_data)

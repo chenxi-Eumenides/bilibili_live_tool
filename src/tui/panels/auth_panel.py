@@ -1,4 +1,6 @@
 """登录面板 — UI 显示，轮询由 app 管理"""
+from time import monotonic
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Center, Vertical
@@ -55,7 +57,7 @@ class AuthPanel(Vertical):
             return
 
         qr_key = result.result["qr_key"]
-        deadline = __import__("time").monotonic() + 180
+        deadline = monotonic() + 180
         self.app.qr_cache = {"qr_url": result.result["qr_url"], "qr_key": qr_key, "deadline": deadline}
         self.app.start_login()
 
