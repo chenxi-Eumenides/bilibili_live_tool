@@ -6,15 +6,16 @@ AuthPanel {
 }
 
 AuthPanel #login-container {
-    width: auto;
+    width: 40;
     height: auto;
     padding: 2;
     background: #2a2a2a;
     border: solid #00a1d6;
 }
 AuthPanel #status-text {
-    text-align: center;
     margin-top: 1;
+    text-style: bold;
+    color: #00a1d6;
 }
 AuthPanel #login-button {
     margin-top: 2;
