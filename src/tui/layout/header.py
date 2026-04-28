@@ -22,4 +22,6 @@ class Header(Static):
             "yellow": "#f59e0b", "blue": "#00a1d6",
         }
         c = color_map.get(color, "#e5e5e5")
-        status_widget.update(f"[bold {c}]●[/] {state_text}")
+        status_widget.update(f"● {state_text}")
+        status_widget.styles.color = c
+        status_widget.styles.text_style = "bold"
