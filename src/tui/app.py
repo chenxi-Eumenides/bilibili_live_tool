@@ -58,6 +58,7 @@ class BiliLiveToolApp(App):
     def _subscribe_events(self):
         self.session.on(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_login_success)
         self.session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_login_failed)
+        self.session.on(SessionEvent.AUTH_LOGOUT_DONE, self._on_logged_out)
         self.session.on(SessionEvent.LIVE_STATE_CHANGED, self._on_live_state_changed)
 
     def _init_state(self):
@@ -81,6 +82,9 @@ class BiliLiveToolApp(App):
         self.call_from_thread(self._apply_state, state)
 
     def _on_login_failed(self, data=None):
+        self.call_from_thread(self._apply_state, AppState.UNAUTH)
+
+    def _on_logged_out(self, data=None):
         self.call_from_thread(self._apply_state, AppState.UNAUTH)
 
     def _on_live_state_changed(self, data=None):

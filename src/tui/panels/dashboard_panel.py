@@ -3,6 +3,8 @@ from textual.app import ComposeResult
 from textual.containers import Grid, Vertical, ScrollableContainer
 from textual.widgets import Static
 
+from ...logic import SessionEvent
+
 
 class DashboardPanel(Vertical):
 
@@ -39,3 +41,32 @@ class DashboardPanel(Vertical):
             with Vertical(classes="full-width"):
                 yield Static("推流码", classes="info-label")
                 yield Static("--", id="rtmp-code", classes="info-value")
+
+    def on_mount(self):
+        self.app.session.on(SessionEvent.LIVE_INFO_UPDATED, self._on_info_updated)
+        self._update_from_config()
+
+    def on_unmount(self):
+        self.app.session.off(SessionEvent.LIVE_INFO_UPDATED, self._on_info_updated)
+
+    def _on_info_updated(self, data=None):
+        self._update_from_config()
+
+    def _update_from_config(self):
+        config = self.app.session.config
+        rd = config.room_data
+
+        self.query_one("#room-title", Static).update(rd.get("title") or config.title or "--")
+        self.query_one("#anchor-uid", Static).update(str(rd.get("user_id") or config.uid or "--"))
+        self.query_one("#room-id", Static).update(str(rd.get("room_id") or config.room_id or "--"))
+
+        parent = rd.get("parent_area_name", "")
+        area = rd.get("area_name", "")
+        self.query_one("#room-area", Static).update(f"{parent}/{area}" if parent and area else "--")
+
+        self.query_one("#room-online", Static).update(str(rd.get("online", "--")))
+        self.query_one("#follower-count", Static).update(str(rd.get("attention", "--")))
+        self.query_one("#room-duration", Static).update("--")
+
+        self.query_one("#rtmp-addr", Static).update(config.rtmp_addr or "--")
+        self.query_one("#rtmp-code", Static).update(config.rtmp_code or "--")
