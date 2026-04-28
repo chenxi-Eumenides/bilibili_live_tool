@@ -7,10 +7,10 @@ from textual.containers import Vertical
 from textual.widgets import Button, Static
 
 from ...logic import auth_generate_qrcode, auth_poll_login, SessionEvent
-from ...utils.data import FuncType
 
 
 class AuthPanel(Vertical):
+    _qr_key = None
 
     def compose(self) -> ComposeResult:
         with Vertical(id="login-container"):
@@ -39,31 +39,28 @@ class AuthPanel(Vertical):
         self.run_worker(self._login_worker, thread=True)
 
     def _login_worker(self):
-        session = self.app.session
+        auth_generate_qrcode(self.app.session)
 
-        result = auth_generate_qrcode(session)
-        if result.type != FuncType.SUCCESS:
-            self._call_update(f"获取二维码失败: {result.result}")
+        if not self._qr_key:
+            self._call_update("获取二维码失败")
             self._call_enable()
             return
 
-        qr_key = result.result["qr_key"]
-
         for _ in range(90):
-            poll = auth_poll_login(session, qr_key)
-            if poll.type == FuncType.SUCCESS:
-                self.app.call_from_thread(session.config.save_config)
+            auth_poll_login(self.app.session, self._qr_key)
+
+            if self.app.session.is_logged_in:
+                self.app.call_from_thread(self.app.session.config.save_config)
                 break
-            code = poll.result.get("code", -1) if isinstance(poll.result, dict) else -1
-            if code == 86038:
-                self._call_update("二维码已过期")
-                break
+
             time.sleep(2)
 
+        self._qr_key = None
         self._call_enable()
 
-    def _on_qrcode_ready(self, qr_text):
-        self._call_update("请使用B站App扫码登录:\n\n" + qr_text)
+    def _on_qrcode_ready(self, data: dict):
+        self._qr_key = data["qr_key"]
+        self._call_update("请使用B站App扫码登录:\n\n" + data["qr_text"])
 
     def _on_polling(self, remaining):
         self._call_update(f"等待扫码... (剩余{remaining}秒)")
