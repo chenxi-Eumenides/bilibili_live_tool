@@ -3,6 +3,8 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Button
 
+from ...utils.data import AppState
+
 
 class Sidebar(Vertical):
 
@@ -26,13 +28,27 @@ class Sidebar(Vertical):
         elif bid == "nav-help":
             self.app.show_help_panel()
 
-    def highlight_button(self, panel: str):
+    def update_button_states(self, state: AppState, current_panel: str):
         try:
             for bid in ["nav-info", "nav-manage", "nav-danmu", "nav-help"]:
                 self.query_one(f"#{bid}", Button).variant = "default"
-            btn_map = {"info": "nav-info", "manage": "nav-manage", "danmu": "nav-danmu", "help": "nav-help"}
-            target = btn_map.get(panel)
+            panel_to_btn = {"info": "nav-info", "manage": "nav-manage", "danmu": "nav-danmu", "help": "nav-help"}
+            target = panel_to_btn.get(current_panel)
             if target:
                 self.query_one(f"#{target}", Button).variant = "primary"
+
+            toggle_btn = self.query_one("#nav-toggle", Button)
+            if state == AppState.UNAUTH:
+                toggle_btn.label = "开播"
+                toggle_btn.disabled = True
+                toggle_btn.variant = "default"
+            elif state == AppState.IDLE:
+                toggle_btn.label = "开播"
+                toggle_btn.disabled = False
+                toggle_btn.variant = "success"
+            elif state == AppState.LIVE:
+                toggle_btn.label = "下播"
+                toggle_btn.disabled = False
+                toggle_btn.variant = "error"
         except Exception:
             pass
