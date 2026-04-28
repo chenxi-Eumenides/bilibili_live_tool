@@ -27,7 +27,7 @@ Header #app-version {
     color: #999999;
 }
 
-Header #spacer {
+Header #header-spacer {
     width: 1fr;
 }
 
