@@ -27,13 +27,20 @@ def danmaku_start(session: Session) -> FuncResult:
         FuncResult(SUCCESS) 或 FAIL（重复启动/未登录/无房间号）
     """
     if session._danmaku_running:
+        session._emit(SessionEvent.DANMAKU_START_FAIL, "弹幕监听已在运行")
         return FuncResult(type=FuncType.FAIL, result="弹幕监听已在运行")
-    if not session.is_logged_in:
+    if not session.is_login:
+        session._emit(SessionEvent.DANMAKU_START_FAIL, "未登录，无法监听弹幕")
         return FuncResult(type=FuncType.FAIL, result="未登录，无法监听弹幕")
-    if not (session.danmaku_room_id or session.room_id):
+    if not (session.danmaku_room_id or session.config.room_id):
+        session._emit(SessionEvent.DANMAKU_START_FAIL, "未设置房间号")
         return FuncResult(type=FuncType.FAIL, result="未设置房间号")
     session._danmaku_stop_event = Event()
     session._danmaku_running = True
+    session._emit(
+        SessionEvent.DANMAKU_STARTED,
+        {"danmaku_room_id": session.danmaku_room_id or session.config.room_id},
+    )
     return FuncResult(type=FuncType.SUCCESS, result="弹幕监听已就绪")
 
 
@@ -49,8 +56,10 @@ def danmaku_stop(session: Session) -> FuncResult:
         FuncResult(SUCCESS) 或 FAIL（未在运行）
     """
     if not session._danmaku_running:
+        session._emit(SessionEvent.DANMAKU_STOP_FAIL, "弹幕监听未在运行")
         return FuncResult(type=FuncType.FAIL, result="弹幕监听未在运行")
     session._danmaku_stop_event.set()
+    session._emit(SessionEvent.DANMAKU_STOPPED, {"reason": "主动停止"})
     return FuncResult(type=FuncType.SUCCESS, result="已发送停止信号")
 
 
@@ -68,19 +77,24 @@ async def _listen_loop(session: Session) -> None:
     ws = None
     heartbeat_task = None
     try:
-        wbi_result = get_wbi_key(session.cookies)
+        wbi_result = get_wbi_key(session.config.cookies)
         if wbi_result.type != FuncType.SUCCESS:
             session._emit(SessionEvent.ERROR, f"获取 wbi 密钥失败: {wbi_result.result}")
             return
         img_key, sub_key = wbi_result.result["img_key"], wbi_result.result["sub_key"]
 
         info_result = get_danmaku_info(
-            cookies=session.cookies,
-            room_id=session.danmaku_room_id or session.room_id,
-            img_key=img_key, sub_key=sub_key,
+            cookies=session.config.cookies,
+            room_id=session.danmaku_room_id or session.config.room_id,
+            img_key=img_key,
+            sub_key=sub_key,
         )
-        if info_result.type != FuncType.SUCCESS or not info_result.result.get("danmaku_ws_url_list"):
-            session._emit(SessionEvent.ERROR, f"获取弹幕 WS 信息失败: {info_result.result}")
+        if info_result.type != FuncType.SUCCESS or not info_result.result.get(
+            "danmaku_ws_url_list"
+        ):
+            session._emit(
+                SessionEvent.ERROR, f"获取弹幕 WS 信息失败: {info_result.result}"
+            )
             return
 
         ws_url = info_result.result["danmaku_ws_url_list"][0]
@@ -93,7 +107,10 @@ async def _listen_loop(session: Session) -> None:
         ws = ws_result.result
 
         auth_result = await ws_send_auth(
-            ws, session.user_id, session.danmaku_room_id or session.room_id, danmaku_key
+            ws,
+            session.config.uid,
+            session.danmaku_room_id or session.config.room_id,
+            danmaku_key,
         )
         if auth_result.type != FuncType.SUCCESS:
             session._emit(SessionEvent.ERROR, f"弹幕 WS 认证失败: {auth_result.result}")
@@ -107,7 +124,7 @@ async def _listen_loop(session: Session) -> None:
             if result.type == FuncType.SUCCESS:
                 messages = result.result
                 if isinstance(messages, list):
-                    room = session.danmaku_room_id or session.room_id
+                    room = session.danmaku_room_id or session.config.room_id
                     for msg in messages:
                         if hasattr(msg, "live_room_id"):
                             msg.live_room_id = room
@@ -132,7 +149,7 @@ async def _listen_loop(session: Session) -> None:
                 pass
         session._danmaku_running = False
         session._danmaku_stop_event = None
-        session._emit(SessionEvent.DANMAKU_STOPPED)
+        session._emit(SessionEvent.DANMAKU_STOPPED, {"reason": "监听循环结束"})
 
 
 async def _heartbeat_loop(ws, session: Session) -> None:
