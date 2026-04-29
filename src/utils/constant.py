@@ -102,6 +102,12 @@ class SessionEvent:
 
     DANMAKU_RECEIVED = "danmaku:received"
     DANMAKU_STOPPED = "danmaku:stopped"
+    DANMAKU_STARTED = "danmaku:started"
+    DANMAKU_START_FAIL = "danmaku:start_fail"
+    DANMAKU_STOP_FAIL = "danmaku:stop_fail"
+
+    AUTH_SAFETY_SKIPPED = "auth:safety_skipped"
+    AUTH_UPDATE_SAFETY_FAIL = "auth:update_safety_fail"
 
     ERROR = "error"
     EXCEPTION = "exception"
