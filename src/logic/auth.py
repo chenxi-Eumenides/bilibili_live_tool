@@ -4,7 +4,12 @@ from threading import Event
 from time import monotonic, sleep
 
 from .session import Session
-from ..utils.api import api_get_login_qr, api_check_login, api_get_user_nav, api_get_bili_ticket
+from ..utils.api import (
+    api_get_login_qr,
+    api_check_login,
+    api_get_user_nav,
+    api_get_bili_ticket,
+)
 from ..utils.data import FuncResult, FuncType
 from ..utils.constant import BiliCode, SessionEvent, Tuning
 
@@ -23,11 +28,12 @@ def auth_get_qr(session: Session) -> FuncResult:
 
     res = api_get_login_qr()
     if res.type != FuncType.SUCCESS:
-        session._emit(SessionEvent.AUTH_QR_FAIL)
+        session._emit(SessionEvent.AUTH_QR_FAIL, str(res.result))
         return res
-    session._qr_cache = res.result
-    session._emit(SessionEvent.AUTH_QR_READY)
+    session.qr_cache = res.result
+    session._emit(SessionEvent.AUTH_QR_READY, res.result)
     return res
+
 
 def auth_poll_qr(
     session: Session,
@@ -98,9 +104,9 @@ def auth_poll_qr(
     session.config.set_refresh_token(refresh_token)
     session._login_verified = True
     session.config.save_config()
-    session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
+    session._emit(SessionEvent.AUTH_LOGIN_SUCCESS, {"uid": session.config.uid})
     return FuncResult(type=FuncType.SUCCESS)
-    
+
 
 def auth_update_safety(session: Session) -> FuncResult:
     """更新鉴权信息
@@ -116,9 +122,11 @@ def auth_update_safety(session: Session) -> FuncResult:
     """
 
     if not (session.config.need_update_refresh_token or session.config.need_update_wbi):
+        session._emit(SessionEvent.AUTH_SAFETY_SKIPPED, "无需更新")
         return FuncResult(type=FuncType.FAIL, result="无需更新")
     res = api_get_bili_ticket(session.config.cookies)
     if res.type != FuncType.SUCCESS:
+        session._emit(SessionEvent.AUTH_UPDATE_SAFETY_FAIL, "更新失败")
         return FuncResult(type=FuncType.FAIL, result="更新失败")
     data = res.result
     session.config.bili_ticket = data.get("bili_ticket", "")
@@ -126,7 +134,14 @@ def auth_update_safety(session: Session) -> FuncResult:
     session.config.bili_ticket_ttl = data.get("ttl", 0)
     session.config.set_wbi(data.get("img_key", ""), data.get("sub_key", ""))
     session.config.save_config()
-    session._emit(SessionEvent.AUTH_UPDATE_SAFETY)
+    session._emit(
+        SessionEvent.AUTH_UPDATE_SAFETY,
+        {
+            "bili_ticket": session.config.bili_ticket,
+            "wbi_img_key": session.config.wbi_img_key,
+            "wbi_sub_key": session.config.wbi_sub_key,
+        },
+    )
     return FuncResult(type=FuncType.SUCCESS, result="更新成功")
 
 
@@ -152,8 +167,9 @@ def auth_validate_login(session: Session) -> FuncResult:
         session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录已过期")
         return FuncResult(type=FuncType.FAIL, result="登录已过期")
     session._login_verified = True
-    session._emit(SessionEvent.AUTH_LOGIN_SUCCESS)
+    session._emit(SessionEvent.AUTH_LOGIN_SUCCESS, {"uid": session.config.uid})
     return FuncResult(type=FuncType.SUCCESS, result=res.result)
+
 
 def auth_logout(session: Session) -> FuncResult:
     """登出，清除所有登录态。
@@ -172,9 +188,7 @@ def auth_logout(session: Session) -> FuncResult:
     session.app_state = None
     session._login_verified = False
     session.room_data = {}
-    session._qr_cache = {}
-    session._face_qr_cache = {}
-    session._emit(SessionEvent.AUTH_LOGOUT)
+    session.qr_cache = {}
+    session.face_qr_cache = {}
+    session._emit(SessionEvent.AUTH_LOGOUT, {"reason": "登出成功"})
     return FuncResult(type=FuncType.SUCCESS, result="登出成功")
-
-
