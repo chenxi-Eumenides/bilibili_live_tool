@@ -133,22 +133,6 @@ class Tuning:
     COOLDOWN_MAX = 1.0
 
 
-class TUIColors:
-    """UI样式常量 - 深色主题"""
-
-    ACCENT_COLOR = "#06b6d4"  # 青色强调色
-    SUCCESS_COLOR = "#22c55e"  # 成功绿
-    WARNING_COLOR = "#f59e0b"  # 警告黄
-    ERROR_COLOR = "#ef4444"  # 错误红
-    TEXT_PRIMARY = "#ffffff"  # 主文字 - 纯白
-    TEXT_SECONDARY = "#a1a1aa"  # 次文字 - 淡灰
-    TEXT_MUTED = "#71717a"  # 辅助文字 - 中灰
-    BG_PRIMARY = "#09090b"  # 最深背景 - 近黑
-    BG_SECONDARY = "#18181b"  # 二级背景 - 深灰
-    BG_TERTIARY = "#27272a"  # 三级背景 - 中深灰
-    BORDER_COLOR = "#3f3f46"  # 边框颜色
-
-
 class DanmakuColors:
     """弹幕颜色配置 - 所有颜色统一管理"""
 
@@ -199,6 +183,7 @@ class KeyBindings:
     COPY_STREAM = "c"  # 复制推流码
     COPY_ALL = "shift+c"  # 复制全部信息
     TOGGLE_LOG = "l"  # 展开/折叠日志
+
 
 # 解码加密数据
 WBI_KEY_INDEX_TABLE = [
@@ -301,4 +286,3 @@ MIXIN_KEY_ENC_TABLE: list[int] = [
     44,
     52,
 ]
-
