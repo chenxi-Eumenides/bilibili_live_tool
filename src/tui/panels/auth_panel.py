@@ -6,7 +6,7 @@ from textual.app import ComposeResult
 from textual.containers import Center, Vertical
 from textual.widgets import Button, Static
 
-from ...logic import SessionEvent, auth_generate_qrcode
+from ...logic import SessionEvent, auth_get_qr
 from ...utils.data import FuncType
 from ...utils.lib import generate_qr_text
 
@@ -22,13 +22,13 @@ class AuthPanel(Vertical):
 
     def on_mount(self):
         session = self.app.session
-        session.on(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
+        session.on(SessionEvent.AUTH_QR_READY, self._on_qrcode_ready)
         session.on(SessionEvent.AUTH_QR_WAITING, self._on_qr_waiting)
         session.on(SessionEvent.AUTH_QR_SCANNED, self._on_scanned)
         session.on(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
 
-        cache = self.app.qr_cache
+        cache = session.qr_cache
         if cache:
             self._qr_key = cache["qr_key"]
             self.query_one("#login-button", Button).display = False
@@ -38,7 +38,7 @@ class AuthPanel(Vertical):
 
     def on_unmount(self):
         session = self.app.session
-        session.off(SessionEvent.AUTH_QRCODE_READY, self._on_qrcode_ready)
+        session.off(SessionEvent.AUTH_QR_READY, self._on_qrcode_ready)
         session.off(SessionEvent.AUTH_QR_WAITING, self._on_qr_waiting)
         session.off(SessionEvent.AUTH_QR_SCANNED, self._on_scanned)
         session.off(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
@@ -50,7 +50,7 @@ class AuthPanel(Vertical):
         self.query_one("#qr-area", Static).display = True
         self.query_one("#status-text", Static).update("正在获取二维码...")
 
-        result = auth_generate_qrcode(self.app.session)
+        result = auth_get_qr(self.app.session)
         if result.type != FuncType.SUCCESS:
             self.query_one("#status-text", Static).update(f"获取二维码失败: {result.result}")
             self.query_one("#login-button", Button).display = True

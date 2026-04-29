@@ -21,7 +21,6 @@ class Session:
     提供 on/off/once/_emit 事件系统供用户层订阅。
     """
 
-
     def __init__(self, config: CONFIG | None = None) -> None:
         """
         Args:
@@ -108,7 +107,7 @@ class Session:
     @property
     def config(self):
         return self._config
-    
+
     @config.setter
     def config(self, value: CONFIG | None):
         if value:
@@ -127,7 +126,7 @@ class Session:
     @property
     def is_replay(self) -> bool:
         return self._app_state == AppState.REPLAY
-    
+
     @property
     def can_live(self) -> bool:
         return bool(

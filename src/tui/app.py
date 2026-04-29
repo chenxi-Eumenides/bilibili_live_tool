@@ -8,7 +8,7 @@ from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.reactive import reactive
 
-from ..logic import Session, auth_poll_login, auth_post_login, auth_validate_login
+from ..logic import Session, auth_poll_qr, auth_validate_login
 from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE, SessionEvent
 from ..utils.data import AppState, FuncType
@@ -63,11 +63,11 @@ class BiliLiveToolApp(App):
     def _subscribe_events(self):
         self.session.on(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_login_success)
         self.session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_login_failed)
-        self.session.on(SessionEvent.AUTH_LOGOUT_DONE, self._on_logged_out)
+        self.session.on(SessionEvent.AUTH_LOGOUT, self._on_logged_out)
         self.session.on(SessionEvent.LIVE_STATE_CHANGED, self._on_live_state_changed)
 
     def _init_state(self):
-        if self.session.cookies:
+        if self.session.config.cookies:
             self.run_worker(self._validate_login, thread=True)
         else:
             self.app_state = AppState.UNAUTH
@@ -98,14 +98,14 @@ class BiliLiveToolApp(App):
         if remaining <= 0:
             self.session._emit(SessionEvent.AUTH_LOGIN_FAILED, "二维码已过期")
             return
-        result = auth_poll_login(self.session, qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
+        result = auth_poll_qr(self.session, qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
         if result.type == FuncType.SUCCESS:
             auth_post_login(self.session)
             self.call_from_thread(self.show_info_panel)
 
     def _on_login_success(self, data=None):
         self.qr_cache = None
-        ls = self.session.config.room_data.get("live_status", 0)
+        ls = self.session.room_data.get("live_status", 0)
         if ls == 1:
             state = AppState.LIVE
         elif ls == 2:
@@ -122,7 +122,7 @@ class BiliLiveToolApp(App):
         self.call_from_thread(self._apply_state, AppState.UNAUTH)
 
     def _on_live_state_changed(self, data=None):
-        ls = self.session.config.room_data.get("live_status", 0)
+        ls = self.session.room_data.get("live_status", 0)
         if ls == 1:
             state = AppState.LIVE
         elif ls == 2:

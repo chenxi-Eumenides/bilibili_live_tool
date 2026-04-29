@@ -8,12 +8,12 @@ from sys import argv
 from ..logic import (
     Session,
     _listen_loop,
-    auth_generate_qrcode,
+    auth_get_qr,
     auth_logout,
-    auth_poll_login,
+    auth_poll_qr,
     auth_validate_login,
     live_get_area_list,
-    live_refresh_room_info,
+    live_refresh_room_data,
     live_start,
     live_stop,
     live_update_room,
@@ -33,14 +33,12 @@ def help_lines():
         "CLI 模式:",
         "  --cli                          login + 自动开/下播",
         "  --login                        扫码登录",
-        "  --logout                       清除登录态",
-        "  --live start [--area 分区ID] [--title 标题]  开播",
-        "  --live stop                    下播",
-        "  --live status                  查看状态",
-        '  --title "标题" [--area 分区ID]   改标题',
-        "  --area 分区ID [--title \"标题\"]  改分区",
-        "  --area list                    列出主分区",
-        "  --area list 主分区ID             列出子分区",
+        "  --status                       查看状态",
+        "  --start [-a 分区ID] [-t 标题]  开播",
+        "  --stop                    下播",
+        "  --update [-a 分区ID] [-t 标题] 改分区/标题",
+        "  --area                    列出主分区",
+        "  --area 主分区ID             列出子分区",
         "  --danmaku [直播间号]            弹幕监听 (默认: 自己的直播间)",
     ]
 
@@ -65,7 +63,7 @@ def handle_login(session: Session) -> bool:
         print(f"已登录 (uid={session.user_id})，跳过登录")
         return True
 
-    result = auth_generate_qrcode(session)
+    result = auth_get_qr(session)
     if result.type != FuncType.SUCCESS:
         print(f"获取二维码失败: {result.result}")
         return False
@@ -76,7 +74,7 @@ def handle_login(session: Session) -> bool:
     _print_qr(qr_url)
 
     print("\n等待扫码...")
-    poll = auth_poll_login(session, qr_key)
+    poll = auth_poll_qr(session, qr_key)
     if poll.type == FuncType.SUCCESS:
         session.config.save_config()
         print(f"登录成功! uid={session.user_id}")
@@ -116,7 +114,7 @@ def handle_live_stop(session: Session) -> None:
 
 
 def handle_live_status(session: Session) -> None:
-    refresh = live_refresh_room_info(session)
+    refresh = live_refresh_room_data(session)
     if refresh.type != FuncType.SUCCESS:
         print(f"刷新失败: {refresh.result}")
         return
@@ -203,7 +201,7 @@ def handle_cli(session: Session) -> None:
     if session.room_id == 0:
         print("房间号未知，开播时将自动获取")
 
-    refresh = live_refresh_room_info(session)
+    refresh = live_refresh_room_data(session)
     if refresh.type != FuncType.SUCCESS:
         print(f"获取房间状态失败: {refresh.result}")
         return

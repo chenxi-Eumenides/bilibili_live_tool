@@ -9,16 +9,16 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path.cwd()))
 
 from src.logic.auth import (
-    auth_generate_qrcode,
-    auth_poll_login,
+    auth_get_qr,
+    auth_poll_qr,
     auth_validate_login,
     auth_logout,
 )
 from src.logic.danmaku import danmaku_start, danmaku_stop
 from src.logic.live import (
     live_get_area_list,
-    live_get_room_info_cache,
-    live_refresh_room_info,
+    live_read_room_info_cache,
+    live_refresh_room_data,
     live_start,
     live_stop,
     live_update_room,
@@ -137,9 +137,9 @@ class TestAuth(TestCase):
             result={"qr_url": "https://bili.com/qr", "qr_key": "abc123"},
         )
         emit_calls = []
-        self.session.on(SessionEvent.AUTH_QRCODE_READY, lambda *a: emit_calls.append(a))
+        self.session.on(SessionEvent.AUTH_QR_READY, lambda *a: emit_calls.append(a))
 
-        result = auth_generate_qrcode(self.session)
+        result = auth_get_qr(self.session)
 
         self.assertEqual(result.type, FuncType.SUCCESS)
         self.assertEqual(result.result["qr_key"], "abc123")
@@ -148,7 +148,7 @@ class TestAuth(TestCase):
     @patch("src.logic.auth.api_get_login_qr")
     def test_auth_generate_qrcode_failure(self, mock_qr):
         mock_qr.return_value = FuncResult(type=FuncType.FAIL, result="bili error")
-        result = auth_generate_qrcode(self.session)
+        result = auth_get_qr(self.session)
         self.assertEqual(result.type, FuncType.FAIL)
 
     @patch("src.logic.auth.api_check_login")
@@ -163,7 +163,7 @@ class TestAuth(TestCase):
         emit_calls = []
         self.session.on(SessionEvent.AUTH_LOGIN_SUCCESS, lambda: emit_calls.append(1))
 
-        result = auth_poll_login(self.session, "qr_key", timeout_sec=5)
+        result = auth_poll_qr(self.session, "qr_key", timeout_sec=5)
 
         self.assertEqual(result.type, FuncType.SUCCESS)
         self.assertTrue(self.session.is_logged_in)
@@ -184,7 +184,7 @@ class TestAuth(TestCase):
         self.session.on(SessionEvent.AUTH_LOGIN_POLLING, lambda *a: emit_calls.append("polling"))
         self.session.on(SessionEvent.AUTH_LOGIN_SUCCESS, lambda: emit_calls.append("success"))
 
-        result = auth_poll_login(self.session, "qr_key", timeout_sec=5)
+        result = auth_poll_qr(self.session, "qr_key", timeout_sec=5)
 
         self.assertEqual(result.type, FuncType.SUCCESS)
         self.assertIn("polling", emit_calls)
@@ -197,7 +197,7 @@ class TestAuth(TestCase):
         emit_calls = []
         self.session.on(SessionEvent.AUTH_LOGIN_FAILED, lambda *a: emit_calls.append(a))
 
-        result = auth_poll_login(self.session, "qr_key", timeout_sec=5)
+        result = auth_poll_qr(self.session, "qr_key", timeout_sec=5)
 
         self.assertEqual(result.type, FuncType.FAIL)
         self.assertFalse(self.session.is_logged_in)
@@ -207,7 +207,7 @@ class TestAuth(TestCase):
     def test_auth_poll_login_timeout(self, mock_check):
         mock_check.return_value = FuncResult(type=FuncType.FAIL, result=BiliCode.LOGIN_QR_WAITING)
 
-        result = auth_poll_login(self.session, "qr_key", timeout_sec=1)
+        result = auth_poll_qr(self.session, "qr_key", timeout_sec=1)
         self.assertEqual(result.type, FuncType.FAIL)
         self.assertIn("超时", result.result)
 
@@ -269,7 +269,7 @@ class TestAuth(TestCase):
         self.session._login_verified = True
 
         emit_calls = []
-        self.session.on(SessionEvent.AUTH_LOGOUT_DONE, lambda: emit_calls.append(1))
+        self.session.on(SessionEvent.AUTH_LOGOUT, lambda: emit_calls.append(1))
 
         result = auth_logout(self.session)
 
@@ -394,16 +394,16 @@ class TestLive(TestCase):
         self._assert_not_logged_in(lambda s: live_update_room(s, title="x"))
 
     def test_live_refresh_room_info_requires_login(self):
-        self._assert_not_logged_in(live_refresh_room_info)
+        self._assert_not_logged_in(live_refresh_room_data)
 
     def test_live_get_room_info_cache_with_cache(self):
         self.session.config.room_data = {"room_id": 999}
-        result = live_get_room_info_cache(self.session)
+        result = live_read_room_info_cache(self.session)
         self.assertEqual(result.type, FuncType.SUCCESS)
         self.assertEqual(result.result["room_id"], 999)
 
     def test_live_get_room_info_cache_without_cache(self):
-        result = live_get_room_info_cache(self.session)
+        result = live_read_room_info_cache(self.session)
         self.assertEqual(result.type, FuncType.FAIL)
         self.assertIn("尚无房间数据", str(result.result))
 
