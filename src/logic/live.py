@@ -29,30 +29,33 @@ def live_init(session: Session) -> FuncResult:
         FuncResult(SUCCESS) 或 FAIL
     """
     if not session.is_login:
-        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL)
-        session._emit(SessionEvent.LIVE_AREA_UPDATED_FAIL)
+        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL, "未登录")
+        session._emit(SessionEvent.LIVE_AREA_UPDATED_FAIL, "未登录")
         return FuncResult(type=FuncType.FAIL, result="未登录")
     # 获取分区列表
     res = api_get_area_list(cookies=session.config.cookies)
     if res.type != FuncType.SUCCESS:
-        session._emit(SessionEvent.LIVE_AREA_UPDATED_FAIL)
+        session._emit(SessionEvent.LIVE_AREA_UPDATED_FAIL, "获取分区列表失败")
         return FuncResult(type=FuncType.FAIL, result="获取分区列表失败")
     session.area_list = res.result
     session._emit(SessionEvent.LIVE_AREA_UPDATED)
     # 获取直播间号
     res = api_get_room_id(cookies=session.config.cookies, user_id=session.config.uid)
     if res.type != FuncType.SUCCESS:
-        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL)
+        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL, "获取直播间号失败")
         return FuncResult(type=FuncType.FAIL, result="获取直播间号失败")
     session.config.room_id = res.result
     # 获取直播间信息
-    res = api_get_room_data(cookies=session.config.cookies, room_id=session.config.room_id)
+    res = api_get_room_data(
+        cookies=session.config.cookies, room_id=session.config.room_id
+    )
     if res.type != FuncType.SUCCESS:
-        session._emit(SessionEvent.LIVE_INFO_UPDATED)
+        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL, "获取直播间信息失败")
         return FuncResult(type=FuncType.FAIL, result="获取直播间信息失败")
     session.room_data = res.result
-    session._emit(SessionEvent.LIVE_INFO_UPDATED)
+    session._emit(SessionEvent.LIVE_INFO_UPDATED, {"room_data": session.room_data})
     return FuncResult(type=FuncType.SUCCESS)
+
 
 def live_start(session: Session, area_id: int = 0) -> FuncResult:
     """开播。
@@ -70,25 +73,39 @@ def live_start(session: Session, area_id: int = 0) -> FuncResult:
         FuncResult(SUCCESS, {rtmp_addr, rtmp_code}) 或 FAIL
     """
     if not session.can_live:
-        session._emit(SessionEvent.LIVE_START_FAIL)
+        session._emit(SessionEvent.LIVE_START_FAIL, "开播信息不全，无法开播")
         return FuncResult(type=FuncType.FAIL, result="开播信息不全，无法开播")
     area_id = area_id if area_id else session.config.area_id
     if not area_id:
-        session._emit(SessionEvent.LIVE_START_FAIL)
+        session._emit(SessionEvent.LIVE_START_FAIL, "没有分区id，无法开播")
         return FuncResult(type=FuncType.FAIL, result="没有分区id，无法开播")
-    res = api_start_live(cookies=session.config.cookies, user_id=session.config.uid, room_id=session.config.room_id, area_id=area_id)
+    res = api_start_live(
+        cookies=session.config.cookies,
+        user_id=session.config.uid,
+        room_id=session.config.room_id,
+        area_id=area_id,
+    )
     data = res.result
     if res.type != FuncType.SUCCESS:
         if isinstance(data, dict) and data.get("face_auth"):
-            session._face_qr_cache = {"qr_url": data.get("qr_url", "")}
-            session._emit(SessionEvent.LIVE_FACE_AUTH_REQUIRED)
+            session.face_qr_cache = {"qr_url": data.get("qr_url", "")}
+            session._emit(
+                SessionEvent.LIVE_FACE_AUTH_REQUIRED, {"qr_url": data.get("qr_url", "")}
+            )
         else:
-            session._emit(SessionEvent.LIVE_START_FAIL)
+            session._emit(SessionEvent.LIVE_START_FAIL, str(res.result))
         return res
     session.config.rtmp_addr = data.get("rtmp_addr", "")
     session.config.rtmp_code = data.get("rtmp_code", "")
     session.app_state = AppState.LIVE
-    session._emit(SessionEvent.LIVE_STATE_CHANGED)
+    session._emit(
+        SessionEvent.LIVE_STATE_CHANGED,
+        {
+            "app_state": AppState.LIVE.value,
+            "rtmp_addr": session.config.rtmp_addr,
+            "rtmp_code": session.config.rtmp_code,
+        },
+    )
     return res
 
 
@@ -104,21 +121,23 @@ def live_stop(session: Session) -> FuncResult:
         FuncResult(SUCCESS) 或 FAIL
     """
     if not session.is_login:
-        session._emit(SessionEvent.LIVE_STOP_FAIL)
+        session._emit(SessionEvent.LIVE_STOP_FAIL, "未登录，无法下播")
         return FuncResult(type=FuncType.FAIL, result="未登录，无法下播")
     if not session.is_live or not session.is_replay:
-        session._emit(SessionEvent.LIVE_STOP_FAIL)
+        session._emit(SessionEvent.LIVE_STOP_FAIL, "未开播，无法下播")
         return FuncResult(type=FuncType.FAIL, result="未开播，无法下播")
     res = api_stop_live(cookies=session.config.cookies, room_id=session.config.room_id)
     if res.type != FuncType.SUCCESS:
-        session._emit(SessionEvent.LIVE_STOP_FAIL)
+        session._emit(SessionEvent.LIVE_STOP_FAIL, str(res.result))
         return res
     session.app_state = AppState.IDLE
-    session._emit(SessionEvent.LIVE_STATE_CHANGED)
+    session._emit(SessionEvent.LIVE_STATE_CHANGED, {"app_state": AppState.IDLE.value})
     return res
 
 
-def live_update_room(session: Session, title: str | None = None, area_id: int | None = None) -> FuncResult:
+def live_update_room(
+    session: Session, title: str | None = None, area_id: int | None = None
+) -> FuncResult:
     """修改直播间标题或分区，一次 API 调用完成。
 
     两个参数均为 None 时不发请求直接返回 FAIL。
@@ -134,20 +153,25 @@ def live_update_room(session: Session, title: str | None = None, area_id: int | 
         FuncResult(SUCCESS) 或 FAIL
     """
     if not session.is_login:
-        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL)
+        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL, "未登录，无法修改直播间信息")
         return FuncResult(type=FuncType.FAIL, result="未登录，无法修改直播间信息")
     if not title and not area_id:
-        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL)
+        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL, "未提供标题或分区ID")
         return FuncResult(type=FuncType.FAIL, result="未提供标题或分区ID")
-    res = api_update_room(cookies=session.config.cookies, room_id=session.config.room_id, title=title, area_id=area_id)
+    res = api_update_room(
+        cookies=session.config.cookies,
+        room_id=session.config.room_id,
+        title=title,
+        area_id=area_id,
+    )
     if res.type != FuncType.SUCCESS:
-        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL)
+        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL, str(res.result))
         return res
     if title:
         session.config.title = title
     if area_id:
         session.config.area_id = area_id
-    session._emit(SessionEvent.LIVE_INFO_UPDATED)
+    session._emit(SessionEvent.LIVE_INFO_UPDATED, {"title": title, "area_id": area_id})
     return res
 
 
@@ -163,12 +187,14 @@ def live_refresh_room_data(session: Session) -> FuncResult:
         FuncResult(SUCCESS, room_data) 或 FAIL
     """
     if not session.is_login:
-        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL)
+        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL, "未登录，无法获取直播间信息")
         return FuncResult(type=FuncType.FAIL, result="未登录，无法获取直播间信息")
-    result = api_get_room_data(cookies=session.config.cookies, room_id=session.config.room_id)
+    result = api_get_room_data(
+        cookies=session.config.cookies, room_id=session.config.room_id
+    )
     if result.type != FuncType.SUCCESS:
-        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL)
+        session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL, str(result.result))
         return result
     session.room_data = result.result or {}
-    session._emit(SessionEvent.LIVE_INFO_UPDATED)
+    session._emit(SessionEvent.LIVE_INFO_UPDATED, {"room_data": session.room_data})
     return result
