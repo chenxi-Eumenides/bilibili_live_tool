@@ -102,7 +102,7 @@ def auth_poll_qr(
     refresh_token = res.result["refresh_token"]
     session.config.cookies = cookies
     session.config.set_refresh_token(refresh_token)
-    session._login_verified = True
+    session.login_verified = True
     session.config.save_config()
     session._emit(SessionEvent.AUTH_LOGIN_SUCCESS, {"uid": session.config.uid})
     return FuncResult(type=FuncType.SUCCESS)
@@ -157,16 +157,15 @@ def auth_validate_login(session: Session) -> FuncResult:
         FuncResult(SUCCESS, {uname, mid, ...}) 或 FAIL
     """
 
-    if not session.config.cookies:
-        session._login_verified = False
+    session.login_verified = False
+    if not session.config.has_cookies:
         session._emit(SessionEvent.AUTH_LOGIN_FAILED, "无 cookies, 未登录")
         return FuncResult(type=FuncType.FAIL, result="无 cookies, 未登录")
     res = api_get_user_nav(session.config.cookies)
     if res.type != FuncType.SUCCESS:
-        session._login_verified = False
         session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录已过期")
         return FuncResult(type=FuncType.FAIL, result="登录已过期")
-    session._login_verified = True
+    session.login_verified = True
     session._emit(SessionEvent.AUTH_LOGIN_SUCCESS, {"uid": session.config.uid})
     return FuncResult(type=FuncType.SUCCESS, result=res.result)
 
@@ -186,7 +185,7 @@ def auth_logout(session: Session) -> FuncResult:
 
     session.config = None
     session.app_state = None
-    session._login_verified = False
+    session.login_verified = False
     session.room_data = {}
     session.qr_cache = {}
     session.face_qr_cache = {}

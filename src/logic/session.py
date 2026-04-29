@@ -118,11 +118,22 @@ class Session:
             self._config = CONFIG()
 
     @property
+    def login_verified(self) -> bool:
+        return self._login_verified
+
+    @login_verified.setter
+    def login_verified(self, value: bool):
+        self._login_verified = value
+        if value and self.is_login and self._app_state == AppState.UNAUTH:
+            self._app_state = AppState.IDLE
+        elif not value:
+            self._app_state = AppState.UNAUTH
+
+    @property
     def is_login(self) -> bool:
         return bool(
-            self.config.has_cookies
-            and self._login_verified
-            and self._app_state != AppState.UNAUTH
+            self._login_verified
+            and self.config.has_cookies
         )
 
     @property
