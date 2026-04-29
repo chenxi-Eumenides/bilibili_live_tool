@@ -60,7 +60,7 @@ def auth_poll_qr(
     deadline = monotonic() + timeout_sec
     while True:
         # 取消或超时
-        if monotonic() < deadline:
+        if monotonic() > deadline:
             session._emit(SessionEvent.AUTH_LOGIN_FAILED, "登录超时")
             return FuncResult(type=FuncType.FAIL, result="登录超时")
         if stop_event and stop_event.is_set():

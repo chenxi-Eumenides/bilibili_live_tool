@@ -68,16 +68,13 @@ def _build_parser():
     return p
 
 
-def _load_session() -> Session:
-    config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
-    session = Session(config)
-    if session.config.has_cookies:
-        res = auth_validate_login(session)
-        if res.type == FuncType.SUCCESS:
-            auth_update_safety(session)
-            live_init(session)
-        elif result.type == FuncType.FAIL:
-            print("登录已过期，请使用 --login 重新登录")
+def _check_login(session) -> Session:
+    res = auth_validate_login(session)
+    if res.type != FuncType.SUCCESS:
+        print(f"{res.result}，请使用 --login 重新登录")
+        return None
+    res = auth_update_safety(session)
+    res = live_init(session)
     return session
 
 
@@ -93,13 +90,17 @@ def run():
 
 
 async def _async_main(args):
-    session = None
     try:
-        session = _load_session()
+        config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
+        session = Session(config)
         if args.cli:
             await handle_cli(session)
         elif args.login:
             await handle_login(session)
+        else:
+            session = _check_login(session)
+        if session is None:
+            return
         elif args.status:
             await handle_live_status(session)
         elif args.start:

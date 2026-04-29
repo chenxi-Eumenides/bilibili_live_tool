@@ -13,12 +13,12 @@ from ..logic import (
     live_init,
 )
 from ..utils.constant import SessionEvent
+from ..utils.lib import generate_qr_text
 
-
-async def handle_live_start(session, args) -> None:
-    area = int(args.area[0]) if args.area else session.config.area_id
+async def handle_live_start(session, area, title) -> None:
+    area = area if area else session.config.area_id
     if area == 0:
-        print("请使用 --area 指定分区ID，或先用 --area 保存到配置。")
+        print("请使用 -a 指定分区ID，或先用 --update -a 保存分区ID。")
         print("可用 --area 查看分区列表。")
         return
 
@@ -31,6 +31,9 @@ async def handle_live_start(session, args) -> None:
     def on_face_auth(data):
         captured["event"] = "face_auth"
         captured["data"] = data or {}
+
+    def on_info_updated(data):
+        captured["event"] = "info_updated"
 
     def on_fail(msg):
         captured["event"] = "fail"
@@ -49,11 +52,17 @@ async def handle_live_start(session, args) -> None:
         if rtmp:
             print(f"推流地址: {rtmp}")
             print(f"推流码:   {code}")
-        if args.title:
-            await handle_update(session, args)
+        if title:
+            session.once(SessionEvent.LIVE_INFO_UPDATED, on_info_updated)
+            session.once(SessionEvent.LIVE_INFO_UPDATED_FAIL, on_fail)
+            live_update_room(session, title=title)
+
+            if captured.get("event") == "info_updated":
+                print("更新标题成功")
     elif captured.get("event") == "face_auth":
         qr = captured["data"].get("qr_url", "")
-        print(f"需要人脸认证: {qr}")
+        print(f"需要人脸认证: ")
+        print("\n".join(generate_qr_text(qr)))
     else:
         print(captured.get("msg", "开播失败"))
 
@@ -112,14 +121,9 @@ async def handle_live_status(session) -> None:
         print(f"当前观众: {online}")
 
 
-async def handle_update(session, args) -> None:
-    title = args.title
-    area = args.area
-
-    area_id = int(area[0]) if area else None
-
+async def handle_update(session, area_id, title) -> None:
     if not title and not area_id:
-        print("请指定 --title 和/或 --area")
+        print("请指定 -a 和/或 -t")
         return
 
     captured = {}

@@ -28,7 +28,7 @@ class Session:
         """
 
         # user
-        self.room_data: dict = {}
+        self._room_data: dict = {}
         self._config = config or CONFIG()
         self._app_state = AppState.UNAUTH
         self._login_verified = False
@@ -166,3 +166,15 @@ class Session:
             self._app_state = value
         elif value is None:
             self._app_state = AppState.UNAUTH
+
+    @property
+    def room_data(self) -> dict:
+        return self._room_data
+
+    @room_data.setter
+    def room_data(self, value: dict):
+        self._room_data = value
+        self.config.room_id = value.get("room_id", 0)
+        self.config.title = value.get("title", "")
+        self.config.area_id = value.get("area_id", 0)
+        self.config.parent_area_id = value.get("parent_area_id", 0)

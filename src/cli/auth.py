@@ -8,11 +8,6 @@ from ..utils.constant import SessionEvent
 from ..utils.lib import generate_qr_text
 
 
-def _print_qr(qr_url: str) -> None:
-    for line in generate_qr_text(qr_url):
-        print(line)
-
-
 async def handle_login(session) -> bool:
     if session.is_login:
         print(f"已登录 (uid={session.config.uid})")
@@ -39,7 +34,7 @@ async def handle_login(session) -> bool:
         return False
 
     print("请使用B站App扫描以下二维码登录:\n")
-    _print_qr(qr_data["url"])
+    print("\n".join(generate_qr_text(qr_data["url"])))
     print("\n等待扫码...")
 
     poll_result = {}

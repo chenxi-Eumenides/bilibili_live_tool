@@ -543,14 +543,18 @@ def api_get_bili_ticket(cookies: dict) -> FuncResult:
     )
     if not res.data:
         raise API_DATA_ERROR(f"无法获得bili_ticket数据 {res.data}")
+    img_url = res.data.get("nav", {}).get("img","")
+    sub_url = res.data.get("nav", {}).get("sub","")
+    img_key = img_url.rpartition("/")[2].partition(".")[0]
+    sub_key = sub_url.rpartition("/")[2].partition(".")[0]
     return FuncResult(
         type=FuncType.SUCCESS,
         result={
             "bili_ticket": res.data.get("ticket"),
             "created_at": res.data.get("created_at"),
             "ttl": res.data.get("ttl"),
-            "img_key": res.data.get("nav", {}).get("img"),
-            "sub_key": res.data.get("nav", {}).get("sub"),
+            "img_key": img_key,
+            "sub_key": sub_key,
         },
     )
 
