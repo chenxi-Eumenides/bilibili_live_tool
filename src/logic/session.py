@@ -32,13 +32,13 @@ class Session:
         self._config = config or CONFIG()
         self._app_state = AppState.UNAUTH
         self._login_verified = False
-        self._qr_cache: dict[str, str] = {"qr_url": "", "qr_key": ""}
-        self._face_qr_cache: dict[str, str] = {"qr_url": ""}
+        self.qr_cache: dict[str, str] = {"qr_url": "", "qr_key": ""}
+        self.face_qr_cache: dict[str, str] = {"qr_url": ""}
         # app
         self.livehime_build: str = ApiData.LIVEHIME_BUILD
         self.livehime_version: str = ApiData.LIVEHIME_VERSION
         self.area_list: LiveAreaList | None = None
-        self._danmaku_room_id = 0
+        self.danmaku_room_id = 0
         self._danmaku_running = False
         self._danmaku_stop_event: Event | None = None
         self._listeners: dict[str, list[Callable[..., None]]] = {}
@@ -79,9 +79,11 @@ class Session:
             event: 事件名
             callback: 回调函数，仅触发一次
         """
+
         def _wrapper(*args: Any) -> None:
             self.off(event, _wrapper)
             callback(*args)
+
         self.on(event, _wrapper)
 
     def _emit(self, event: str, *args: Any) -> None:
@@ -117,7 +119,11 @@ class Session:
 
     @property
     def is_login(self) -> bool:
-        return bool(self.config.has_cookies and self._login_verified and self._app_state != AppState.UNAUTH)
+        return bool(
+            self.config.has_cookies
+            and self._login_verified
+            and self._app_state != AppState.UNAUTH
+        )
 
     @property
     def is_live(self) -> bool:
