@@ -1,31 +1,43 @@
-"""命令行入口"""
+"""CLI 入口：参数解析、异步分派"""
 
-from argparse import ArgumentParser, Namespace
-from asyncio import run as asyncio_run
-from rich import print
+import asyncio
+from argparse import ArgumentParser
 from sys import argv
 
 from ..logic import (
     Session,
-    _listen_loop,
-    auth_get_qr,
-    auth_logout,
-    auth_poll_qr,
     auth_validate_login,
-    live_get_area_list,
-    live_refresh_room_data,
-    live_start,
-    live_stop,
-    live_update_room,
-    danmaku_start,
-    danmaku_stop,
+    auth_update_safety,
+    live_init,
 )
 from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE
 from ..utils.data import FuncType
-from ..utils.lib import generate_qr_text
+from .auth import handle_login, handle_logout
+from .live import (
+    handle_live_start,
+    handle_live_stop,
+    handle_live_status,
+    handle_update,
+    handle_area,
+    handle_cli,
+)
+from .danmaku import handle_danmaku
 
-CLI_FLAGS = frozenset({"--login", "--logout", "--live", "--title", "--area", "--danmaku", "--cli"})
+CLI_FLAGS = frozenset(
+    {
+        "--login",
+        "--logout",
+        "--start",
+        "--stop",
+        "--status",
+        "--update",
+        "--title",
+        "--area",
+        "--danmaku",
+        "--cli",
+    }
+)
 
 
 def help_lines():
@@ -43,250 +55,77 @@ def help_lines():
     ]
 
 
-def _load_session() -> Session:
-    config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
-    session = Session(config)
-    if session.config.cookies:
-        result = auth_validate_login(session)
-        if result.type == FuncType.SUCCESS:
-            print(f"从 {CONFIG_FILE} 恢复登录 (uid={session.user_id})")
-    return session
-
-
-def _print_qr(qr_url: str) -> None:
-    for line in generate_qr_text(qr_url):
-        print(line)
-
-
-def handle_login(session: Session) -> bool:
-    if session.is_logged_in:
-        print(f"已登录 (uid={session.user_id})，跳过登录")
-        return True
-
-    result = auth_get_qr(session)
-    if result.type != FuncType.SUCCESS:
-        print(f"获取二维码失败: {result.result}")
-        return False
-
-    qr_url = result.result["qr_url"]
-    qr_key = result.result["qr_key"]
-    print("请使用B站App扫描以下二维码登录:\n")
-    _print_qr(qr_url)
-
-    print("\n等待扫码...")
-    poll = auth_poll_qr(session, qr_key)
-    if poll.type == FuncType.SUCCESS:
-        session.config.save_config()
-        print(f"登录成功! uid={session.user_id}")
-        return True
-
-    print(f"登录失败: {poll.result}")
-    return False
-
-
-def handle_live_start(session: Session, args) -> None:
-    area = int(args.area[0]) if args.area else session.config.area_id
-    if area == 0:
-        print("请使用 --area 指定分区ID，或先用 --area 保存到配置。")
-        print("可用 --area list 查看分区列表。")
-        return
-    result = live_start(session, area_id=area)
-    if result.type != FuncType.SUCCESS:
-        print(f"开播失败: {result.result}")
-        return
-    data = result.result
-    print(f"开播成功 (房间:{session.room_id})")
-    if data.get("rtmp_addr"):
-        print(f"推流地址: {data['rtmp_addr']}")
-        print(f"推流码:   {data.get('rtmp_code','')}")
-    if args.title:
-        handle_update(session, args)
-    elif args.area:
-        handle_update(session, args)
-
-
-def handle_live_stop(session: Session) -> None:
-    result = live_stop(session)
-    if result.type == FuncType.SUCCESS:
-        print("下播成功")
-    else:
-        print(f"下播失败: {result.result}")
-
-
-def handle_live_status(session: Session) -> None:
-    refresh = live_refresh_room_data(session)
-    if refresh.type != FuncType.SUCCESS:
-        print(f"刷新失败: {refresh.result}")
-        return
-    data = session.config.room_data
-    is_live = data.get("live_status")
-    print(f"房间号: {data.get('room_id','?')}")
-    print(f"标题:   {data.get('title','?')}")
-    print(f"分区:   {data.get('area_name','?')} (id={data.get('area_id','?')})")
-    status_map = {0: "未开播", 1: "直播中", 2: "轮播中"}
-    print(f"状态:   {status_map.get(is_live, f'未知({is_live})')}")
-    if is_live:
-        live_time = data.get("live_time", "00:00:00")
-        if live_time and live_time != "0000-00-00 00:00:00":
-            print(f"直播时长: {live_time}")
-    online = data.get("online", 0)
-    if online:
-        print(f"当前观众: {online}")
-
-
-def handle_update(session: Session, args) -> None:
-    title = args.title
-    area = args.area
-
-    if area and area[0] == "list":
-        result = live_get_area_list(session)
-        if result.type != FuncType.SUCCESS:
-            print(f"获取分区列表失败: {result.result}")
-            return
-        parent_id = int(area[1]) if len(area) > 1 else None
-        for main in result.result:
-            if parent_id is None:
-                print(f"  [{main.id}] {main.name}")
-            elif main.id == parent_id:
-                print(f"  [{main.id}] {main.name}")
-                for sub in main.list:
-                    print(f"    [{sub.id}] {sub.name}")
-        return
-
-    area_id = int(area[0]) if area else None
-
-    if title or area_id:
-        r = live_update_room(session, title=title, area_id=area_id)
-        if r.type == FuncType.SUCCESS:
-            if title:
-                print(f"标题已更新: {title}")
-            if area_id:
-                print(f"分区已更新: {area_id}")
-        else:
-            print(f"修改失败: {r.result}")
-
-
-def handle_danmaku(session: Session, room_id: str | None = None) -> None:
-    if room_id:
-        session.danmaku_room_id = int(room_id)
-        print(f"监听直播间: {session.danmaku_room_id}")
-    else:
-        print(f"监听自己的直播间: {session.room_id}")
-
-    result = danmaku_start(session)
-    if result.type != FuncType.SUCCESS:
-        print(f"启动失败: {result.result}")
-        return
-
-    def on_received(msg):
-        if hasattr(msg, "format_rich"):
-            print(msg.format_rich())
-        else:
-            print(msg)
-
-    session.on("danmaku:received", on_received)
-    print("按两次 Ctrl+C 停止")
-    try:
-        asyncio_run(_listen_loop(session))
-    except KeyboardInterrupt:
-        pass
-    finally:
-        danmaku_stop(session)
-        print("已停止")
-
-
-def handle_cli(session: Session) -> None:
-    if not handle_login(session):
-        return
-    if session.room_id == 0:
-        print("房间号未知，开播时将自动获取")
-
-    refresh = live_refresh_room_data(session)
-    if refresh.type != FuncType.SUCCESS:
-        print(f"获取房间状态失败: {refresh.result}")
-        return
-    rd = session.config.room_data
-    if rd.get("area_id"):
-        session.config.area_id = rd["area_id"]
-    if rd.get("title"):
-        session.config.title = rd["title"]
-    is_live = rd.get("live_status")
-    if is_live:
-        print("当前正在直播")
-    else:
-        print("正在开播...")
-        handle_live_start(session, Namespace(area=None, title=None))
-
-
-def handle_logout(session: Session) -> None:
-    result = auth_logout(session)
-    print(result.result if result.type == FuncType.SUCCESS else f"登出失败: {result.result}")
-
-
-def main():
-    session = None
-    try:
-        session = _run()
-    except KeyboardInterrupt:
-        print()
-    finally:
-        if session and session.is_logged_in:
-            session.config.save_config()
-
-
-def _run():
+def _build_parser():
     p = ArgumentParser(prog="bili", add_help=False)
     p.add_argument("--login", action="store_true")
     p.add_argument("--logout", action="store_true")
-    p.add_argument("--live", choices=["start", "stop", "status"])
+    p.add_argument("--start", action="store_true")
+    p.add_argument("--stop", action="store_true")
+    p.add_argument("--status", action="store_true")
+    p.add_argument("--update", action="store_true")
     p.add_argument("--area", nargs="*", default=None)
     p.add_argument("--title", type=str, default=None)
     p.add_argument("--danmaku", nargs="?", const="", default=None)
     p.add_argument("--cli", action="store_true")
+    return p
 
+
+def _load_session(*, with_live_init: bool = False) -> Session:
+    config = CONFIG.from_file() if CONFIG_FILE.exists() else CONFIG()
+    session = Session(config)
+    if session.config.cookies:
+        result = auth_validate_login(session)
+        if result.type == FuncType.SUCCESS and with_live_init:
+            auth_update_safety(session)
+            live_init(session)
+        elif result.type == FuncType.FAIL:
+            print("登录已过期，请使用 --login 重新登录")
+    return session
+
+
+def run():
+    p = _build_parser()
     args = p.parse_args()
 
     if len(argv) == 1:
         p.print_help()
-        return None
+        return
 
+    asyncio.run(_async_main(args))
+
+
+async def _async_main(args):
     session = None
+    try:
+        if args.login:
+            session = _load_session()
+            await handle_login(session)
+            return
+        if args.logout:
+            session = _load_session()
+            await handle_logout(session)
+            return
+        if args.danmaku is not None:
+            session = _load_session()
+            await handle_danmaku(session, args.danmaku)
+            return
 
-    if args.login:
-        session = _load_session()
-        handle_login(session)
-        return session
+        session = _load_session(with_live_init=True)
 
-    if args.logout:
-        session = _load_session()
-        handle_logout(session)
-        return session
-
-    if args.live:
-        session = _load_session()
-        if args.live == "start":
-            handle_live_start(session, args)
-        elif args.live == "stop":
-            handle_live_stop(session)
-        elif args.live == "status":
-            handle_live_status(session)
-        return session
-
-    if args.title or args.area:
-        session = _load_session()
-        handle_update(session, args)
-        return session
-
-    if args.danmaku is not None:
-        session = _load_session()
-        handle_danmaku(session, args.danmaku)
-        return session
-
-    if args.cli:
-        session = _load_session()
-        handle_cli(session)
-        return session
-
-
-if __name__ == "__main__":
-    main()
+        if args.start:
+            await handle_live_start(session, args)
+        elif args.stop:
+            await handle_live_stop(session)
+        elif args.status:
+            await handle_live_status(session)
+        elif args.update:
+            await handle_update(session, args)
+        elif args.area is not None:
+            await handle_area(session, args.area)
+        elif args.cli:
+            await handle_cli(session)
+    except KeyboardInterrupt:
+        print()
+    finally:
+        if session and session.is_login:
+            session.config.save_config()
