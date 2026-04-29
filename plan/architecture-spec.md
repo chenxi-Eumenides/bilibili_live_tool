@@ -36,7 +36,7 @@
 - 用户层只 import 逻辑层，不直接 import 基础层（入口文件除外）
 - CLI 和 TUI 各自导出 `FLAGS`、`run()`、`help_lines()`
 
-**当前状态**：基础层 ✅ 定稿 → 逻辑层 ✅ 主体定稿（danmaku 🔶）→ 用户层 🔶 待适配
+**当前状态**：基础层 ✅ 定稿 → 逻辑层 ✅ 全部定稿 → 用户层 🔶 待适配
 
 ---
 
@@ -143,9 +143,7 @@ class Session:
     _emit(event, *args)      # 触发（内部使用）
 ```
 
-> **待补充公开 property**（当前为私有字段，适配用户层时需要）：
-> - `danmaku_room_id` → getter/setter for `_danmaku_room_id`
-> - `qr_cache` → getter for `_qr_cache`
+> 公开属性：`danmaku_room_id`、`qr_cache`、`face_qr_cache` 均为直接公开字段（无下划线前缀）
 
 ### 4.2 auth.py ✅ 定稿
 
@@ -167,11 +165,7 @@ class Session:
 | `live_update_room(session, title, area_id)` | 改标题/分区 |
 | `live_refresh_room_data(session)` | 拉取最新 room_data |
 
-### 4.4 danmaku.py 🔶 待更新
-
-**当前状态**：仍引用旧版 Session 属性（`session.is_logged_in`、`session.user_id`、`session.room_id`），需适配新版 Session API。
-
-**目标设计**：
+### 4.4 danmaku.py ✅ 定稿
 
 | 函数 | 说明 |
 |------|------|
@@ -179,14 +173,12 @@ class Session:
 | `danmaku_stop(session)` | 设置停止信号 |
 | `_listen_loop(session)` | 异步主循环：获取信息 → 连接 → 认证 → 心跳 → 接收 → 清理 |
 
-**适配要点**：
-- `session.is_logged_in` → `session.is_login`
-- `session.cookies` → `session.config.cookies`
-- `session.user_id` → `session.config.uid`
-- `session.room_id` → `session.config.room_id`
+**适配完成**：旧属性替换（`session.is_logged_in` → `session.is_login`、`session.user_id` → `session.config.uid`、`session.room_id` → `session.config.room_id`），新增事件发布。
 
 ### 4.5 事件系统（SessionEvent）✅ 定稿
 
+| 事件 | 触发函数 |
+|------|---------|
 | 事件 | 触发函数 |
 |------|---------|
 | `AUTH_QR_READY` | auth_get_qr |
@@ -197,6 +189,8 @@ class Session:
 | `AUTH_LOGIN_FAILED` | auth_poll_qr, auth_validate_login |
 | `AUTH_LOGOUT` | auth_logout |
 | `AUTH_UPDATE_SAFETY` | auth_update_safety |
+| `AUTH_SAFETY_SKIPPED` | auth_update_safety |
+| `AUTH_UPDATE_SAFETY_FAIL` | auth_update_safety |
 | `LIVE_STATE_CHANGED` | live_start, live_stop |
 | `LIVE_INFO_UPDATED` | live_init, live_update_room, live_refresh_room_data |
 | `LIVE_INFO_UPDATED_FAIL` | live_init, live_update_room, live_refresh_room_data |
@@ -206,7 +200,10 @@ class Session:
 | `LIVE_START_FAIL` | live_start |
 | `LIVE_STOP_FAIL` | live_stop |
 | `DANMAKU_RECEIVED` | _listen_loop |
-| `DANMAKU_STOPPED` | _listen_loop |
+| `DANMAKU_STOPPED` | _listen_loop, danmaku_stop |
+| `DANMAKU_STARTED` | danmaku_start |
+| `DANMAKU_START_FAIL` | danmaku_start |
+| `DANMAKU_STOP_FAIL` | danmaku_stop |
 | `ERROR` | 各处 |
 | `EXCEPTION` | 各处 |
 
@@ -301,18 +298,45 @@ BiliLiveToolApp (App)
 | `session.room_id` | `danmaku_panel.py:26` | `session.config.room_id` |
 | `session.danmaku_room_id` | `danmaku_panel.py:33` | `session.config.danmaku_room_id`（或加 property）|
 
-### 6.4 样式系统（✅ 已有，无需变更）
+### 6.4 样式系统（✅ TCSS 颜色变量统一）
+
+7 个 `.tcss` 文件头部统一声明了 18 个颜色变量：
 
 ```tcss
-$bg-primary: #1a1a1a     /* 最深背景 */
-$bg-panel: #2a2a2a       /* 面板背景 */
-$bg-sub: #3a3a3a          /* 次级背景 */
-$accent: #00a1d6          /* 强调色（B站蓝）*/
-$border: #006f95          /* 边框色 */
-$success: #52c41a         /* 成功 */
-$error: #f5222d           /* 错误 */
-$warning: #f59e0b         /* 警告 */
+/* 背景色 */
+$bg-darkest: #1a1a1a     /* 最深背景 */
+$bg-dark: #2a2a2a        /* 面板/侧栏背景 */
+$bg-medium: #3a3a3a      /* 次级背景/卡片 */
+
+/* 文字色 */
+$text-primary: #e5e5e5   /* 主文本 */
+$text-muted: #999999     /* 次要文本 */
+
+/* B站强调色 */
+$accent: #00a1d6         /* 强调色（B站蓝）*/
+$accent-hover: #0088b3   /* 悬停 */
+$accent-active: #006f95  /* 激活 */
+$accent-dim: #005574     /* 边框 / 非活跃状态 */
+
+/* 语义色 */
+$success: #52c41a        /* 成功 */
+$error: #f5222d          /* 错误/警告信息 */
+$warning: #f59e0b        /* 警告 */
+
+/* 弹幕头衔色 */
+$badge-tidu: #0066CC     /* 提督 */
+$badge-jianzhang: #66CCFF /* 舰长 */
+$badge-fan: #FFB6C1      /* 粉丝 */
+
+/* 弹幕系统通知色 */
+$system-light: #FF6B6B   /* 系统消息（亮）*/
+$system-dark: #CC0000    /* 系统消息（暗）*/
+
+/* 边框 */
+$border-dim: #555555     /* 次级边框 */
 ```
+
+> 修改颜色仅需同步 7 个 `.tcss` 文件头部变量定义。`header.py` 中的 `color_map` 字典同样使用上述 hex 值。
 
 ---
 
@@ -386,10 +410,11 @@ else:
 
 ## 十、适配路线图
 
-### 第一阶段：Logic 层收尾
-- [ ] `danmaku.py` — 将旧 Session 属性名替换为新 API
-- [ ] `Session` — 添加 `danmaku_room_id` property、`qr_cache` property
-- [ ] 同步更新 `__init__.py` 导出
+### 第一阶段：Logic 层收尾（已完成 ✅）
+- [x] `danmaku.py` — 旧 Session 属性替换 + 新增事件
+- [x] `Session` — `danmaku_room_id`、`qr_cache`、`face_qr_cache` 改为公开字段
+- [x] 同步更新 `__init__.py` 导出
+- [x] 新增 5 个事件常量 + 所有 return 事件通知
 
 ### 第二阶段：CLI 层适配
 - [ ] 替换 5 个错误 Session 属性路径

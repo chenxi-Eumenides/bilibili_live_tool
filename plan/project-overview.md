@@ -1,7 +1,6 @@
 # bilibili_live_tool 项目说明
 
 > **代码结构文档** — 反映仓库当前实际状态
-> 注意：logic 层已部分重构，danmaku/CLI/TUI 尚未适配新 API。
 > **最后更新**: 2026-04-29
 > **当前分支**: `dev`
 
@@ -22,7 +21,7 @@
 ### 开发基线
 
 - 方向：**自下而上**（基础层 → 逻辑层 → 用户层）
-- 当前：**基础层定稿 ✅，逻辑层主体定稿 ✅，用户层待适配 🔶**
+- 当前：**基础层定稿 ✅，逻辑层全部定稿 ✅，用户层待适配 🔶**
 
 ---
 
@@ -39,6 +38,7 @@
 | R07 | 2026-04-28 | 用户 | 代码风格适配规范 | ✅ |
 | R08 | 2026-04-28 | 用户 | 生成项目说明文件 | ✅ |
 | R09-R17 | — | — | Logic 修复项、测试规范、分支策略 | ✅ |
+| R18 | 2026-04-29 | 用户 | 分支工作流：小任务从 dev 分叉合并回 dev；大型任务从 dev 分叉 dev/xxx，其上再分叉子任务分支，全部完成后 dev/xxx→dev | ✅ |
 
 ---
 
@@ -54,8 +54,7 @@
 │              │  待适配         │  待适配           │
 ├──────────────┴─────────────────┴───────────────────┤
 │                    逻辑层                           │
-│  src/logic/  session/auth/live ✅                  │
-│              danmaku.py 🔶 待更新                  │
+│  src/logic/  session/auth/live/danmaku ✅ 全部定稿 │
 ├────────────────────────────────────────────────────┤
 │                    基础层                           │
 │  src/utils/  ✅ 全部定稿                            │
@@ -89,9 +88,7 @@
 | `session.py` | `Session` (is_login/is_live/can_live/app_state, 事件系统) | ✅ 定稿 |
 | `auth.py` | `auth_get_qr`, `auth_poll_qr`, `auth_update_safety`, `auth_validate_login`, `auth_logout` | ✅ 定稿 |
 | `live.py` | `live_init`, `live_start`, `live_stop`, `live_update_room`, `live_refresh_room_data` | ✅ 定稿 |
-| `danmaku.py` | `danmaku_start`, `danmaku_stop`, `_listen_loop` | 🔶 待更新 |
-
-> `danmaku.py` 当前仍引用旧版 Session 属性（`session.is_logged_in`、`session.user_id`、`session.room_id`），需适配新版 Session API。
+| `danmaku.py` | `danmaku_start`, `danmaku_stop`, `_listen_loop` | ✅ 定稿 |
 
 ### 4.3 用户层 CLI `src/cli/` 🔶 未适配
 
@@ -106,10 +103,10 @@
 | 根 | `main.py`, `app.py`, `__init__.py` | 原始代码 |
 | `layout/` | `header.py`, `sidebar.py`, `main_panel.py`, `status_bar.py` | 原始代码 |
 | `panels/` | `auth_panel.py`, `dashboard_panel.py`, `settings_panel.py`, `danmaku_panel.py`, `help_panel.py` | 原始代码 |
-| `styles/` | 7 个 tcss 文件 | ✅ 视觉可用 |
+| `styles/` | 7 个 tcss 文件 | ✅ 18色变量统一 |
 
 > TUI 的 layout/panels/styles 结构已搭建，但内部引用的 logic API 仍为旧版。
-> 适配将在 logic 层（含 danmaku）定稿后进行。
+> 适配将在 CLI/TUI 层统一进行。
 
 ---
 
@@ -123,7 +120,7 @@ src/
 │   ├── session.py               # ✅ 定稿
 │   ├── auth.py                  # ✅ 定稿
 │   ├── live.py                  # ✅ 定稿
-│   ├── danmaku.py               # 🔶 待更新
+│   ├── danmaku.py               # ✅ 定稿
 │   └── __init__.py
 ├── tui/
 │   ├── app.py, main.py          # 🔶 待适配
@@ -207,7 +204,7 @@ class AppState(Enum):
 | logic/session | ✅ 定稿 | Session 状态 + 事件系统 |
 | logic/auth | ✅ 定稿 | 扫码登录全流程 |
 | logic/live | ✅ 定稿 | 开播/下播/改标题/分区/刷新 |
-| logic/danmaku | 🔶 待更新 | 引用旧版 Session 属性 |
+| logic/danmaku | ✅ 定稿 | 旧属性替换 + 新增事件 |
 | CLI | 🔶 待适配 | 基于旧版 logic API |
 | TUI | 🔶 待适配 | 基于旧版 logic API |
 | 单元测试 | 🔶 待更新 | 需同步适配 |
@@ -250,7 +247,31 @@ ruff check src/                             # 代码检查
 ## 十三、Git 分支策略
 
 ```
-master → dev（当前）
+master → dev（主开发分支）
+            ├── feat/xxx        # 单个小任务分支
+            └── dev/xxx         # 大型任务集成分支
+                    └── feat/xxx # 大型任务下的子任务分支
 ```
-- 功能分支开发完成后合并到 `dev`
-- 合并后删除功能分支
+
+### 分支工作流规则
+
+#### 单个小任务
+1. 从 `dev` 分叉 `feat/<任务名>` 分支
+2. 在 `feat/xxx` 上完成开发
+3. 合并回 `dev`，删除分支
+
+#### 大型任务（由多个小任务组成）
+1. 从 `dev` 分叉 `dev/<任务名>` 集成分支
+2. 从 `dev/xxx` 分叉子任务分支 `feat/<子任务>`（可多个并行）
+3. 子任务完成后逐个合并回 `dev/xxx`
+4. 全部子任务完成后，将 `dev/xxx` 合并回 `dev`
+5. 删除 `dev/xxx` 及其所有子任务分支
+
+### 当前分支状态
+
+```
+dev（当前）
+  └── （CLI 改造直接完成在此分支上，未使用分支流程）
+```
+
+> 后续开发将严格遵循上述分支工作流。
