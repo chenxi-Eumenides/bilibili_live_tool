@@ -1,7 +1,6 @@
 """CLI 认证命令处理"""
 
-import asyncio
-
+from asyncio import to_thread
 from rich import print
 
 from ..logic import auth_get_qr, auth_poll_qr, auth_logout
@@ -54,7 +53,7 @@ async def handle_login(session) -> bool:
 
     session.once(SessionEvent.AUTH_LOGIN_SUCCESS, on_success)
     session.once(SessionEvent.AUTH_LOGIN_FAILED, on_failed)
-    await asyncio.to_thread(auth_poll_qr, session, qr_data["key"])
+    await to_thread(auth_poll_qr, session, qr_data["key"])
 
     if poll_result.get("event") == "fail":
         print(f"登录失败: {poll_result.get('msg')}")

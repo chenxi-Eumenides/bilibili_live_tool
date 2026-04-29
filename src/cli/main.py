@@ -1,7 +1,7 @@
 """CLI 入口：参数解析、异步分派"""
 
-import asyncio
 from argparse import ArgumentParser
+from asyncio import run as asyncio_run
 from sys import argv
 
 from ..logic import (
@@ -91,7 +91,7 @@ def run():
         p.print_help()
         return
 
-    asyncio.run(_async_main(args))
+    asyncio_run(_async_main(args))
 
 
 async def _async_main(args):
