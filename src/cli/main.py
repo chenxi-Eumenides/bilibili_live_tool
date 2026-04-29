@@ -13,7 +13,7 @@ from ..logic import (
 from ..utils.config import CONFIG
 from ..utils.constant import CONFIG_FILE
 from ..utils.data import FuncType
-from .auth import handle_login, handle_logout
+from .auth import handle_login
 from .live import (
     handle_live_start,
     handle_live_stop,
@@ -27,7 +27,6 @@ from .danmaku import handle_danmaku
 CLI_FLAGS = frozenset(
     {
         "--login",
-        "--logout",
         "--start",
         "--stop",
         "--status",
@@ -58,7 +57,6 @@ def help_lines():
 def _build_parser():
     p = ArgumentParser(prog="bili", add_help=False)
     p.add_argument("--login", action="store_true")
-    p.add_argument("--logout", action="store_true")
     p.add_argument("--start", action="store_true")
     p.add_argument("--stop", action="store_true")
     p.add_argument("--status", action="store_true")
@@ -100,10 +98,6 @@ async def _async_main(args):
         if args.login:
             session = _load_session()
             await handle_login(session)
-            return
-        if args.logout:
-            session = _load_session()
-            await handle_logout(session)
             return
         if args.danmaku is not None:
             session = _load_session()

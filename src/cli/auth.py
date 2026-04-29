@@ -3,7 +3,7 @@
 from asyncio import to_thread
 from rich import print
 
-from ..logic import auth_get_qr, auth_poll_qr, auth_logout
+from ..logic import auth_get_qr, auth_poll_qr
 from ..utils.constant import SessionEvent
 from ..utils.lib import generate_qr_text
 
@@ -63,18 +63,3 @@ async def handle_login(session) -> bool:
     print(f"登录成功! uid={session.config.uid}")
     return True
 
-
-async def handle_logout(session) -> None:
-    logout_data = {}
-
-    def on_logout(data):
-        logout_data["emitted"] = True
-        logout_data["reason"] = (data or {}).get("reason", "登出成功")
-
-    session.once(SessionEvent.AUTH_LOGOUT, on_logout)
-    auth_logout(session)
-
-    if logout_data.get("emitted"):
-        print(logout_data["reason"])
-    else:
-        print("登出失败")
