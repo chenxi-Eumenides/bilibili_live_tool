@@ -15,7 +15,7 @@ def _print_qr(qr_url: str) -> None:
 
 async def handle_login(session) -> bool:
     if session.is_login:
-        print(f"已登录 (uid={session.config.uid})，跳过登录")
+        print(f"已登录 (uid={session.config.uid})")
         return True
 
     qr_data = {}
