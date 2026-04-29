@@ -1,10 +1,32 @@
+/* ========================================
+   深色主题色板（统一变量）
+   ======================================== */
+$bg-darkest: #1a1a1a;
+$bg-dark: #2a2a2a;
+$bg-medium: #3a3a3a;
+$text-primary: #e5e5e5;
+$text-muted: #999999;
+$accent: #00a1d6;
+$accent-hover: #0089b6;
+$accent-active: #006f95;
+$accent-dim: #005574;
+$success: #52c41a;
+$error: #f5222d;
+$warning: #f59e0b;
+$border-dim: #555555;
+$badge-tidu: #0066CC;
+$badge-jianzhang: #66CCFF;
+$badge-fan: #FFB6C1;
+$system-light: #FF6B6B;
+$system-dark: #CC0000;
+
 /* ===== 布局组件样式 ===== */
 
 Header {
     height: 2;
-    background: #2a2a2a;
-    color: #e5e5e5;
-    border-bottom: solid #006f95;
+    background: $bg-dark;
+    color: $text-primary;
+    border-bottom: solid $accent-active;
     padding: 0 2;
 }
 
@@ -24,7 +46,7 @@ Header #app-title {
 Header #app-version {
     width: auto;
     content-align: center middle;
-    color: #999999;
+    color: $text-muted;
 }
 
 Header #header-spacer {
@@ -46,15 +68,15 @@ Header #refresh-indicator {
     width: auto;
     content-align: right middle;
     margin-right: 1;
-    color: #f59e0b;
+    color: $warning;
 }
 
 Sidebar {
     width: 20%;
     min-width: 19;
     max-width: 23;
-    background: #3a3a3a;
-    border-right: solid #006f95;
+    background: $bg-medium;
+    border-right: solid $accent-active;
     padding: 1;
 }
 
@@ -79,14 +101,14 @@ Sidebar .nav-button {
 }
 
 MainPanel {
-    background: #1a1a1a;
+    background: $bg-darkest;
     padding: 1 2;
 }
 
 StatusBar {
     height: 2;
-    background: #2a2a2a;
-    border-top: solid #006f95;
+    background: $bg-dark;
+    border-top: solid $accent-active;
     dock: bottom;
     content-align: center middle;
 }

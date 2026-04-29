@@ -1,3 +1,25 @@
+/* ========================================
+   深色主题色板（统一变量）
+   ======================================== */
+$bg-darkest: #1a1a1a;
+$bg-dark: #2a2a2a;
+$bg-medium: #3a3a3a;
+$text-primary: #e5e5e5;
+$text-muted: #999999;
+$accent: #00a1d6;
+$accent-hover: #0089b6;
+$accent-active: #006f95;
+$accent-dim: #005574;
+$success: #52c41a;
+$error: #f5222d;
+$warning: #f59e0b;
+$border-dim: #555555;
+$badge-tidu: #0066CC;
+$badge-jianzhang: #66CCFF;
+$badge-fan: #FFB6C1;
+$system-light: #FF6B6B;
+$system-dark: #CC0000;
+
 /* ===== DashboardPanel - 信息面板样式 ===== */
 
 DashboardPanel {
@@ -5,8 +27,8 @@ DashboardPanel {
     padding: 1;
 }
 DashboardPanel .info-card {
-    background: #2a2a2a;
-    border: solid #006f95;
+    background: $bg-dark;
+    border: solid $accent-active;
     padding: 1 2;
     margin: 0;
     height: 100%;
@@ -15,7 +37,7 @@ DashboardPanel .info-card {
 }
 
 DashboardPanel .section-title {
-    color: #00a1d6;
+    color: $accent;
     text-style: bold;
     margin-bottom: 1;
     height: 1;
@@ -56,12 +78,12 @@ DashboardPanel .column-right {
 }
 
 DashboardPanel .info-label {
-    color: #999999;
+    color: $text-muted;
     height: 1;
 }
 
 DashboardPanel .info-value {
-    color: #e5e5e5;
+    color: $text-primary;
     text-style: bold;
     height: 1;
     margin-bottom: 1;

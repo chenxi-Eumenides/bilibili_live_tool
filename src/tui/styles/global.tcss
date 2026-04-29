@@ -1,100 +1,122 @@
+/* ========================================
+   深色主题色板（统一变量）
+   ======================================== */
+$bg-darkest: #1a1a1a;
+$bg-dark: #2a2a2a;
+$bg-medium: #3a3a3a;
+$text-primary: #e5e5e5;
+$text-muted: #999999;
+$accent: #00a1d6;
+$accent-hover: #0089b6;
+$accent-active: #006f95;
+$accent-dim: #005574;
+$success: #52c41a;
+$error: #f5222d;
+$warning: #f59e0b;
+$border-dim: #555555;
+$badge-tidu: #0066CC;
+$badge-jianzhang: #66CCFF;
+$badge-fan: #FFB6C1;
+$system-light: #FF6B6B;
+$system-dark: #CC0000;
+
 /* ===== 全局样式 ===== */
 
 /* 应用级别 */
 App {
-    background: #1a1a1a;
-    color: #e5e5e5;
+    background: $bg-darkest;
+    color: $text-primary;
 }
 
 /* 通用组件 */
 Button {
-    background: #00a1d6;
+    background: $accent;
     color: white;
     border: none;
     padding: 0 2;
 }
 
 Button:hover {
-    background: #0089b6;
+    background: $accent-hover;
 }
 
 Button:focus {
-    background: #006f95;
+    background: $accent-active;
 }
 
 Button.primary {
-    background: #00a1d6;
+    background: $accent;
 }
 
 Button.success {
-    background: #52c41a;
+    background: $success;
 }
 
 Button.error {
-    background: #f5222d;
+    background: $error;
 }
 
 Input {
-    background: #2a2a2a;
-    border: solid #006f95;
+    background: $bg-dark;
+    border: solid $accent-active;
     padding: 0 1;
 }
 
 Input:focus {
-    border: solid #00a1d6;
+    border: solid $accent;
 }
 
 Static {
-    color: #e5e5e5;
+    color: $text-primary;
 }
 
 Select {
-    background: #2a2a2a;
-    border: solid #006f95;
+    background: $bg-dark;
+    border: solid $accent-active;
 }
 
 Select:focus {
-    border: solid #00a1d6;
+    border: solid $accent;
 }
 
 /* 状态指示 */
 .status-online {
-    color: #52c41a;
+    color: $success;
 }
 
 .status-offline {
-    color: #999999;
+    color: $text-muted;
 }
 
 .status-live {
-    color: #f5222d;
+    color: $error;
 }
 
 /* 日志样式 */
 Log {
-    background: #3a3a3a;
-    border: solid #005574;
+    background: $bg-medium;
+    border: solid $accent-dim;
     padding: 0 1;
 }
 
 /* 帮助文本 */
 .help-text {
-    color: #999999;
+    color: $text-muted;
     text-style: italic;
 }
 
 /* 加载状态 */
 .loading {
     text-style: bold;
-    color: #00a1d6;
+    color: $accent;
 }
 
 /* 滚动条 */
 Scrollbar {
-    background: #2a2a2a;
-    color: #00a1d6;
+    background: $bg-dark;
+    color: $accent;
 }
 
 Scrollbar:hover {
-    background: #3a3a3a;
+    background: $bg-medium;
 }
