@@ -3,6 +3,7 @@
 > **规范文档** — 项目层级规则、Python 通用规范、AI 协作约定
 > 给开发工具（Agent）使用，保持信息密度
 > **最后更新**: 2026-04-29
+> ❗ = 必须遵守（违反 = 不合格），其余为用到再查
 
 ---
 
@@ -25,7 +26,7 @@
 
 ## 二、项目专属规范
 
-### 2.1 架构约束
+### ❗ 2.1 架构约束
 
 - 三层不可逾越：`utils`（零状态）→ `logic`（持有 Session, 管理状态）→ `cli/tui`（用户层）
 - 用户层不直接调用 `src/utils/api.py` 中的函数，只通过 logic 层
@@ -50,7 +51,7 @@
 - 二维码缓存存 `qr_url` + `qr_key`，需要时调用 `generate_qr_text(qr_url)` 生成
 - CSS/样式：自适应宽度（`min-width` + `max-width` + 百分比），不设死固定值
 
-### 2.4 代码组织
+### ❗ 2.4 代码组织
 
 - 常量放 `src/utils/constant.py` 对应类中，模块私有常量留在模块内
 - 库函数放 `src/utils/lib.py`
@@ -66,7 +67,7 @@
 - `config.json` 自动识别 v1/v2/v3 格式
 - 读取前先判断文件是否存在
 
-### 2.6 分支策略
+### ❗ 2.6 分支策略
 
 ```
 master → dev（主开发分支）
@@ -100,7 +101,7 @@ dev（主开发分支）
 
 ## 三、Python 通用规范
 
-### 3.1 导入规范
+### ❗ 3.1 导入规范
 
 | 规则 | 示例 |
 |------|------|
@@ -117,18 +118,29 @@ dev（主开发分支）
 - 参数求值在调用线程中执行 → `self.query_one()` 不可在 `call_from_thread` 参数中直接求值，放 lambda 内
 - `time.sleep(2)` 无法中断 → 用 `threading.Event.wait(timeout=2)`，设置 event 后立即返回
 
-### 3.3 事件驱动
+### ❗ 3.3 事件驱动
 
 - 优先通过事件（`session.on/off/_emit`）而非返回值获取状态
-- 事件名用类常量管理（如 `SessionEvent.AUTH_LOGIN_SUCCESS`）
+- 事件名用类常量管理（如 `SessionEvent.AUTH_LOGIN_SUCCESS`），**禁止裸字符串**
 - 跨线程事件需 `call_from_thread` 将 UI 操作切回主线程
+- 每个 logic 函数 `return` 前必须 `session._emit()` 对应事件
 
-### 3.4 同步 vs 异步
+### ❗ 3.4 类型安全
+
+- **禁止** `as any`、`@ts-ignore`、`@ts-expect-error`
+
+### ❗ 3.5 提交规范
+
+- 原子 commit，一个功能一个提交
+- 消息格式：`类型: 中文简述`
+- 破坏性操作前必须用 `question` 工具确认
+
+### 3.6 同步 vs 异步
 
 - 同步 HTTP 调用（`requests`）在后台线程中运行，避免阻塞主事件循环
 - 用 `asyncio.to_thread(func, *args)` 或 `run_worker(thread=True)` 将同步函数放到线程池
 
-### 3.5 错误处理
+### 3.7 错误处理
 
 - `try/except Exception: pass` 吞异常可掩盖 bug，谨慎使用
 - 跨线程 UI 更新失败时用 try/except 兜底，防止线程卡死

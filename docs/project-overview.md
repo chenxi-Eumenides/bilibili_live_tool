@@ -3,6 +3,7 @@
 > **代码结构文档** — 反映仓库当前实际状态
 > **最后更新**: 2026-04-29
 > **当前分支**: `dev`
+> 📋 = 用到再查（可跳过），其余为重点
 
 ---
 
@@ -17,6 +18,15 @@
 | Python | >=3.9 |
 | 构建 | uv + pyinstaller |
 | 入口 | `uv run bili` → `src.BiliLiveTool:main` |
+
+### 快速启动
+
+```bash
+uv run bili --help                     # 帮助（会触发 TUI import，待修）
+uv run python -m src.cli --help        # CLI 直接入口
+uv run python -m src.cli --status      # 查看状态
+ruff check src/                        # 代码检查（cli/logic 应零错误）
+```
 
 ### 开发基线
 
@@ -224,12 +234,11 @@ ruff check src/                             # 代码检查
 
 ---
 
-## 十一、plan 文档索引
+## 十一、文档索引
 
 | 文件 | 说明 |
 |------|------|
-| `development-standards.md` | **开发规范** — 项目规则、分支策略、AI 协作约定 |
+| `development-standards.md` | **开发规范** ❗ 必须遵守 |
 | `architecture-spec.md` | **架构设计规格书** — 目标设计 + 适配路线图 |
-| `project-overview.md`（本文件） | **代码结构文档** — 当前模块清单、数据结构、配置格式 |
-| `logic-layer-design-spec.md` | 旧版 logic 规格（内容已并入 architecture-spec）|
-| `tui-layer-design-spec.md` | 旧版 TUI 规格（内容已并入 architecture-spec）|
+| `project-overview.md`（本文件） | **代码结构文档** 📋 — 当前模块清单、数据结构、配置格式 |
+| `../AGENTS.md` | AI 代理上手导航 |

@@ -1,9 +1,9 @@
 # bilibili_live_tool 架构设计规格书
 
 > **目标设计文档** — 描述系统应该呈现的最终架构
-> 合并自 `logic-layer-design-spec.md` + `tui-layer-design-spec.md`
 > 标注"待更新"/"待适配"的模块为尚未实现的目标设计
 > 对应 committed 版本: **0.5.0**
+> ❗ = 必须遵守，其余为设计参考
 
 ---
 
@@ -30,10 +30,10 @@
 └──────────────────────────────────────────────────────────────┘
 ```
 
-**核心原则**：
+**❗ 核心原则**：
 - 基础层纯函数，零状态，不 import 上层模块
 - 逻辑层持有 Session 状态，`FuncResult` 返回 + `SessionEvent` 事件双通道通知
-- 用户层只 import 逻辑层，不直接 import 基础层（入口文件除外）
+- ❗ 用户层只 import 逻辑层，不直接 import 基础层
 - CLI 和 TUI 各自导出 `FLAGS`、`run()`、`help_lines()`
 
 **当前状态**：基础层 ✅ 定稿 → 逻辑层 ✅ 全部定稿 → 用户层 CLI ✅，TUI 🔶
@@ -387,5 +387,5 @@ else:
 
 ## 十、参考
 
-- `plan/project-overview.md` — 代码结构文档
-- `plan/development-standards.md` — 开发规范
+- `docs/project-overview.md` — 代码结构文档
+- `docs/development-standards.md` — 开发规范
