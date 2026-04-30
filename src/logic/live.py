@@ -90,7 +90,7 @@ def live_start(session: Session, area_id: int = 0) -> FuncResult:
     data = res.result
     if res.type != FuncType.SUCCESS:
         if isinstance(data, dict) and data.get("face_auth"):
-            session.face_qr_cache = {"qr_url": data.get("qr_url", "")}
+            session.cache_face_qr_url = data.get("qr_url", "")
             session._emit(
                 SessionEvent.LIVE_FACE_AUTH_REQUIRED, {"qr_url": data.get("qr_url", "")}
             )

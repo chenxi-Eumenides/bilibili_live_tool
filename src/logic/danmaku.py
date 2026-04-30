@@ -59,8 +59,8 @@ def danmaku_stop(session: Session) -> FuncResult:
         session._emit(SessionEvent.DANMAKU_STOP_FAIL, "弹幕监听未在运行")
         return FuncResult(type=FuncType.FAIL, result="弹幕监听未在运行")
     session._danmaku_stop_event.set()
-    session.danmaku_key = ""
-    session.danmaku_ws_url_list = []
+    session.cache_danmaku_key = ""
+    session.cache_danmaku_ws_urls = []
     session._emit(SessionEvent.DANMAKU_STOPPED, {"reason": "主动停止"})
     return FuncResult(type=FuncType.SUCCESS, result="已发送停止信号")
 
@@ -80,8 +80,8 @@ async def _listen_loop(session: Session) -> None:
     heartbeat_task = None
     room_id = session.danmaku_room_id or session.config.room_id
     try:
-        if session.danmaku_key and session.danmaku_ws_url_list:
-            danmaku_key, ws_url_list = session.danmaku_key, session.danmaku_ws_url_list
+        if session.cache_danmaku_key and session.cache_danmaku_ws_urls:
+            danmaku_key, ws_url_list = session.cache_danmaku_key, session.cache_danmaku_ws_urls
         else:
             wbi_result = get_wbi_key(session.config.cookies)
             if wbi_result.type != FuncType.SUCCESS:
@@ -104,8 +104,8 @@ async def _listen_loop(session: Session) -> None:
                 return
             danmaku_key = info_result.result["danmaku_key"]
             ws_url_list = info_result.result["danmaku_ws_url_list"]
-            session.danmaku_key = danmaku_key
-            session.danmaku_ws_url_list = ws_url_list
+            session.cache_danmaku_key = danmaku_key
+            session.cache_danmaku_ws_urls = ws_url_list
 
         ws_url = ws_url_list[0]
 
@@ -122,14 +122,14 @@ async def _listen_loop(session: Session) -> None:
             danmaku_key,
         )
         if auth_result.type != FuncType.SUCCESS:
-            was_cached = bool(session.danmaku_key)
+            was_cached = bool(session.cache_danmaku_key)
             if was_cached:
                 session._emit(
                     SessionEvent.DANMAKU_KEY_INVALID,
                     {"room_id": room_id, "reason": "缓存 key 认证失败，重新获取"},
                 )
-                session.danmaku_key = ""
-                session.danmaku_ws_url_list = []
+                session.cache_danmaku_key = ""
+                session.cache_danmaku_ws_urls = []
                 await ws.close()
 
                 wbi_result = get_wbi_key(session.config.cookies)
@@ -147,8 +147,8 @@ async def _listen_loop(session: Session) -> None:
                     return
                 danmaku_key = info_result.result["danmaku_key"]
                 ws_url_list = info_result.result["danmaku_ws_url_list"]
-                session.danmaku_key = danmaku_key
-                session.danmaku_ws_url_list = ws_url_list
+                session.cache_danmaku_key = danmaku_key
+                session.cache_danmaku_ws_urls = ws_url_list
 
                 ws_url = ws_url_list[0]
                 ws_result = await get_danmaku_websocket(ws_url)
@@ -199,8 +199,8 @@ async def _listen_loop(session: Session) -> None:
                 pass
         session._danmaku_running = False
         session._danmaku_stop_event = None
-        session.danmaku_key = ""
-        session.danmaku_ws_url_list = []
+        session.cache_danmaku_key = ""
+        session.cache_danmaku_ws_urls = []
         session._emit(SessionEvent.DANMAKU_STOPPED, {"reason": "监听循环结束"})
 
 

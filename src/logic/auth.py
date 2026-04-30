@@ -30,7 +30,8 @@ def auth_get_qr(session: Session) -> FuncResult:
     if res.type != FuncType.SUCCESS:
         session._emit(SessionEvent.AUTH_QR_FAIL, str(res.result))
         return res
-    session.qr_cache = res.result
+    session.cache_qr_url = res.result["qr_url"]
+    session.cache_qr_key = res.result["qr_key"]
     session._emit(SessionEvent.AUTH_QR_READY, res.result)
     return res
 
@@ -187,7 +188,8 @@ def auth_logout(session: Session) -> FuncResult:
     session.app_state = None
     session.login_verified = False
     session.room_data = {}
-    session.qr_cache = {}
-    session.face_qr_cache = {}
+    session.cache_qr_url = ""
+    session.cache_qr_key = ""
+    session.cache_face_qr_url = ""
     session._emit(SessionEvent.AUTH_LOGOUT, {"reason": "登出成功"})
     return FuncResult(type=FuncType.SUCCESS, result="登出成功")
