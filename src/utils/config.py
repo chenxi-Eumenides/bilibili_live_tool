@@ -86,7 +86,10 @@ class CONFIG:
     @property
     def uid(self) -> int:
         if not self._uid:
-            self._uid = self.cookies.get("DedeUserID", 0)
+            try:
+                self._uid = int(self.cookies.get("DedeUserID", 0))
+            except:
+                self._uid = 0
         return self._uid
 
     @property
