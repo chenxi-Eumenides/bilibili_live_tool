@@ -61,6 +61,7 @@ async def handle_live_start(session, area, title) -> None:
         qr = captured["data"].get("qr_url", "")
         print("需要人脸认证:")
         print("\n".join(generate_qr_text(qr)))
+        print("完成人脸验证后，重新尝试开播")
     else:
         print(captured.get("msg", "开播失败"))
 
