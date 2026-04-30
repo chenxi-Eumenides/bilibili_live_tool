@@ -54,7 +54,8 @@ def live_init(session: Session) -> FuncResult:
         return FuncResult(type=FuncType.FAIL, result="获取直播间信息失败")
     session.room_data = res.result
     session.config.room_id = res.result.get("room_id", 0)
-    session.config
+    ls = res.result.get("live_status", 0)
+    session.app_state = AppState.LIVE if ls == 1 else AppState.REPLAY if ls == 2 else AppState.IDLE
     session._emit(SessionEvent.LIVE_INFO_UPDATED, {"room_data": session.room_data})
     return FuncResult(type=FuncType.SUCCESS)
 
@@ -198,5 +199,7 @@ def live_refresh_room_data(session: Session) -> FuncResult:
         session._emit(SessionEvent.LIVE_INFO_UPDATED_FAIL, str(result.result))
         return result
     session.room_data = result.result or {}
+    ls = session.room_data.get("live_status", 0)
+    session.app_state = AppState.LIVE if ls == 1 else AppState.REPLAY if ls == 2 else AppState.IDLE
     session._emit(SessionEvent.LIVE_INFO_UPDATED, {"room_data": session.room_data})
     return result
