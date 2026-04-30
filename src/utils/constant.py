@@ -102,6 +102,7 @@ class SessionEvent:
 
     DANMAKU_RECEIVED = "danmaku:received"
     DANMAKU_STOPPED = "danmaku:stopped"
+    DANMAKU_CANCELLED = "danmaku:cancelled"
     DANMAKU_STARTED = "danmaku:started"
     DANMAKU_START_FAIL = "danmaku:start_fail"
     DANMAKU_STOP_FAIL = "danmaku:stop_fail"
