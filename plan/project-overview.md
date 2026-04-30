@@ -2,7 +2,7 @@
 
 > **代码结构文档** — 反映仓库当前实际状态
 > **最后更新**: 2026-04-29
-> **当前分支**: `dev`
+> **当前分支**: `dev`（`dev-cli-migration` 分支上的 CLI 改造待合并）
 
 ---
 
@@ -21,28 +21,11 @@
 ### 开发基线
 
 - 方向：**自下而上**（基础层 → 逻辑层 → 用户层）
-- 当前：**基础层定稿 ✅，逻辑层全部定稿 ✅，用户层待适配 🔶**
+- 当前：**基础层定稿 ✅，逻辑层全部定稿 ✅，用户层 CLI ✅，TUI 🔶**
 
 ---
 
-## 二、开发要求记录
-
-| 编号 | 日期 | 来源 | 要求 | 状态 |
-|------|------|------|------|------|
-| R01 | 2026-04-28 | 用户 | 完成 TUI 层开发 | 🔶 逻辑层完成后继续 |
-| R02 | 2026-04-28 | 用户 | 开发计划放在 `plan/` 下 | ✅ |
-| R03 | 2026-04-28 | 用户 | 每个小功能单独分支 | ✅ |
-| R04 | 2026-04-28 | 用户 | 边框边距按需使用 | ✅ |
-| R05 | 2026-04-28 | 用户 | 黑色终端主题 | ✅ |
-| R06 | 2026-04-28 | 用户 | 不变更弹幕颜色定义 | ✅ |
-| R07 | 2026-04-28 | 用户 | 代码风格适配规范 | ✅ |
-| R08 | 2026-04-28 | 用户 | 生成项目说明文件 | ✅ |
-| R09-R17 | — | — | Logic 修复项、测试规范、分支策略 | ✅ |
-| R18 | 2026-04-29 | 用户 | 分支工作流：小任务从 dev 分叉合并回 dev；大型任务从 dev 分叉 dev/xxx，其上再分叉子任务分支，全部完成后 dev/xxx→dev | ✅ |
-
----
-
-## 三、三层架构概览
+## 二、三层架构概览
 
 ```
 ┌────────────────────────────────────────────────────┐
@@ -50,8 +33,8 @@
 │         src/BiliLiveTool.py (总入口)                │
 ├──────────────┬─────────────────┬───────────────────┤
 │   用户层     │  CLI 模式       │  TUI 模式         │
-│ (View)       │  src/cli/ 🔶    │  src/tui/ 🔶      │
-│              │  待适配         │  待适配           │
+│ (View)       │  src/cli/ ✅    │  src/tui/ 🔶      │
+│              │  已适配         │  待适配           │
 ├──────────────┴─────────────────┴───────────────────┤
 │                    逻辑层                           │
 │  src/logic/  session/auth/live/danmaku ✅ 全部定稿 │
@@ -68,9 +51,9 @@
 
 ---
 
-## 四、各层模块清单
+## 三、各层模块清单
 
-### 4.1 基础层 `src/utils/` ✅ 定稿
+### 3.1 基础层 `src/utils/` ✅ 定稿
 
 | 文件 | 职责 | 关键导出 |
 |------|------|---------|
@@ -81,7 +64,7 @@
 | `error.py` | 错误类型 | `FuncType`, `FAIL`, `API_BILI_CODE_ERROR`, `FAIL_BILI_CODE` |
 | `api.py` | API 调用 | `api()`, `api_with_sign()`, `ws_listen_danmaku` |
 
-### 4.2 逻辑层 `src/logic/`
+### 3.2 逻辑层 `src/logic/`
 
 | 文件 | 关键导出 | 状态 |
 |------|---------|------|
@@ -90,13 +73,18 @@
 | `live.py` | `live_init`, `live_start`, `live_stop`, `live_update_room`, `live_refresh_room_data` | ✅ 定稿 |
 | `danmaku.py` | `danmaku_start`, `danmaku_stop`, `_listen_loop` | ✅ 定稿 |
 
-### 4.3 用户层 CLI `src/cli/` 🔶 未适配
+### 3.3 用户层 CLI `src/cli/` ✅ 已适配
 
 | 文件 | 备注 |
 |------|------|
-| `main.py` | 基于旧版 logic API，多处不兼容 |
+| `main.py` | 入口：参数解析 + async dispatch |
+| `auth.py` | login 事件驱动 handler |
+| `live.py` | start/stop/status/update/area/cli handler |
+| `danmaku.py` | 弹幕事件驱动 handler |
 
-### 4.4 用户层 TUI `src/tui/` 🔶 未适配
+> CLI 层已合并至 `dev`，支持 flat 参数 + 事件驱动 + 异步。
+
+### 3.4 用户层 TUI `src/tui/` 🔶 未适配
 
 | 目录 | 文件 | 备注 |
 |------|------|------|
@@ -106,16 +94,20 @@
 | `styles/` | 7 个 tcss 文件 | ✅ 18色变量统一 |
 
 > TUI 的 layout/panels/styles 结构已搭建，但内部引用的 logic API 仍为旧版。
-> 适配将在 CLI/TUI 层统一进行。
 
 ---
 
-## 五、文件结构总览
+## 四、文件结构总览
 
 ```
 src/
 ├── BiliLiveTool.py              # 总入口 ✅
-├── cli/main.py                  # CLI 🔶 待适配
+├── cli/
+│   ├── main.py                  # ✅ CLI 入口
+│   ├── auth.py                  # ✅ 登录 handler
+│   ├── live.py                  # ✅ 直播 handler
+│   ├── danmaku.py               # ✅ 弹幕 handler
+│   ├── __init__.py / __main__.py
 ├── logic/
 │   ├── session.py               # ✅ 定稿
 │   ├── auth.py                  # ✅ 定稿
@@ -132,7 +124,7 @@ src/
 
 ---
 
-## 六、技术栈与依赖
+## 五、技术栈与依赖
 
 | 包 | 用途 |
 |----|------|
@@ -144,7 +136,7 @@ src/
 
 ---
 
-## 七、关键数据结构
+## 六、关键数据结构
 
 ### FuncResult
 ```python
@@ -169,7 +161,7 @@ class AppState(Enum):
 
 ---
 
-## 八、配置文件格式（v3）
+## 七、配置文件格式（v3）
 
 ```json
 {
@@ -191,7 +183,7 @@ class AppState(Enum):
 
 ---
 
-## 九、当前模块进度
+## 八、当前模块进度
 
 | 模块 | 状态 | 备注 |
 |------|------|------|
@@ -205,13 +197,13 @@ class AppState(Enum):
 | logic/auth | ✅ 定稿 | 扫码登录全流程 |
 | logic/live | ✅ 定稿 | 开播/下播/改标题/分区/刷新 |
 | logic/danmaku | ✅ 定稿 | 旧属性替换 + 新增事件 |
-| CLI | 🔶 待适配 | 基于旧版 logic API |
+| CLI | ✅ 已适配 | 事件驱动 + 异步 + 扁平参数 |
 | TUI | 🔶 待适配 | 基于旧版 logic API |
 | 单元测试 | 🔶 待更新 | 需同步适配 |
 
 ---
 
-## 十、已完成的关键修复
+## 九、已完成的关键修复
 
 | 修复项 | 说明 |
 |--------|------|
@@ -223,7 +215,7 @@ class AppState(Enum):
 
 ---
 
-## 十一、测试与构建
+## 十、测试与构建
 
 ```bash
 python -m unittest unittest.test_src_logic  # Logic 层（需同步适配）
@@ -232,46 +224,12 @@ ruff check src/                             # 代码检查
 
 ---
 
-## 十二、plan 文档索引
+## 十一、plan 文档索引
 
 | 文件 | 说明 |
 |------|------|
-| `requirements-summary.md` | 需求汇总（不动）|
+| `development-standards.md` | **开发规范** — 项目规则、分支策略、AI 协作约定 |
 | `architecture-spec.md` | **架构设计规格书** — 目标设计 + 适配路线图 |
-| `project-overview.md`（本文件） | **代码结构文档** |
+| `project-overview.md`（本文件） | **代码结构文档** — 当前模块清单、数据结构、配置格式 |
 | `logic-layer-design-spec.md` | 旧版 logic 规格（内容已并入 architecture-spec）|
 | `tui-layer-design-spec.md` | 旧版 TUI 规格（内容已并入 architecture-spec）|
-
----
-
-## 十三、Git 分支策略
-
-```
-master → dev（主开发分支）
-            ├── feat/xxx        # 单个小任务分支
-            └── dev/xxx         # 大型任务集成分支
-                    └── feat/xxx # 大型任务下的子任务分支
-```
-
-### 分支工作流规则
-
-#### 单个小任务
-1. 从 `dev` 分叉 `feat/<任务名>` 分支
-2. 在 `feat/xxx` 上完成开发
-3. 合并回 `dev`，删除分支
-
-#### 大型任务（由多个小任务组成）
-1. 从 `dev` 分叉 `dev/<任务名>` 集成分支
-2. 从 `dev/xxx` 分叉子任务分支 `feat/<子任务>`（可多个并行）
-3. 子任务完成后逐个合并回 `dev/xxx`
-4. 全部子任务完成后，将 `dev/xxx` 合并回 `dev`
-5. 删除 `dev/xxx` 及其所有子任务分支
-
-### 当前分支状态
-
-```
-dev（当前）
-  └── （CLI 改造直接完成在此分支上，未使用分支流程）
-```
-
-> 后续开发将严格遵循上述分支工作流。

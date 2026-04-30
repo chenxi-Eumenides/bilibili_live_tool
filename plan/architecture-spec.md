@@ -21,7 +21,7 @@
 │              │  FLAGS + run()      │  BiliLiveToolApp (App)  │
 ├──────────────┴────────────────────┴──────────────────────────┤
 │                       逻辑层                                  │
-│  src/logic/  session ✅ / auth ✅ / live ✅ / danmaku 🔶     │
+│  src/logic/  session ✅ / auth ✅ / live ✅ / danmaku ✅     │
 │              Session 持有状态 + 事件系统                       │
 ├──────────────────────────────────────────────────────────────┤
 │                       基础层                                  │
@@ -36,67 +36,15 @@
 - 用户层只 import 逻辑层，不直接 import 基础层（入口文件除外）
 - CLI 和 TUI 各自导出 `FLAGS`、`run()`、`help_lines()`
 
-**当前状态**：基础层 ✅ 定稿 → 逻辑层 ✅ 全部定稿 → 用户层 🔶 待适配
+**当前状态**：基础层 ✅ 定稿 → 逻辑层 ✅ 全部定稿 → 用户层 CLI ✅，TUI 🔶
+
+> 开发规范（导入原则、常量管理、文档格式、分层规则、测试规范、分支策略）详见 `development-standards.md`。
 
 ---
 
-## 二、开发规范
+## 二、基础层 `src/utils/` ✅ 定稿
 
-### 2.1 导入原则
-- **最小导入**：`from xxx import a, b`，不用 `import xxx`
-- **函数内禁止导入**：所有 import 在文件顶部
-- **无未使用导入**：`ruff F401` 检查
-- **相对导入**：项目内 `from ..logic import Session`
-
-### 2.2 常量管理
-所有可复用常量在 `src/utils/constant.py` 的类中：
-
-| 类 | 内容 |
-|---|------|
-| `ApiData` | API 默认参数 |
-| `ApiUrl` | API 地址 |
-| `BiliCode` | B站 API 状态码 |
-| `SessionEvent` | 事件名称（字符串常量）|
-| `Tuning` | 运行时调优参数 |
-
-> 颜色常量不放入 constant.py。TUI 颜色统一在 `.tcss` 中写十六进制值。
-
-### 2.3 文档格式
-```python
-"""简短说明。
-
-Args:
-    session: Session 实例
-    param: 说明
-Returns:
-    FuncResult(SUCCESS, ...) 或 FAIL
-Events:
-    EVENT_NAME: 何时触发
-"""
-```
-
-### 2.4 分层规则
-
-| 层 | 可依赖 | 不可 |
-|----|--------|------|
-| utils | 标准库 + 第三方 SDK | logic/cli/tui |
-| logic | utils | cli/tui，不直接调 `api()` |
-| cli/tui | logic（入口文件可调 config）| utils/api.py |
-
-### 2.5 测试规范
-- Logic 层 mock 测试，不依赖网络
-- API 层集成测试，需要真实 `unittest/config.json`
-- 测试不污染真实 `config.json`
-
-### 2.6 分支策略
-- 每个功能/修复单独分支，完成后合并回 `dev`
-- 当前开发分支：`dev`
-
----
-
-## 三、基础层 `src/utils/` ✅ 定稿
-
-### 3.1 模块清单
+### 2.1 模块清单
 
 | 文件 | 关键导出 |
 |------|---------|
@@ -107,7 +55,7 @@ Events:
 | `config.py` | `CONFIG` (dataclass, 支持 v1/v2/v3 格式) |
 | `constant.py` | `VERSION`, `ApiData`, `ApiUrl`, `SessionEvent`, `BiliCode`, `Tuning` |
 
-### 3.2 关键修复
+### 2.2 关键修复
 | 修复项 | 说明 |
 |--------|------|
 | `api_update_room` area_id | 修正为 `config.area_v2` |
@@ -118,9 +66,9 @@ Events:
 
 ---
 
-## 四、逻辑层 `src/logic/`
+## 三、逻辑层 `src/logic/`
 
-### 4.1 session.py ✅ 定稿
+### 3.1 session.py ✅ 定稿
 
 `Session` 类：持有 CONFIG，管理 AppState，提供事件系统。
 
@@ -145,7 +93,7 @@ class Session:
 
 > 公开属性：`danmaku_room_id`、`qr_cache`、`face_qr_cache` 均为直接公开字段（无下划线前缀）
 
-### 4.2 auth.py ✅ 定稿
+### 3.2 auth.py ✅ 定稿
 
 | 函数 | 说明 |
 |------|------|
@@ -155,7 +103,7 @@ class Session:
 | `auth_validate_login(session)` | 验证 cookies 有效性 |
 | `auth_logout(session)` | 清空登录态 |
 
-### 4.3 live.py ✅ 定稿
+### 3.3 live.py ✅ 定稿
 
 | 函数 | 说明 |
 |------|------|
@@ -165,7 +113,7 @@ class Session:
 | `live_update_room(session, title, area_id)` | 改标题/分区 |
 | `live_refresh_room_data(session)` | 拉取最新 room_data |
 
-### 4.4 danmaku.py ✅ 定稿
+### 3.4 danmaku.py ✅ 定稿
 
 | 函数 | 说明 |
 |------|------|
@@ -175,10 +123,8 @@ class Session:
 
 **适配完成**：旧属性替换（`session.is_logged_in` → `session.is_login`、`session.user_id` → `session.config.uid`、`session.room_id` → `session.config.room_id`），新增事件发布。
 
-### 4.5 事件系统（SessionEvent）✅ 定稿
+### 3.5 事件系统（SessionEvent）✅ 定稿
 
-| 事件 | 触发函数 |
-|------|---------|
 | 事件 | 触发函数 |
 |------|---------|
 | `AUTH_QR_READY` | auth_get_qr |
@@ -209,15 +155,13 @@ class Session:
 
 ---
 
-## 五、用户层 CLI `src/cli/main.py` 🔶 待适配
+## 四、用户层 CLI `src/cli/` ✅ 已适配
 
-**当前状态**：基于旧版 logic API（旧函数名 + 旧 Session 属性），尚未适配。
-
-**目标设计**：
+**目标设计**（已在 `dev-cli-migration` 分支实现）：
 
 ### 入口标志
 ```python
-CLI_FLAGS = frozenset({"--login", "--logout", "--live", "--title", "--area", "--danmaku", "--cli"})
+CLI_FLAGS = frozenset({"--login", "--start", "--stop", "--status", "--update", "--area", "--danmaku", "--cli"})
 ```
 
 ### 命令列表
@@ -225,14 +169,29 @@ CLI_FLAGS = frozenset({"--login", "--logout", "--live", "--title", "--area", "--
 |------|------|
 | `--login` | 扫码登录 |
 | `--logout` | 清除登录态 |
-| `--live start [--area ID] [--title TITLE]` | 开播 |
-| `--live stop` | 下播 |
-| `--live status` | 房间状态 |
-| `--title TITLE [--area ID]` | 改标题 |
-| `--area ID [--title TITLE]` | 改分区 |
-| `--area list [父分区ID]` | 列出分区 |
+| `--start [-a ID] [-t TITLE]` | 开播 |
+| `--stop` | 下播 |
+| `--status` | 房间状态 |
+| `--update [-a ID] [-t TITLE]` | 改标题/分区 |
+| `--area [list] [父分区ID]` | 列出分区 |
 | `--danmaku [直播间号]` | 弹幕监听 |
 | `--cli` | 一键登录+自动开/下播 |
+
+### 文件结构（目标）
+```
+src/cli/
+├── __init__.py   # 导出 FLAGS, help_lines, run
+├── main.py       # 入口：flat ArgumentParser + async dispatch + session lifecycle
+├── auth.py       # handle_login, handle_logout（事件驱动）
+├── live.py       # handle_live_start/stop/status/update/area/cli（事件驱动）
+└── danmaku.py    # handle_danmaku（事件驱动 + async _listen_loop）
+```
+
+### 关键设计点
+- Flat CLI 接口：`--start/--stop/--status/--update` 取代旧 `--live start/stop/status`
+- 事件驱动 handlers：通过 `session.once()` 订阅 SessionEvent，不再检查 `FuncResult.type`
+- 全异步入口：`asyncio.run()`，handler 均为 async 函数
+- Session 自动初始化：`auth_validate_login` → `auth_update_safety` → `live_init`
 
 ### 适配要点
 
@@ -243,25 +202,14 @@ CLI_FLAGS = frozenset({"--login", "--logout", "--live", "--title", "--area", "--
 | `session.room_id` | `session.config.room_id` |
 | `session.config.room_data` | `session.room_data` |
 | `live_get_area_list(session)` | `live_init(session)` + `session.area_list` |
-| `session.danmaku_room_id` | `session.danmaku_room_id`（需加 property）|
-
-### 函数引用映射
-```
-old → new
-auth_generate_qrcode → auth_get_qr
-auth_poll_login → auth_poll_qr
-live_refresh_room_info → live_refresh_room_data
-AUTH_QRCODE_READY → AUTH_QR_READY
-AUTH_LOGOUT_DONE → AUTH_LOGOUT
-```
 
 ---
 
-## 六、用户层 TUI `src/tui/` 🔶 待适配
+## 五、用户层 TUI `src/tui/` 🔶 待适配
 
 **当前状态**：layout/panels/styles 结构已搭建，但内部引用的 logic API 仍为旧版。
 
-### 6.1 整体架构（目标设计）
+### 5.1 整体架构（目标设计）
 
 ```
 BiliLiveToolApp (App)
@@ -276,7 +224,7 @@ BiliLiveToolApp (App)
 └── StatusBar              (layout/status_bar.py)
 ```
 
-### 6.2 事件订阅（目标设计）
+### 5.2 事件订阅（目标设计）
 
 | Widget | 订阅事件 |
 |--------|---------|
@@ -287,18 +235,18 @@ BiliLiveToolApp (App)
 | SettingsPanel | `LIVE_STATE_CHANGED`, `LIVE_INFO_UPDATED` |
 | DanmakuPanel | `DANMAKU_RECEIVED`, `DANMAKU_STOPPED` |
 
-### 6.3 适配要点
+### 5.3 适配要点
 
 | 旧代码 | 位置 | 应改为 |
 |--------|------|--------|
 | `auth_post_login(session)` | `app.py:103` | `auth_update_safety(session)` + `live_init(session)` |
-| `session.qr_cache` | `auth_panel.py:31` | `session._qr_cache`（或加 property）|
+| `self.app.qr_cache` | `auth_panel.py:63,81` | `self.app.session.qr_cache` |
 | `config.room_data` | `dashboard_panel.py:64` | `session.room_data` |
 | `live_get_area_list(session)` | `settings_panel.py:7,36` | `live_init(session)` + `session.area_list` |
 | `session.room_id` | `danmaku_panel.py:26` | `session.config.room_id` |
-| `session.danmaku_room_id` | `danmaku_panel.py:33` | `session.config.danmaku_room_id`（或加 property）|
+| `auth_validate_login` 未处理结果 | `app.py:76-77` | 成功后调用 `auth_update_safety` + `live_init` |
 
-### 6.4 样式系统（✅ TCSS 颜色变量统一）
+### 5.4 样式系统（✅ TCSS 颜色变量统一）
 
 7 个 `.tcss` 文件头部统一声明了 18 个颜色变量：
 
@@ -340,7 +288,7 @@ $border-dim: #555555     /* 次级边框 */
 
 ---
 
-## 七、入口分发 `src/BiliLiveTool.py` ✅ 定稿
+## 六、入口分发 `src/BiliLiveTool.py` ✅ 定稿
 
 1. `--help` 拼接 cli/tui 的 `help_lines()`
 2. `--set-default MODE` 存 `config.json`
@@ -358,9 +306,9 @@ uv run bili --cli                 # 交互式 CLI
 
 ---
 
-## 八、数据流
+## 七、数据流
 
-### 8.1 FuncResult 模式
+### 7.1 FuncResult 模式
 ```python
 result = live_start(session, area_id=123)
 if result.type == FuncType.SUCCESS:
@@ -369,7 +317,7 @@ else:
     print(f"失败: {result.result}")
 ```
 
-### 8.2 Session 属性（适配后）
+### 7.2 Session 属性（适配后）
 
 | 属性 | 来源 | 说明 |
 |------|------|------|
@@ -386,7 +334,7 @@ else:
 
 ---
 
-## 九、配置格式
+## 八、配置格式
 
 ### v3 格式（当前定稿）
 
@@ -408,7 +356,7 @@ else:
 
 ---
 
-## 十、适配路线图
+## 九、适配路线图
 
 ### 第一阶段：Logic 层收尾（已完成 ✅）
 - [x] `danmaku.py` — 旧 Session 属性替换 + 新增事件
@@ -416,17 +364,19 @@ else:
 - [x] 同步更新 `__init__.py` 导出
 - [x] 新增 5 个事件常量 + 所有 return 事件通知
 
-### 第二阶段：CLI 层适配
-- [ ] 替换 5 个错误 Session 属性路径
-- [ ] 替换 `live_get_area_list` → `live_init` + `session.area_list`
-- [ ] 验证全部 CLI 命令
+### 第二阶段：CLI 层适配（已完成 ✅）
+- [x] 文件拆分：main → main/auth/live/danmaku
+- [x] Flat CLI 接口：`--start/--stop/--status/--update`
+- [x] 事件驱动 handlers（`session.once()` 替代 `FuncResult` 判断）
+- [x] 全异步入口 + Session 自动初始化
+- [x] 替换所有旧属性路径
 
 ### 第三阶段：TUI 层适配
 - [ ] `app.py` — 替换 `auth_post_login` → `auth_update_safety` + `live_init`
-- [ ] `auth_panel.py` — 通过 property 访问 qr_cache
+- [ ] `auth_panel.py` — 通过 `session.qr_cache` 访问缓存
 - [ ] `dashboard_panel.py` — `config.room_data` → `session.room_data`
 - [ ] `settings_panel.py` — 替换 `live_get_area_list`
-- [ ] `danmaku_panel.py` — 修正属性路径
+- [ ] `danmaku_panel.py` — 修正属性路径 + 事件集成
 - [ ] 统一验证事件流
 
 ### 第四阶段：测试
@@ -435,7 +385,7 @@ else:
 
 ---
 
-## 十一、参考
+## 十、参考
 
 - `plan/project-overview.md` — 代码结构文档
-- `plan/requirements-summary.md` — 需求汇总（不动）
+- `plan/development-standards.md` — 开发规范

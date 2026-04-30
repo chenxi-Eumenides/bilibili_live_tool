@@ -91,7 +91,7 @@ master → dev（主开发分支）
 
 ```
 dev（主开发分支）
-  └── dev-cli-migration     — CLI 事件驱动改造（待合并回 dev）
+  └── TUI 层待适配
 ```
 
 > 所有开发严格遵循上述分支工作流。
