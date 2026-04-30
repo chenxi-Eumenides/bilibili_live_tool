@@ -42,6 +42,7 @@ class Session:
         self.danmaku_room_id = 0
         self.cache_danmaku_key: str = ""
         self.cache_danmaku_ws_urls: list[str] = []
+        self._danmaku_ws = None
         self._danmaku_running = False
         self._danmaku_stop_event: Event | None = None
         self._listeners: dict[str, list[Callable[..., None]]] = {}
