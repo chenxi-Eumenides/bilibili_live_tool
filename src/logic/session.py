@@ -39,6 +39,8 @@ class Session:
         self.livehime_version: str = ApiData.LIVEHIME_VERSION
         self.area_list: LiveAreaList | None = None
         self.danmaku_room_id = 0
+        self.danmaku_key: str = ""
+        self.danmaku_ws_url_list: list[str] = []
         self._danmaku_running = False
         self._danmaku_stop_event: Event | None = None
         self._listeners: dict[str, list[Callable[..., None]]] = {}

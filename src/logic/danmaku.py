@@ -59,6 +59,8 @@ def danmaku_stop(session: Session) -> FuncResult:
         session._emit(SessionEvent.DANMAKU_STOP_FAIL, "弹幕监听未在运行")
         return FuncResult(type=FuncType.FAIL, result="弹幕监听未在运行")
     session._danmaku_stop_event.set()
+    session.danmaku_key = ""
+    session.danmaku_ws_url_list = []
     session._emit(SessionEvent.DANMAKU_STOPPED, {"reason": "主动停止"})
     return FuncResult(type=FuncType.SUCCESS, result="已发送停止信号")
 
@@ -76,29 +78,36 @@ async def _listen_loop(session: Session) -> None:
     """
     ws = None
     heartbeat_task = None
+    room_id = session.danmaku_room_id or session.config.room_id
     try:
-        wbi_result = get_wbi_key(session.config.cookies)
-        if wbi_result.type != FuncType.SUCCESS:
-            session._emit(SessionEvent.ERROR, f"获取 wbi 密钥失败: {wbi_result.result}")
-            return
-        img_key, sub_key = wbi_result.result["img_key"], wbi_result.result["sub_key"]
+        if session.danmaku_key and session.danmaku_ws_url_list:
+            danmaku_key, ws_url_list = session.danmaku_key, session.danmaku_ws_url_list
+        else:
+            wbi_result = get_wbi_key(session.config.cookies)
+            if wbi_result.type != FuncType.SUCCESS:
+                session._emit(SessionEvent.ERROR, f"获取 wbi 密钥失败: {wbi_result.result}")
+                return
+            img_key, sub_key = wbi_result.result["img_key"], wbi_result.result["sub_key"]
 
-        info_result = get_danmaku_info(
-            cookies=session.config.cookies,
-            room_id=session.danmaku_room_id or session.config.room_id,
-            img_key=img_key,
-            sub_key=sub_key,
-        )
-        if info_result.type != FuncType.SUCCESS or not info_result.result.get(
-            "danmaku_ws_url_list"
-        ):
-            session._emit(
-                SessionEvent.ERROR, f"获取弹幕 WS 信息失败: {info_result.result}"
+            info_result = get_danmaku_info(
+                cookies=session.config.cookies,
+                room_id=room_id,
+                img_key=img_key,
+                sub_key=sub_key,
             )
-            return
+            if info_result.type != FuncType.SUCCESS or not info_result.result.get(
+                "danmaku_ws_url_list"
+            ):
+                session._emit(
+                    SessionEvent.ERROR, f"获取弹幕 WS 信息失败: {info_result.result}"
+                )
+                return
+            danmaku_key = info_result.result["danmaku_key"]
+            ws_url_list = info_result.result["danmaku_ws_url_list"]
+            session.danmaku_key = danmaku_key
+            session.danmaku_ws_url_list = ws_url_list
 
-        ws_url = info_result.result["danmaku_ws_url_list"][0]
-        danmaku_key = info_result.result["danmaku_key"]
+        ws_url = ws_url_list[0]
 
         ws_result = await get_danmaku_websocket(ws_url)
         if ws_result.type != FuncType.SUCCESS:
@@ -113,8 +122,49 @@ async def _listen_loop(session: Session) -> None:
             danmaku_key,
         )
         if auth_result.type != FuncType.SUCCESS:
-            session._emit(SessionEvent.ERROR, f"弹幕 WS 认证失败: {auth_result.result}")
-            return
+            was_cached = bool(session.danmaku_key)
+            if was_cached:
+                session._emit(
+                    SessionEvent.DANMAKU_KEY_INVALID,
+                    {"room_id": room_id, "reason": "缓存 key 认证失败，重新获取"},
+                )
+                session.danmaku_key = ""
+                session.danmaku_ws_url_list = []
+                await ws.close()
+
+                wbi_result = get_wbi_key(session.config.cookies)
+                if wbi_result.type != FuncType.SUCCESS:
+                    session._emit(SessionEvent.ERROR, f"获取 wbi 密钥失败: {wbi_result.result}")
+                    return
+                img_key, sub_key = wbi_result.result["img_key"], wbi_result.result["sub_key"]
+                info_result = get_danmaku_info(
+                    cookies=session.config.cookies,
+                    room_id=room_id,
+                    img_key=img_key, sub_key=sub_key,
+                )
+                if info_result.type != FuncType.SUCCESS or not info_result.result.get("danmaku_ws_url_list"):
+                    session._emit(SessionEvent.ERROR, f"获取弹幕 WS 信息失败: {info_result.result}")
+                    return
+                danmaku_key = info_result.result["danmaku_key"]
+                ws_url_list = info_result.result["danmaku_ws_url_list"]
+                session.danmaku_key = danmaku_key
+                session.danmaku_ws_url_list = ws_url_list
+
+                ws_url = ws_url_list[0]
+                ws_result = await get_danmaku_websocket(ws_url)
+                if ws_result.type != FuncType.SUCCESS:
+                    session._emit(SessionEvent.ERROR, f"弹幕 WS 重连失败: {ws_result.result}")
+                    return
+                ws = ws_result.result
+                auth_result = await ws_send_auth(
+                    ws,
+                    session.config.uid,
+                    session.danmaku_room_id or session.config.room_id,
+                    danmaku_key,
+                )
+            if auth_result.type != FuncType.SUCCESS:
+                session._emit(SessionEvent.ERROR, f"弹幕 WS 认证失败: {auth_result.result}")
+                return
 
         heartbeat_task = create_task(_heartbeat_loop(ws, session))
 
@@ -149,6 +199,8 @@ async def _listen_loop(session: Session) -> None:
                 pass
         session._danmaku_running = False
         session._danmaku_stop_event = None
+        session.danmaku_key = ""
+        session.danmaku_ws_url_list = []
         session._emit(SessionEvent.DANMAKU_STOPPED, {"reason": "监听循环结束"})
 
 

@@ -106,6 +106,8 @@ class SessionEvent:
     DANMAKU_START_FAIL = "danmaku:start_fail"
     DANMAKU_STOP_FAIL = "danmaku:stop_fail"
 
+    DANMAKU_KEY_INVALID = "danmaku:key_invalid"
+
     AUTH_SAFETY_SKIPPED = "auth:safety_skipped"
     AUTH_UPDATE_SAFETY_FAIL = "auth:update_safety_fail"
 

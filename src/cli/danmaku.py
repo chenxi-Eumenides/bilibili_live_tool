@@ -41,8 +41,14 @@ async def handle_danmaku(session, room_id: int | None = None) -> None:
     def on_error(msg):
         print(f"[错误] {msg}")
 
+    def on_key_invalid(data):
+        room = (data or {}).get("room_id", "?")
+        reason = (data or {}).get("reason", "key 失效")
+        print(f"[重试] {reason} (房间 {room})")
+
     session.on(SessionEvent.DANMAKU_RECEIVED, on_received)
     session.once(SessionEvent.ERROR, on_error)
+    session.once(SessionEvent.DANMAKU_KEY_INVALID, on_key_invalid)
     try:
         await _listen_loop(session)
     except KeyboardInterrupt:
