@@ -125,7 +125,7 @@ def live_stop(session: Session) -> FuncResult:
     if not session.is_login:
         session._emit(SessionEvent.LIVE_STOP_FAIL, "未登录，无法下播")
         return FuncResult(type=FuncType.FAIL, result="未登录，无法下播")
-    if not session.is_live or not session.is_replay:
+    if not session.is_live and not session.is_replay:
         session._emit(SessionEvent.LIVE_STOP_FAIL, "未开播，无法下播")
         return FuncResult(type=FuncType.FAIL, result="未开播，无法下播")
     res = api_stop_live(cookies=session.config.cookies, room_id=session.config.room_id)
