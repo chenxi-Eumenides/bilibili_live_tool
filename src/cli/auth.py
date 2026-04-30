@@ -1,14 +1,16 @@
 """CLI 认证命令处理"""
 
-from asyncio import to_thread
+from asyncio import CancelledError, to_thread
+from threading import Event
 from rich import print
 
-from ..logic import auth_get_qr, auth_poll_qr
+from ..logic import auth_get_qr, auth_poll_qr, auth_validate_login
 from ..utils.constant import SessionEvent
 from ..utils.lib import generate_qr_text
 
 
 async def handle_login(session) -> bool:
+    auth_validate_login(session)
     if session.is_login:
         print(f"已登录 (uid={session.config.uid})")
         return True
@@ -48,7 +50,13 @@ async def handle_login(session) -> bool:
 
     session.once(SessionEvent.AUTH_LOGIN_SUCCESS, on_success)
     session.once(SessionEvent.AUTH_LOGIN_FAILED, on_failed)
-    await to_thread(auth_poll_qr, session, qr_data["key"])
+    stop = Event()
+    try:
+        await to_thread(auth_poll_qr, session, qr_data["key"], stop_event=stop)
+    except (KeyboardInterrupt, CancelledError):
+        stop.set()
+        print("\n已取消")
+        return False
 
     if poll_result.get("event") == "fail":
         print(f"登录失败: {poll_result.get('msg')}")
