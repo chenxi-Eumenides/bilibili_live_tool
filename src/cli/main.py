@@ -86,7 +86,10 @@ def run():
         print("\n".join(help_lines()))
         return
 
-    asyncio_run(_async_main(args))
+    try:
+        asyncio_run(_async_main(args))
+    except KeyboardInterrupt:
+        pass
 
 
 async def _async_main(args):
