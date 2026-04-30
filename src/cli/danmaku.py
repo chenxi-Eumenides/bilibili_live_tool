@@ -6,9 +6,9 @@ from ..logic import danmaku_start, danmaku_stop, _listen_loop
 from ..utils.constant import SessionEvent
 
 
-async def handle_danmaku(session, room_id: str | None = None) -> None:
+async def handle_danmaku(session, room_id: int | None = None) -> None:
     if room_id:
-        session.danmaku_room_id = int(room_id)
+        session.danmaku_room_id = room_id
         print(f"监听直播间: {session.danmaku_room_id}")
     else:
         print(f"监听自己的直播间: {session.config.room_id}")
@@ -38,27 +38,17 @@ async def handle_danmaku(session, room_id: str | None = None) -> None:
         else:
             print(msg)
 
+    def on_error(msg):
+        print(f"[错误] {msg}")
+
     session.on(SessionEvent.DANMAKU_RECEIVED, on_received)
+    session.once(SessionEvent.ERROR, on_error)
     try:
         await _listen_loop(session)
     except KeyboardInterrupt:
         pass
     finally:
         session.off(SessionEvent.DANMAKU_RECEIVED, on_received)
-        stop_captured = {}
-
-        def on_stopped(data):
-            stop_captured["event"] = "stopped"
-
-        def on_stop_fail(msg):
-            stop_captured["event"] = "fail"
-            stop_captured["msg"] = str(msg) if msg else "停止失败"
-
-        session.once(SessionEvent.DANMAKU_STOPPED, on_stopped)
-        session.once(SessionEvent.DANMAKU_STOP_FAIL, on_stop_fail)
-        danmaku_stop(session)
-
-        if stop_captured.get("event") == "fail":
-            print(stop_captured["msg"])
-        else:
-            print("已停止")
+        if session._danmaku_running:
+            danmaku_stop(session)
+        print("已停止")

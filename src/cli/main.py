@@ -101,14 +101,18 @@ async def _async_main(args):
             session = _check_login(session)
         if session is None:
             return
-        elif args.status:
+
+        area_arg = args.a[0] if args.a else None
+        title_arg = args.t[0] if args.t else None
+
+        if args.status:
             await handle_live_status(session)
         elif args.start:
-            await handle_live_start(session, args.a, args.t)
+            await handle_live_start(session, area_arg, title_arg)
         elif args.stop:
             await handle_live_stop(session)
         elif args.update:
-            await handle_update(session, args.a, args.t)
+            await handle_update(session, area_arg, title_arg)
         elif args.area is not None:
             await handle_area(session, args.area)
         elif args.danmaku is not None:

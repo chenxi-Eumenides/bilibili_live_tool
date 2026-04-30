@@ -1,7 +1,5 @@
 """CLI 直播命令处理"""
 
-from types import SimpleNamespace
-
 from rich import print
 
 from ..logic import (
@@ -61,7 +59,7 @@ async def handle_live_start(session, area, title) -> None:
                 print("更新标题成功")
     elif captured.get("event") == "face_auth":
         qr = captured["data"].get("qr_url", "")
-        print(f"需要人脸认证: ")
+        print("需要人脸认证:")
         print("\n".join(generate_qr_text(qr)))
     else:
         print(captured.get("msg", "开播失败"))
@@ -149,22 +147,14 @@ async def handle_update(session, area_id, title) -> None:
         print(f"分区已更新: {area_id}")
 
 
-async def handle_area(session, area_args: list[str]) -> None:
+async def handle_area(session, parent_id: int) -> None:
     area_list = session.area_list
     if not area_list:
         print("分区列表为空，请先登录")
         return
 
-    parent_id = None
-    if area_args:
-        raw = area_args[0]
-        if raw == "list":
-            parent_id = int(area_args[1]) if len(area_args) > 1 else None
-        else:
-            parent_id = int(raw)
-
     for main in area_list:
-        if parent_id is None:
+        if parent_id == 0:
             print(f"  [{main.id}] {main.name}")
         elif main.id == parent_id:
             print(f"  [{main.id}] {main.name}")
@@ -212,4 +202,4 @@ async def handle_cli(session) -> None:
         print("当前正在直播")
     else:
         print("正在开播...")
-        await handle_live_start(session, SimpleNamespace(area=None, title=None))
+        await handle_live_start(session, None, None)
