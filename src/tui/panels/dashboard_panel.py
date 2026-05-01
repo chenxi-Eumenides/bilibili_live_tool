@@ -4,6 +4,7 @@ from textual.containers import Grid, Vertical, ScrollableContainer
 from textual.widgets import Static
 
 from ...logic import SessionEvent
+from ..layout.header import Header
 
 
 class DashboardPanel(Vertical):
@@ -50,10 +51,12 @@ class DashboardPanel(Vertical):
         self.app.session.off(SessionEvent.LIVE_INFO_UPDATED, self._on_info_updated)
 
     def _on_info_updated(self, data=None):
-        self._refresh()
+        try:
+            self.app.call_from_thread(self._refresh)
+        except Exception:
+            pass
 
     def _refresh(self):
-        from ..layout.header import Header
         header = self.app.query_one(Header)
         header.set_refreshing(True)
         self._update_from_config()

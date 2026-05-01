@@ -124,35 +124,28 @@ class BiliLiveToolApp(App):
     def _on_logged_out(self, data=None):
         self.call_from_thread(self._apply_state, AppState.UNAUTH)
 
-    def _on_live_state_changed(self, data=None):
+    def _live_status_to_state(self):
         ls = self.session.room_data.get("live_status", 0)
         if ls == 1:
-            state = AppState.LIVE
-        elif ls == 2:
-            state = AppState.REPLAY
-        else:
-            state = AppState.IDLE
+            return AppState.LIVE
+        if ls == 2:
+            return AppState.REPLAY
+        return AppState.IDLE
+
+    def _on_live_state_changed(self, data=None):
         try:
-            self.call_from_thread(self._apply_state, state)
+            self.call_from_thread(self._apply_state, self._live_status_to_state())
         except Exception:
             pass
 
     def _on_info_updated(self, data=None):
-        ls = self.session.room_data.get("live_status", 0)
-        if ls == 1:
-            state = AppState.LIVE
-        elif ls == 2:
-            state = AppState.REPLAY
-        else:
-            state = AppState.IDLE
         try:
-            self.call_from_thread(self._apply_state, state)
+            self.call_from_thread(self._apply_state, self._live_status_to_state())
         except Exception:
             pass
 
     def _apply_state(self, state: AppState):
         self.app_state = state
-        self._refresh_ui()
 
     def _refresh_ui(self):
         state = self.app_state

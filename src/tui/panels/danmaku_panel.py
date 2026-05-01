@@ -33,8 +33,6 @@ class DanmakuPanel(Vertical):
             self._set_placeholder("没有弹幕")
             if not session._danmaku_running:
                 danmaku_start(session)
-        if session._danmaku_running:
-            self._set_placeholder("没有弹幕")
 
     def on_unmount(self):
         session = self.app.session
