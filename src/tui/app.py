@@ -1,16 +1,24 @@
 """Textual App主类"""
+from asyncio import create_task
 from pathlib import Path
 from threading import Event
-from time import monotonic
 
 from textual.app import App
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.reactive import reactive
 
-from ..logic import Session, auth_poll_qr, auth_validate_login
+from ..logic import (
+    Session,
+    _listen_loop,
+    auth_poll_qr,
+    auth_update_safety,
+    auth_validate_login,
+    danmaku_stop,
+    live_init,
+)
 from ..utils.config import CONFIG
-from ..utils.constant import CONFIG_FILE, SessionEvent
+from ..utils.constant import CONFIG_FILE, SessionEvent, Tuning
 from ..utils.data import AppState, FuncType
 from .layout.header import Header
 from .layout.main_panel import MainPanel
@@ -34,8 +42,8 @@ class BiliLiveToolApp(App):
 
     app_state = reactive(AppState.UNAUTH)
     current_panel = reactive("info")
-    qr_cache: dict | None = None
     _login_stop_event: Event | None = None
+    _danmaku_task = None
 
     BINDINGS = [
         Binding("q,escape", "quit", "退出"),
@@ -65,6 +73,8 @@ class BiliLiveToolApp(App):
         self.session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_login_failed)
         self.session.on(SessionEvent.AUTH_LOGOUT, self._on_logged_out)
         self.session.on(SessionEvent.LIVE_STATE_CHANGED, self._on_live_state_changed)
+        self.session.on(SessionEvent.LIVE_INFO_UPDATED, self._on_info_updated)
+        self.session.on(SessionEvent.DANMAKU_STARTED, self._on_danmaku_started)
 
     def _init_state(self):
         if self.session.config.cookies:
@@ -74,12 +84,15 @@ class BiliLiveToolApp(App):
             self._refresh_ui()
 
     def _validate_login(self):
-        auth_validate_login(self.session)
+        result = auth_validate_login(self.session)
+        if result.type != FuncType.SUCCESS:
+            return
+        auth_update_safety(self.session)
+        live_init(self.session)
 
     def start_login(self):
         self._stop_login_poll()
-        cache = self.qr_cache
-        if not cache:
+        if not self.session.cache_qr_key:
             return
         self._login_stop_event = Event()
         self.run_worker(self._run_login_poll, thread=True)
@@ -89,31 +102,21 @@ class BiliLiveToolApp(App):
             self._login_stop_event.set()
 
     def _run_login_poll(self):
-        cache = self.qr_cache
-        if not cache:
+        if not self.session.cache_qr_key:
             return
-        qr_key = cache["qr_key"]
-        deadline = cache["deadline"]
-        remaining = deadline - monotonic()
-        if remaining <= 0:
-            self.session._emit(SessionEvent.AUTH_LOGIN_FAILED, "二维码已过期")
-            return
-        result = auth_poll_qr(self.session, qr_key, stop_event=self._login_stop_event, timeout_sec=max(1, int(remaining)))
+        qr_key = self.session.cache_qr_key
+        result = auth_poll_qr(
+            self.session,
+            qr_key,
+            stop_event=self._login_stop_event,
+            timeout_sec=Tuning.LOGIN_POLL_TIMEOUT,
+        )
         if result.type == FuncType.SUCCESS:
-            auth_post_login(self.session)
-            self.call_from_thread(self.show_info_panel)
+            auth_update_safety(self.session)
+            live_init(self.session)
 
     def _on_login_success(self, data=None):
-        self.qr_cache = None
-        ls = self.session.room_data.get("live_status", 0)
-        if ls == 1:
-            state = AppState.LIVE
-        elif ls == 2:
-            state = AppState.REPLAY
-        else:
-            state = AppState.IDLE
-        self.call_from_thread(self._apply_state, state)
-        self.call_from_thread(lambda: setattr(self, "current_panel", "info"))
+        self.call_from_thread(self._apply_state, AppState.IDLE)
 
     def _on_login_failed(self, data=None):
         self.call_from_thread(self._apply_state, AppState.UNAUTH)
@@ -129,7 +132,23 @@ class BiliLiveToolApp(App):
             state = AppState.REPLAY
         else:
             state = AppState.IDLE
-        self.call_from_thread(self._apply_state, state)
+        try:
+            self.call_from_thread(self._apply_state, state)
+        except Exception:
+            pass
+
+    def _on_info_updated(self, data=None):
+        ls = self.session.room_data.get("live_status", 0)
+        if ls == 1:
+            state = AppState.LIVE
+        elif ls == 2:
+            state = AppState.REPLAY
+        else:
+            state = AppState.IDLE
+        try:
+            self.call_from_thread(self._apply_state, state)
+        except Exception:
+            pass
 
     def _apply_state(self, state: AppState):
         self.app_state = state
@@ -177,8 +196,14 @@ class BiliLiveToolApp(App):
     def show_danmu_panel(self):
         self.current_panel = "danmu"
 
+    def _on_danmaku_started(self, data=None):
+        if self._danmaku_task is not None and not self._danmaku_task.done():
+            self._danmaku_task.cancel()
+        self._danmaku_task = create_task(_listen_loop(self.session))
+
     def action_quit(self):
         self._stop_login_poll()
+        danmaku_stop(self.session)
         self.exit()
 
 

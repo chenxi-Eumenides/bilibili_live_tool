@@ -4,7 +4,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, ScrollableContainer
 from textual.widgets import Button, Input, Select, Static
 
-from ...logic import live_get_area_list
+from ...logic import live_init
 from ...utils.data import FuncType
 
 
@@ -33,10 +33,13 @@ class SettingsPanel(Vertical):
         self._load_title()
 
     def _load_areas(self):
-        result = live_get_area_list(self.app.session)
-        if result.type != FuncType.SUCCESS:
+        if not self.app.session.area_list:
+            result = live_init(self.app.session)
+            if result.type != FuncType.SUCCESS:
+                return
+        if not self.app.session.area_list:
             return
-        self._areas = result.result
+        self._areas = self.app.session.area_list
         parent_select = self.query_one("#parent-area-select", Select)
         parent_select.set_options([(a.name, a.id) for a in self._areas])
 

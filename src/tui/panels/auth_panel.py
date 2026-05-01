@@ -1,6 +1,4 @@
 """登录面板 — UI 显示，轮询由 app 管理"""
-from time import monotonic
-
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Center, Vertical
@@ -12,7 +10,6 @@ from ...utils.lib import generate_qr_text
 
 
 class AuthPanel(Vertical):
-    _qr_key = None
 
     def compose(self) -> ComposeResult:
         with Vertical(id="login-container"):
@@ -28,11 +25,11 @@ class AuthPanel(Vertical):
         session.on(SessionEvent.AUTH_LOGIN_SUCCESS, self._on_success)
         session.on(SessionEvent.AUTH_LOGIN_FAILED, self._on_failed)
 
-        cache = session.qr_cache
-        if cache:
-            self._qr_key = cache["qr_key"]
+        if session.cache_qr_url and session.cache_qr_key:
             self.query_one("#login-button", Button).display = False
-            self.query_one("#qr-area", Static).update("\n".join(generate_qr_text(cache["qr_url"])))
+            self.query_one("#qr-area", Static).update(
+                "\n".join(generate_qr_text(session.cache_qr_url))
+            )
             self.query_one("#qr-area", Static).display = True
             self.query_one("#status-text", Static).update("请使用B站App扫码登录")
 
@@ -52,15 +49,15 @@ class AuthPanel(Vertical):
 
         result = auth_get_qr(self.app.session)
         if result.type != FuncType.SUCCESS:
-            self.query_one("#status-text", Static).update(f"获取二维码失败: {result.result}")
+            self.query_one("#status-text", Static).update(
+                f"获取二维码失败: {result.result}"
+            )
             self.query_one("#login-button", Button).display = True
             return
 
-        qr_url = result.result["qr_url"]
-        qr_key = result.result["qr_key"]
-        self.query_one("#qr-area", Static).update("\n".join(generate_qr_text(qr_url)))
-        deadline = monotonic() + 180
-        self.app.qr_cache = {"qr_url": result.result["qr_url"], "qr_key": qr_key, "deadline": deadline}
+        self.query_one("#qr-area", Static).update(
+            "\n".join(generate_qr_text(self.app.session.cache_qr_url))
+        )
         self.app.start_login()
 
     def _on_qrcode_ready(self, data: dict):
@@ -77,8 +74,6 @@ class AuthPanel(Vertical):
 
     def _on_failed(self, reason=None):
         self._call_update(f"登录失败: {reason or '未知'}")
-        if reason and "过期" in reason:
-            self.app.qr_cache = None
 
     def _call_update(self, text):
         try:

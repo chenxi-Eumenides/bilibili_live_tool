@@ -9,6 +9,7 @@ from ..utils.api import (
     ws_send_heart,
     ws_listen_danmaku,
     get_wbi_key,
+    api_get_room_data,
 )
 from ..utils.data import FuncResult, FuncType
 from ..utils.constant import SessionEvent, Tuning
@@ -63,6 +64,25 @@ def danmaku_stop(session: Session) -> FuncResult:
     session.cache_danmaku_ws_urls = []
     session._emit(SessionEvent.DANMAKU_CANCELLED, {"reason": "主动停止"})
     return FuncResult(type=FuncType.SUCCESS, result="已发送停止信号")
+
+
+def danmaku_fetch_room_title(session: Session, room_id: int) -> str:
+    """获取指定房间标题并缓存到 session。
+
+    Args:
+        session: Session 实例
+        room_id: 房间号
+
+    Returns:
+        房间标题字符串，失败返回空字符串
+    """
+    result = api_get_room_data(cookies=session.config.cookies, room_id=room_id)
+    if result.type == FuncType.SUCCESS:
+        title = result.result.get("title", "")
+        session.danmaku_room_title = title
+        return title
+    session.danmaku_room_title = ""
+    return ""
 
 
 async def _listen_loop(session: Session) -> None:

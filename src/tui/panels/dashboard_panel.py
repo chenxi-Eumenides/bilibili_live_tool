@@ -60,8 +60,9 @@ class DashboardPanel(Vertical):
         header.set_refreshing(False)
 
     def _update_from_config(self):
-        config = self.app.session.config
-        rd = config.room_data
+        session = self.app.session
+        rd = session.room_data
+        config = session.config
 
         self.query_one("#room-title", Static).update(rd.get("title") or config.title or "--")
         self.query_one("#anchor-uid", Static).update(str(rd.get("user_id") or config.uid or "--"))

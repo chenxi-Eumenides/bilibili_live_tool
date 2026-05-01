@@ -40,6 +40,7 @@ class Session:
         self.livehime_version: str = ApiData.LIVEHIME_VERSION
         self.area_list: LiveAreaList | None = None
         self.danmaku_room_id = 0
+        self.danmaku_room_title = ""
         self.cache_danmaku_key: str = ""
         self.cache_danmaku_ws_urls: list[str] = []
         self._danmaku_ws = None
