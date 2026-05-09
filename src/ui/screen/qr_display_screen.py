@@ -55,8 +55,12 @@ class QRDisplayScreen(ModalScreen):
             qr_content = self.query_one("#qr-content", Static)
             too_small_msg = self.query_one("#qr-too-small", Static)
 
-            min_width = self.qr_size + 11
-            min_height = self.qr_size // 2 + 9
+            if getattr(self, "_compat", False):
+                min_width = self.qr_size + 14
+                min_height = self.qr_size // 2 + 11
+            else:
+                min_width = self.qr_size + 11
+                min_height = self.qr_size // 2 + 9
 
             if container_width < min_width or container_height < min_height:
                 qr_content.styles.display = "none"
@@ -83,6 +87,7 @@ class QRDisplayScreen(ModalScreen):
             (True, True): "█",
         }
         compat = not is_modern_terminal()
+        self._compat = compat
         qr_data = []
         try:
             qr = qrcode.QRCode(
