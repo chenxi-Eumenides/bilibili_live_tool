@@ -17,10 +17,15 @@
 
 ## 使用方法
 
+运行软件
+1. 点击登录按钮，扫码登录
+2. 进入管理页面，修改标题或分区（可选）
+3. 点击开播，如果跳出二维码，扫码进行人脸验证
+4. 在信息页面中，复制推流码与推流地址，从obs推流
+
 ### 运行exe
 
-下载软件，双击程序运行。
-
+下载软件，双击程序运行
 - [releases](https://github.com/chenxi-Eumenides/bilibili_live_tool/releases/latest)
 - [蓝奏云(CN)](https://wwzt.lanzoul.com/b00zxtbjrg)  密码:chenxi
 
