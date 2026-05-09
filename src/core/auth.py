@@ -10,10 +10,8 @@ from dataclasses import dataclass
 from enum import Enum, auto
 
 import requests
-from qrcode import QRCode
 
-from ..utils.constants import ApiEndpoints, QR_IMG, USER_AGENT
-from ..utils.cleanup import cleanup_qr_files
+from ..utils.constants import ApiEndpoints, USER_AGENT
 from .config import ConfigManager
 
 logger = logging.getLogger(__name__)
@@ -76,23 +74,13 @@ class AuthManager:
             qr_url = data["data"]["url"]
             qr_key = data["data"]["qrcode_key"]
 
-            # 生成二维码图片
-            qr = QRCode()
-            qr.add_data(qr_url)
-            qr.make(fit=True)
-            qr_image = qr.make_image()
-            with open(QR_IMG, "wb") as f:
-                qr_image.save(f)
-
-            logger.info(f"二维码已生成: {QR_IMG}")
+            logger.info("二维码已生成")
             return qr_url, qr_key
 
         except requests.RequestException as e:
-            cleanup_qr_files()
             logger.error(f"网络请求失败: {e}")
             raise Exception(f"网络请求失败: {e}")
         except Exception as e:
-            cleanup_qr_files()
             logger.error(f"生成二维码失败: {e}")
             raise
 
@@ -123,7 +111,6 @@ class AuthManager:
                 cookies = response.cookies.get_dict()
                 refresh_token = data["data"].get("refresh_token", "")
                 logger.info("二维码登录成功")
-                cleanup_qr_files()
                 return QRLoginResult(
                     status=LoginStatus.SUCCESS,
                     cookies=cookies,
@@ -197,19 +184,16 @@ class AuthManager:
                     # 保存登录信息
                     if result.cookies is None:
                         notify("登录失败：未获取到凭证")
-                        cleanup_qr_files()
                         return False
                     self.config_manager.update_cookies(
                         result.cookies,
                         result.refresh_token or "",
                     )
                     notify("登录成功！")
-                    cleanup_qr_files()
                     return True
 
                 if result.status == LoginStatus.EXPIRED:
                     notify("二维码已过期，请重试")
-                    cleanup_qr_files()
                     return False
 
                 if result.status == LoginStatus.SCANNED and not scanned_notified:
@@ -218,7 +202,6 @@ class AuthManager:
 
                 if result.status == LoginStatus.ERROR:
                     notify(f"登录出错: {result.message}")
-                    cleanup_qr_files()
                     return False
 
                 sleep(1)

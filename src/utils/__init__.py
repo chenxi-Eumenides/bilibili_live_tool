@@ -9,8 +9,6 @@ from .constants import (
     BASE_DIR,
     CONFIG_FILE,
     README_FILE,
-    QR_IMG,
-    QR_FACE_IMG,
     APP_KEY,
     APP_SECRET,
     LIVEHIME_BUILD,
@@ -25,7 +23,7 @@ from .constants import (
     Messages,
     Styles,
 )
-from .cleanup import cleanup_qr_files, cleanup_file
+from .cleanup import cleanup_file
 from .crypto import sign_api_data
 
 __all__ = [
@@ -34,8 +32,6 @@ __all__ = [
     "BASE_DIR",
     "CONFIG_FILE",
     "README_FILE",
-    "QR_IMG",
-    "QR_FACE_IMG",
     "APP_KEY",
     "APP_SECRET",
     "LIVEHIME_BUILD",
@@ -49,7 +45,6 @@ __all__ = [
     "KeyBindings",
     "Messages",
     "Styles",
-    "cleanup_qr_files",
     "cleanup_file",
     "sign_api_data",
 ]
