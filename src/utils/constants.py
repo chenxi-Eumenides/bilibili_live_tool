@@ -8,7 +8,7 @@ from enum import Enum, auto
 from pathlib import Path
 
 # ===== 版本信息 =====
-VERSION = (0, 4, 5)
+VERSION = (0, 4, 6)
 VERSION_STR = ".".join(map(str, VERSION))
 
 # ===== 基础路径 =====
@@ -18,8 +18,6 @@ BASE_DIR = Path.cwd()
 # 使用工作目录下的配置文件
 CONFIG_FILE = Path("config.json")
 README_FILE = Path("使用说明.txt")
-QR_IMG = Path("qr.jpg")
-QR_FACE_IMG = Path("qr_face.jpg")
 
 # ===== B站API常量 =====
 APP_KEY: str = "aae92bc66f3edfab"

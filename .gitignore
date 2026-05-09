@@ -208,6 +208,7 @@ learn_unittest.py
 *.bat
 *.zip
 *.code-workspace
+*.bak
 # exclude
 !test.json
 !build.bat
