@@ -56,10 +56,10 @@ class QRDisplayScreen(ModalScreen):
             too_small_msg = self.query_one("#qr-too-small", Static)
 
             if getattr(self, "_compat", False):
-                min_width = self.qr_size + 14
+                min_width = self.qr_size + 16
                 min_height = self.qr_size // 2 + 11
             else:
-                min_width = self.qr_size + 11
+                min_width = self.qr_size + 12
                 min_height = self.qr_size // 2 + 9
 
             if container_width < min_width or container_height < min_height:
