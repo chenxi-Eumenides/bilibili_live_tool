@@ -13,18 +13,12 @@
 - [x] 获取rtmp推流地址与推流码
 - [x] 修改直播间标题、分区
 - [x] 获取直播间弹幕
+- [ ] 发送弹幕（当前按钮无实际作用）
 - [ ] 获取直播间礼物、进场信息等
 
+> **关于界面**：本项目不支持窗口 GUI。目前仅支持 TUI，未来也只会支持 CLI、TUI、headless 三种模式。
+
 ## 使用方法
-
-运行软件
-1. 点击登录按钮，扫码登录
-2. 进入管理页面，修改标题或分区（可选）
-3. 点击开播，如果跳出二维码，扫码进行人脸验证
-4. 在信息页面中，复制推流码与推流地址，从obs推流
-
-### 运行exe
-
 下载软件，双击程序运行
 - [releases](https://github.com/chenxi-Eumenides/bilibili_live_tool/releases/latest)
 - [蓝奏云(CN)](https://wwzt.lanzoul.com/b00zxtbjrg)  密码:chenxi
