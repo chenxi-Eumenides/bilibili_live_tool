@@ -12,11 +12,31 @@ QRDisplayScreen #qr-card {
 }
 
 QRDisplayScreen #qr-title {
+    width: 1fr;
     text-align: center;
+    content-align: center middle;
     text-style: bold;
     color: $primary;
-    margin: 1;
+    margin: 0;
     padding: 0;
+}
+
+QRDisplayScreen #qr-header {
+    height: auto;
+    margin: 1 0;
+}
+
+QRDisplayScreen #qr-toggle-btn {
+    layer: overlay;
+    dock: right;
+    width: auto;
+    background: #00a1d6;
+    color: white;
+    border: none;
+}
+
+QRDisplayScreen #qr-toggle-btn:hover {
+    background: #0089b6;
 }
 
 QRDisplayScreen #qr-content {
