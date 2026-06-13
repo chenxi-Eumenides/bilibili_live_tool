@@ -6,14 +6,13 @@
 """
 
 from textual.screen import ModalScreen
-from textual.containers import Vertical
-from textual.widgets import Static
+from textual.containers import Vertical, Horizontal
+from textual.widgets import Static, Button
 from textual.reactive import reactive
 from textual.binding import Binding
 import qrcode
 
 from ...utils.constants import KeyBindings
-from ...utils.lib import is_modern_terminal
 
 
 class QRDisplayScreen(ModalScreen):
@@ -30,15 +29,29 @@ class QRDisplayScreen(ModalScreen):
         super().__init__()
         self.qr_url = qr_url
         self.title_text = title
+        self._compat = False
 
     def compose(self):
         with Vertical(id="qr-card"):
-            yield Static(self.title_text, id="qr-title")
+            with Horizontal(id="qr-header"):
+                yield Static(self.title_text, id="qr-title")
+                yield Button("切换兼容显示", id="qr-toggle-btn")
             yield Static("", id="qr-content")
             yield Static("窗口太小，请放大后查看二维码", id="qr-too-small")
 
     def on_mount(self):
         """挂载时显示二维码"""
+        self._update_display()
+
+    def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id != "qr-toggle-btn":
+            return
+        self._compat = not self._compat
+        btn = event.button
+        if self._compat:
+            btn.label = "切换压缩显示"
+        else:
+            btn.label = "切换兼容显示"
         self._update_display()
 
     def _update_display(self):
@@ -55,7 +68,7 @@ class QRDisplayScreen(ModalScreen):
             qr_content = self.query_one("#qr-content", Static)
             too_small_msg = self.query_one("#qr-too-small", Static)
 
-            if getattr(self, "_compat", False):
+            if self._compat:
                 min_width = self.qr_size + 16
                 min_height = self.qr_size // 2 + 11
             else:
@@ -86,8 +99,7 @@ class QRDisplayScreen(ModalScreen):
             (False, True): "▄",
             (True, True): "█",
         }
-        compat = not is_modern_terminal()
-        self._compat = compat
+        compat = self._compat
         qr_data = []
         try:
             qr = qrcode.QRCode(
