@@ -6,7 +6,7 @@
 from http.cookies import SimpleCookie
 from logging import getLogger
 from typing import TYPE_CHECKING
-from requests import post
+from requests import post, get
 from time import time
 
 from aiohttp import ClientSession
@@ -101,23 +101,26 @@ class DanmakuPanel(Vertical):
         """添加新弹幕消息（本地发送时使用）"""
         if not self._fetcher:
             return
+        live_mgr = self.app.live_manager
         wbi_signer = self._fetcher._wbi_signer
         params = wbi_signer.add_wbi_sign({"web_location": 444.8})
         data = {
-
+            "bubble": "0",
             "mode": 1,
             "color": 16777215,
-            "fontsize": 16,
+            "fontsize": 25,
             "msg": content,
             "roomid": self.room_id,
             "rnd": int(time()),
-            "csrf": self.app.config_manager.config.csrf,
-            "csrf_token": self.app.config_manager.config.csrf,
+            "csrf": live_mgr._get_csrf(),
+            "csrf_token": live_mgr._get_csrf(),
         }
         res = post(
-            url = ApiEndpoints.SEND_DANMAKU,
-            params = params,
-            data = data,
+            url=ApiEndpoints.SEND_DANMAKU,
+            params=params,
+            data=data,
+            cookies=live_mgr._get_cookies(),
+            headers=live_mgr._get_headers(),
         )
         if res.status_code == 200:
             code = res.json().get("code")
@@ -137,6 +140,7 @@ class DanmakuPanel(Vertical):
         注意：此回调可能在异步协程中执行，需要使用 call_later 确保UI更新在主线程
         """
         message.live_room_id = room_id
+        message.is_self = message.uid == self.app.config_manager.config.user_id
         self.app.call_later(self._add_message_from_fetcher, message)
     
     def on_gift(self, room_id: int, message: GiftMessage):
@@ -194,7 +198,9 @@ class DanmakuPanel(Vertical):
                 
                 # 启动客户端（非阻塞）
                 self._fetcher.start()
-                
+                # 加载历史弹幕
+                self.fetch_history()
+
             except Exception as e:
                 self.app.show_notification(f"弹幕连接失败: {e}")
         
@@ -237,6 +243,48 @@ class DanmakuPanel(Vertical):
         except Exception:
             pass
         return {}
+
+    def fetch_history(self):
+        """获取直播间最近历史弹幕并显示"""
+        from datetime import datetime as dt
+
+        try:
+            live_mgr = self.app.live_manager
+            res = get(
+                url=ApiEndpoints.GET_DANMAKU_HISTORY,
+                params={"roomid": self.room_id},
+                cookies=live_mgr._get_cookies(),
+                headers=live_mgr._get_headers(),
+                timeout=10,
+            )
+            if res.status_code != 200:
+                logger.error(f"获取历史弹幕失败 status_code:{res.status_code}")
+                return
+            data = res.json()
+            if data.get("code") != 0:
+                logger.error(f"获取历史弹幕失败 code:{data.get('code')} msg:{data.get('message','')}")
+                return
+
+            room_msgs = data.get("data", {}).get("room", [])
+            admin_msgs = data.get("data", {}).get("admin", [])
+            all_msgs = room_msgs + admin_msgs
+            all_msgs.sort(key=lambda e: e.get("timeline", ""))
+            current_uid = self.app.config_manager.config.user_id
+            for entry in all_msgs:
+                msg = DanmakuMessage.as_simple(
+                    uname=entry.get("nickname", ""),
+                    msg=entry.get("text", ""),
+                )
+                t = entry.get("timeline", "")
+                try:
+                    msg.timestamp = int(dt.strptime(t, "%Y-%m-%d %H:%M:%S").timestamp() * 1000)
+                except ValueError:
+                    pass
+                msg.is_self = entry.get("uid", 0) == current_uid
+                self._add_message_from_fetcher(msg)
+            logger.info(f"历史弹幕加载完成 room={len(room_msgs)}条 admin={len(admin_msgs)}条")
+        except Exception as e:
+            logger.error(f"获取历史弹幕异常: {e}")
 
     def _add_message_from_fetcher(self, msg: BaseMessage):
         """添加来自获取器的消息"""

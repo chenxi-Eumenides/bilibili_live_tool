@@ -212,3 +212,6 @@ learn_unittest.py
 # exclude
 !test.json
 !build.bat
+# project docs and test scripts (not tracked)
+ARCHITECTURE.md
+test_send_danmaku.py

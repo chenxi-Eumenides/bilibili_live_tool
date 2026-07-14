@@ -92,6 +92,8 @@ class DanmakuMessage:
     """直播间ID"""
     is_simple: bool = False
     """是否为简单弹幕"""
+    is_self: bool = False
+    """是否为自己发送的弹幕"""
 
     @classmethod
     def as_danmaku(cls, info: list, is_mirror: bool = False) -> "DanmakuMessage":
@@ -224,6 +226,8 @@ class DanmakuMessage:
         if self.is_simple:
             return DanmakuType.DEFAULT
 
+        if self.is_self:
+            return DanmakuType.USER_SELF
         if self.admin:
             return DanmakuType.USER_ADMIN
         if self.privilege_type == 1:
@@ -251,6 +255,7 @@ class DanmakuMessage:
             DanmakuType.USER_TIDU: DanmakuColors.USER_TIDU,
             DanmakuType.USER_ZONGDU: DanmakuColors.USER_ZONGDU,
             DanmakuType.USER_ADMIN: DanmakuColors.USER_ADMIN,
+            DanmakuType.USER_SELF: DanmakuColors.USER_SELF,
         }.get(self.type, DanmakuColors.DEFAULT)
 
     @property
@@ -272,6 +277,7 @@ class DanmakuMessage:
             DanmakuType.USER_TIDU,
             DanmakuType.USER_ZONGDU,
             DanmakuType.USER_ADMIN,
+            DanmakuType.USER_SELF,
         }
 
     @property
@@ -291,6 +297,8 @@ class DanmakuMessage:
             DanmakuType.USER_FAN: self.medal_name,
         }.get(self.type):
             return f"{text}{self.medal_level}"
+        elif self.type == DanmakuType.USER_SELF:
+            return "自己"
         else:
             return f""
 

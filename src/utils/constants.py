@@ -54,6 +54,7 @@ class ApiEndpoints:
     SET_LIVE_TIMESHIFT: str = "https://api.live.bilibili.com/xlive/app-blink/v1/upStreamConfig/SetAnchorSelfStreamTimeShift"
     GET_WBI_KEY: str = "https://api.bilibili.com/x/web-interface/nav"
     SEND_DANMAKU: str = "https://api.live.bilibili.com/msg/send"
+    GET_DANMAKU_HISTORY: str = "https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory"
 
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36 Edg/137.0.0.0"
@@ -181,6 +182,7 @@ class DanmakuType(Enum):
     USER_TIDU = auto()  # 提督用户
     USER_ZONGDU = auto()  # 总督用户
     USER_ADMIN = auto()  # 房管用户
+    USER_SELF = auto()  # 自己发送的弹幕
 
     # 礼物类
     GIFT_JIANZHANG = auto()  # 舰长礼物
@@ -211,6 +213,7 @@ class DanmakuColors:
     USER_TIDU: str = "#0066CC"  # 提督用户 - 深蓝色
     USER_ZONGDU: str = "#FFD700"  # 总督用户 - 金色
     USER_ADMIN: str = "#00CC00"  # 房管用户 - 绿色
+    USER_SELF: str = "#FF9900"  # 自己发送 - 橙色
 
     # ===== 礼物类颜色（全部内容都显示此颜色，不含时间戳） =====
     GIFT_JIANZHANG: str = "#66CCFF"  # 舰长礼物 - 浅蓝色
