@@ -8,7 +8,7 @@ from enum import Enum, auto
 from pathlib import Path
 
 # ===== 版本信息 =====
-VERSION = (0, 4, 7)
+VERSION = (0, 4, 8)
 VERSION_STR = ".".join(map(str, VERSION))
 
 # ===== 基础路径 =====
