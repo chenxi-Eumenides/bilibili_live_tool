@@ -5,14 +5,18 @@
   兼容终端 --- 使用全块字符, 逐行渲染, 适合 cmd.exe 等老式终端
 """
 
+import logging
+
 from textual.screen import ModalScreen
 from textual.containers import Vertical, Horizontal
 from textual.widgets import Static, Button
 from textual.reactive import reactive
 from textual.binding import Binding
-import qrcode
 
 from ...utils.constants import KeyBindings
+from ...utils.qrcode_utils import build_qr_matrix, build_qr_lines
+
+logger = logging.getLogger(__name__)
 
 
 class QRDisplayScreen(ModalScreen):
@@ -93,50 +97,20 @@ class QRDisplayScreen(ModalScreen):
             self.query_one("#qr-content", Static).update(f"[二维码生成失败: {e}]")
 
     def _generate_qr_data(self) -> None:
-        _modern_chars = {
-            (False, False): " ",
-            (True, False): "▀",
-            (False, True): "▄",
-            (True, True): "█",
-        }
-        compat = self._compat
-        qr_data = []
         try:
-            qr = qrcode.QRCode(
-                version=6,
-                error_correction=1,
-                box_size=1,
-                border=0,
-            )
-            qr.add_data(self.qr_url)
-            qr.make(fit=False)
-            matrix = qr.get_matrix()
-            size = len(matrix)
+            matrix = build_qr_matrix(self.qr_url)
+            self._qr_compat_lines = build_qr_lines(matrix, True)
+            self._qr_modern_lines = build_qr_lines(matrix, False)
 
-            if compat:
-                for row in range(size):
-                    qr_line = ""
-                    for col in range(size):
-                        qr_line += "██" if matrix[row][col] else "  "
-                    qr_data.append(qr_line)
-                self.qr_size = size * 2
+            if self._compat:
+                self.qr_text = "\n".join(self._qr_compat_lines)
+                self.qr_size = len(matrix) * 2
             else:
-                for row in range(0, size, 2):
-                    qr_line = ""
-                    for line in range(size):
-                        qr_line += _modern_chars[
-                            (
-                                matrix[row][line],
-                                matrix[row + 1][line] if row + 1 < size else False,
-                            )
-                        ]
-                    qr_data.append(qr_line)
-                self.qr_size = len(qr_data) * 2
-
-            self.qr_text = "\n".join(qr_data)
+                self.qr_text = "\n".join(self._qr_modern_lines)
+                self.qr_size = len(self._qr_modern_lines) * 2
         except Exception as e:
             self.qr_size = 0
-            self.qr_text = "[二维码生成失败]\n" + str(e) + "\n" + "\n".join(qr_data)
+            self.qr_text = f"[二维码生成失败: {e}]"
 
     def on_resize(self):
         """窗口大小改变时重新检查"""
