@@ -13,4 +13,4 @@ class StatusBar(Horizontal):
 
     def compose(self) -> ComposeResult:
         """组合状态栏"""
-        yield Static("按 Q / ESC / Ctrl+Q 退出", id="shortcuts-text")
+        yield Static("按 Q / ESC 退出", id="shortcuts-text")
