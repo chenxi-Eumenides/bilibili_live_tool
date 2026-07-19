@@ -194,6 +194,8 @@ cython_debug/
 .cursorindexingignore
 
 # custom
+# file
+qrcode.txt
 # folder
 other/
 test/
