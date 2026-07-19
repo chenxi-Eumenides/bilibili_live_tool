@@ -26,6 +26,19 @@ QRDisplayScreen #qr-header {
     margin: 1 0;
 }
 
+QRDisplayScreen #qr-generate-txt-btn {
+    layer: overlay;
+    dock: left;
+    width: auto;
+    background: #00a1d6;
+    color: white;
+    border: none;
+}
+
+QRDisplayScreen #qr-generate-txt-btn:hover {
+    background: #0089b6;
+}
+
 QRDisplayScreen #qr-toggle-btn {
     layer: overlay;
     dock: right;

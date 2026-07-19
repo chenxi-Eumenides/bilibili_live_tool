@@ -6,6 +6,7 @@
 """
 
 import logging
+from pathlib import Path
 
 from textual.screen import ModalScreen
 from textual.containers import Vertical, Horizontal
@@ -38,6 +39,7 @@ class QRDisplayScreen(ModalScreen):
     def compose(self):
         with Vertical(id="qr-card"):
             with Horizontal(id="qr-header"):
+                yield Button("生成二维码文本文件", id="qr-generate-txt-btn")
                 yield Static(self.title_text, id="qr-title")
                 yield Button("切换兼容显示", id="qr-toggle-btn")
             yield Static("", id="qr-content")
@@ -48,6 +50,9 @@ class QRDisplayScreen(ModalScreen):
         self._update_display()
 
     def on_button_pressed(self, event: Button.Pressed):
+        if event.button.id == "qr-generate-txt-btn":
+            self._generate_qr_text_file()
+            return
         if event.button.id != "qr-toggle-btn":
             return
         self._compat = not self._compat
@@ -111,6 +116,36 @@ class QRDisplayScreen(ModalScreen):
         except Exception as e:
             self.qr_size = 0
             self.qr_text = f"[二维码生成失败: {e}]"
+
+    def _generate_qr_text_file(self) -> None:
+        if not self.qr_url:
+            self.app.show_notification("没有二维码 URL，无法生成")
+            return
+
+        compat_lines = getattr(self, "_qr_compat_lines", None)
+        if not compat_lines:
+            self.app.show_notification("二维码尚未生成，请稍后重试")
+            return
+
+        modern_lines = getattr(self, "_qr_modern_lines", [])
+        try:
+            filepath = Path.cwd() / "qrcode.txt"
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(f"URL:\n{self.qr_url}\n\n")
+                f.write("QRcode (utf-8):\n")
+                f.write("\n".join(modern_lines))
+                f.write("\n\nQRcode (ascii):\n")
+                f.write("\n".join(compat_lines))
+
+            logger.info(f"二维码文本文件已生成: {filepath}")
+            self.app.show_notification(f"已生成: {filepath.name}")
+        except OSError as e:
+            logger.error(f"写入文件失败: {e}")
+            self.app.show_notification(f"写入失败: {e.strerror}")
+        except Exception as e:
+            logger.error(f"生成二维码文本文件失败: {e}")
+            self.app.show_notification(f"生成失败: {e}")
 
     def on_resize(self):
         """窗口大小改变时重新检查"""
